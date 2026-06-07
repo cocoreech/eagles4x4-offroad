@@ -16,24 +16,39 @@
 //   - Prompt injection: when we wire up AI, that prompt builder must
 //     ALSO call sanitizeForPrompt() on any user-provided text
 
-// Categories of dangerous unicode (control chars + bidi + zero-width).
-// Written as \u escapes (not literal control bytes) so the source stays
-// readable and the intent of each range is explicit.
-const DANGEROUS_RANGES = [
-  /\u0000-\u0008/,  // C0 controls (NULL etc.) - \t, \n preserved
-  /\u000B-\u000C/,  // VT, FF
-  /\u000E-\u001F/,  // C0 controls - \r preserved
-  /\u007F/,         // DEL
-  /\u0080-\u009F/,  // C1 controls
-  /\u200B-\u200F/,  // zero-width space + LTR/RTL marks
-  /\u202A-\u202E/,  // bidi overrides
-  /\u2060-\u2069/,  // word joiner + bidi isolate
-  /\uFEFF/,         // BOM
+// Dangerous unicode code-point ranges (C0/C1 control chars + bidi + zero-width).
+// Expressed as numbers and compiled to a regex character class at module load.
+// Building from code points (rather than control characters in a regex literal)
+// keeps the source free of invisible bytes and lets static analyzers see intent.
+// TAB (0x09), LF (0x0A) and CR (0x0D) are deliberately NOT stripped.
+const STRIP_RANGES: ReadonlyArray<readonly [number, number]> = [
+  [0x00, 0x08],     // C0 controls (NUL..BS)
+  [0x0b, 0x0c],     // VT, FF
+  [0x0e, 0x1f],     // remaining C0 controls
+  [0x7f, 0x9f],     // DEL + C1 controls
+  [0x200b, 0x200f], // zero-width space + LTR/RTL marks
+  [0x202a, 0x202e], // bidi overrides
+  [0x2060, 0x2069], // word joiner + bidi isolates
+  [0xfeff, 0xfeff], // BOM / zero-width no-break space
 ]
-const STRIP_PATTERN = new RegExp(
-  '[' + DANGEROUS_RANGES.map(r => r.source).join('') + ']',
-  'g'
-)
+
+function codePointClass(ranges: ReadonlyArray<readonly [number, number]>): string {
+  const ch = (n: number) => String.fromCodePoint(n)
+  return ranges.map(([a, b]) => (a === b ? ch(a) : `${ch(a)}-${ch(b)}`)).join('')
+}
+
+const STRIP_PATTERN = new RegExp('[' + codePointClass(STRIP_RANGES) + ']', 'g')
+
+// Coerce arbitrary input to a string WITHOUT relying on Object's default
+// "[object Object]" stringification. Only genuine primitives become text;
+// objects, arrays, functions, symbols, null and undefined yield ''.
+function toText(input: unknown): string {
+  if (typeof input === 'string') return input
+  if (typeof input === 'number' || typeof input === 'boolean' || typeof input === 'bigint') {
+    return String(input)
+  }
+  return ''
+}
 
 /**
  * Clean a string for safe storage and downstream display.
@@ -43,12 +58,7 @@ const STRIP_PATTERN = new RegExp(
  *  - Caps at maxLength
  */
 export function sanitizeText(input: unknown, maxLength = 1000): string {
-  if (input == null) return ''
-  // Objects/functions have no meaningful text form (would stringify to
-  // "[object Object]" etc.) — treat them as empty rather than store garbage.
-  if (typeof input === 'object' || typeof input === 'function') return ''
-  const raw = String(input)
-  const cleaned = raw
+  const cleaned = toText(input)
     .normalize('NFC')
     .replace(STRIP_PATTERN, '')
     .trim()
@@ -80,14 +90,10 @@ export function sanitizeForPrompt(input: unknown, maxLength = 1000): string {
  * Otherwise the strip is identical to sanitizeText.
  */
 export function sanitizeMultiline(input: unknown, maxLength = 4000): string {
-  if (input == null) return ''
-  if (typeof input === 'object' || typeof input === 'function') return ''
-  const raw = String(input)
-  const cleaned = raw
+  const cleaned = toText(input)
     .normalize('NFC')
-    // Allow \n and \t but strip other controls
-    .replace(/[\u0000-\u0008\u000B-\u000C\u000E-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2060-\u2069\uFEFF]/g, '')
-    .replaceAll('\r\n', '\n') // Normalize line endings
+    .replace(STRIP_PATTERN, '') // strips controls; \t, \n, \r survive
+    .replaceAll('\r\n', '\n') // normalize line endings
     .replaceAll('\r', '\n')
     .trim()
   return cleaned.slice(0, maxLength)
