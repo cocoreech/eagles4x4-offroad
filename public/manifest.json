@@ -1,0 +1,24 @@
+{
+  "name": "Eagles 4x4 Offroad",
+  "short_name": "Eagles 4x4",
+  "description": "Upgrade your ride. Conquer every road. Dasmariñas, Cavite's #1 4x4 offroad shop.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0C0D0A",
+  "theme_color": "#D4A017",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/images/eagles-logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/eagles-logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}

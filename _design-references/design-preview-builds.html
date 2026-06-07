@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eagles 4x4 — Builds Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=Inter:wght@300;400;500;600;700;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:     #0A0A0A;
+      --surf:   #141414;
+      --surf2:  #1A1A1A;
+      --border: #222222;
+      --border2:#2A2A2A;
+      --text:   #F5F5F5;
+      --muted:  #888888;
+      --muted2: #555555;
+      --gold:   #C9A84C;
+      --gold2:  #E2BC6A;
+      --olive:  #4A5240;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; cursor: pointer; }
+    button { font-family: inherit; cursor: pointer; }
+
+    .badge-preview {
+      position: fixed; bottom: 16px; right: 16px; z-index: 9999;
+      background: var(--gold); color: #000;
+      font-size: 9px; font-weight: 800; letter-spacing: 0.15em;
+      text-transform: uppercase; padding: 6px 14px; border-radius: 2px;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: 64px; padding: 0 40px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(10,10,10,0.95);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-ring {
+      width: 44px; height: 44px; border-radius: 50%;
+      overflow: hidden; flex-shrink: 0; border: 2px solid var(--gold);
+    }
+    .logo-ring img { width: 100%; height: 100%; object-fit: cover; }
+    .logo-text {
+      font-family: 'Rajdhani', sans-serif; font-weight: 700;
+      font-size: 26px; line-height: 1; letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .logo-text span { color: var(--gold); }
+    .nav-links { display: flex; gap: 32px; list-style: none; }
+    .nav-links a { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); transition: color 0.2s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--gold); }
+    .nav-cta {
+      background: var(--gold); color: #000;
+      font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 10px 22px; border-radius: 2px;
+    }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      padding-top: 64px;
+      background: var(--surf); border-bottom: 1px solid var(--border);
+      position: relative; overflow: hidden;
+    }
+    .page-header-inner {
+      max-width: 1400px; margin: 0 auto;
+      padding: 56px 48px 48px;
+      display: flex; align-items: flex-end; justify-content: space-between; gap: 32px;
+    }
+    .page-kicker {
+      display: inline-flex; align-items: center; gap: 10px; margin-bottom: 14px;
+    }
+    .kicker-line { width: 28px; height: 1.5px; background: var(--gold); }
+    .kicker-text { font-size: 10px; font-weight: 800; letter-spacing: 0.4em; text-transform: uppercase; color: var(--gold); }
+    .page-title {
+      font-family: 'Playfair Display', serif; font-weight: 900;
+      font-size: clamp(44px, 5.5vw, 78px); line-height: 0.92;
+      letter-spacing: -0.02em;
+    }
+    .page-title em { font-style: italic; color: var(--gold); }
+    .page-desc {
+      font-family: 'Playfair Display', serif; font-style: italic;
+      font-size: 16px; color: rgba(245,245,245,0.55);
+      max-width: 380px; margin-top: 18px; line-height: 1.55;
+    }
+    .header-stats {
+      display: flex; gap: 36px; padding-bottom: 4px;
+    }
+    .header-stat {}
+    .header-stat-num {
+      font-family: 'Playfair Display', serif; font-weight: 700;
+      font-size: 36px; line-height: 1; color: var(--gold);
+    }
+    .header-stat-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--muted); margin-top: 8px;
+    }
+
+    /* ── FEATURED BUILD ── */
+    .featured {
+      max-width: 1400px; margin: 0 auto;
+      padding: 56px 48px 0;
+    }
+    .featured-card {
+      position: relative; overflow: hidden;
+      border-radius: 6px;
+      background: var(--surf);
+      border: 1px solid var(--border);
+    }
+    .featured-img-wrap {
+      aspect-ratio: 21/9; overflow: hidden; position: relative;
+    }
+    .featured-img-wrap img {
+      width: 100%; height: 100%; object-fit: cover;
+      filter: brightness(0.65) saturate(0.9);
+    }
+    .featured-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(8,8,8,0.95) 0%, rgba(8,8,8,0.3) 50%, transparent 100%);
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 48px;
+    }
+    .featured-tag {
+      display: inline-flex; align-items: center; gap: 10px;
+      margin-bottom: 14px; width: fit-content;
+    }
+    .featured-tag-line { width: 28px; height: 1.5px; background: var(--gold); }
+    .featured-tag-text {
+      font-size: 10px; font-weight: 800; letter-spacing: 0.3em;
+      text-transform: uppercase; color: var(--gold);
+    }
+    .featured-title {
+      font-family: 'Playfair Display', serif; font-weight: 900;
+      font-size: clamp(34px, 4vw, 56px); line-height: 1.05;
+      color: #fff; max-width: 700px;
+      margin-bottom: 18px;
+    }
+    .featured-title em { font-style: italic; color: var(--gold); }
+    .featured-meta {
+      display: flex; gap: 24px; flex-wrap: wrap;
+      font-size: 12px; color: rgba(245,245,245,0.7);
+      margin-bottom: 20px;
+    }
+    .featured-meta span strong { color: var(--gold); font-weight: 700; }
+    .featured-actions { display: flex; gap: 12px; }
+    .btn-gold {
+      background: var(--gold); color: #000;
+      font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 12px 24px; border-radius: 2px; border: none;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: background 0.2s;
+    }
+    .btn-gold:hover { background: var(--gold2); }
+    .btn-ghost {
+      background: transparent; color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+      font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 12px 24px; border-radius: 2px;
+      transition: all 0.2s;
+    }
+    .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ── FILTER BAR ── */
+    .filter-bar {
+      max-width: 1400px; margin: 0 auto;
+      padding: 48px 48px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 24px; flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+      margin-top: 16px;
+    }
+    .filter-section {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .filter-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--muted2);
+      margin-right: 6px;
+    }
+    .chip {
+      padding: 7px 14px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+      background: var(--surf); border: 1px solid var(--border);
+      color: var(--muted); border-radius: 20px;
+      transition: all 0.15s; cursor: pointer;
+    }
+    .chip:hover { border-color: var(--border2); color: var(--text); }
+    .chip.active { background: rgba(201,168,76,0.12); border-color: var(--gold); color: var(--gold); }
+    .chip .count { font-size: 9px; margin-left: 4px; opacity: 0.7; }
+
+    .sort-wrap {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 11px; color: var(--muted);
+    }
+    .sort-select {
+      background: var(--surf); border: 1px solid var(--border);
+      color: var(--text); padding: 8px 12px;
+      font-size: 12px; font-family: inherit; border-radius: 3px;
+      outline: none; cursor: pointer;
+    }
+    .sort-select:focus { border-color: var(--gold); }
+
+    /* ── BUILDS GRID ── */
+    .builds-section {
+      max-width: 1400px; margin: 0 auto;
+      padding: 32px 48px 56px;
+    }
+    .results-meta {
+      font-size: 12px; color: var(--muted);
+      margin-bottom: 24px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .results-meta strong { color: var(--gold); font-weight: 700; }
+
+    .builds-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    }
+    .build-card {
+      background: var(--surf);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.25s, border-color 0.2s;
+    }
+    .build-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--border2);
+    }
+    .build-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 2px; background: var(--gold);
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 0.3s; z-index: 2;
+    }
+    .build-card:hover::before { transform: scaleX(1); }
+    .build-thumb { aspect-ratio: 4/3; overflow: hidden; position: relative; }
+    .build-thumb img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: transform 0.5s;
+      filter: brightness(0.88) saturate(0.95);
+    }
+    .build-card:hover .build-thumb img { transform: scale(1.05); }
+    .build-thumb-badge {
+      position: absolute; top: 12px; left: 12px;
+      background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 4px 10px;
+      font-size: 9px; font-weight: 700; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--gold);
+      border-radius: 3px;
+    }
+    .build-body {
+      padding: 18px 22px 22px;
+      border-top: 1px solid var(--border);
+    }
+    .build-vehicle {
+      font-size: 9px; font-weight: 800; letter-spacing: 0.22em;
+      text-transform: uppercase; color: var(--gold); margin-bottom: 8px;
+    }
+    .build-title {
+      font-family: 'Playfair Display', serif; font-weight: 700;
+      font-size: 18px; color: var(--text); line-height: 1.25;
+      margin-bottom: 14px;
+      transition: color 0.2s;
+    }
+    .build-card:hover .build-title { color: var(--gold); }
+    .build-tags {
+      display: flex; flex-wrap: wrap; gap: 5px;
+      margin-bottom: 16px;
+    }
+    .build-tag {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 8px; border-radius: 2px;
+      border: 1px solid rgba(201,168,76,0.25);
+      color: rgba(201,168,76,0.65);
+    }
+    .build-foot {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: 12px; border-top: 1px solid var(--border);
+      font-size: 11px;
+    }
+    .build-meta { color: var(--muted); display: flex; gap: 12px; }
+    .build-meta span { display: inline-flex; align-items: center; gap: 4px; }
+    .build-arrow {
+      color: var(--muted); transition: color 0.2s;
+    }
+    .build-card:hover .build-arrow { color: var(--gold); }
+
+    /* ── LOAD MORE / PAGINATION ── */
+    .load-more {
+      display: flex; justify-content: center;
+      margin-top: 48px;
+    }
+    .btn-outline-gold {
+      background: transparent; color: var(--gold);
+      border: 1px solid rgba(201,168,76,0.4);
+      font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+      padding: 14px 32px; border-radius: 2px;
+      transition: all 0.2s;
+    }
+    .btn-outline-gold:hover { background: var(--gold); color: #000; }
+
+    /* ── CTA BAND ── */
+    .cta-band {
+      background: var(--olive);
+      padding: 80px 48px;
+      margin-top: 48px;
+      position: relative; overflow: hidden;
+    }
+    .cta-band::before {
+      content: ''; position: absolute; top: -150px; right: -150px;
+      width: 500px; height: 500px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.12), transparent 70%);
+    }
+    .cta-inner {
+      max-width: 1400px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 48px; position: relative; z-index: 1;
+    }
+    .cta-text {}
+    .cta-text h2 {
+      font-family: 'Playfair Display', serif; font-weight: 900;
+      font-size: clamp(32px, 3.5vw, 52px); line-height: 1.05;
+      color: #fff; margin-bottom: 14px;
+    }
+    .cta-text h2 em { font-style: italic; color: var(--gold); }
+    .cta-text p {
+      font-family: 'Playfair Display', serif; font-style: italic;
+      font-size: 16px; color: rgba(255,255,255,0.65);
+      max-width: 480px; line-height: 1.55;
+    }
+    .cta-actions { display: flex; gap: 12px; flex-shrink: 0; }
+
+    /* Footer */
+    .footer-strip {
+      border-top: 1px solid var(--border);
+      padding: 24px 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 12px; color: var(--muted);
+    }
+    .footer-strip a { color: var(--gold); }
+
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="design-preview.html" class="logo">
+    <div class="logo-ring"><img src="public/images/eagles4x4-logo.jpg" alt="Eagles 4x4 Logo" /></div>
+    <div class="logo-text">EAGLES <span>4X4</span></div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="design-preview.html">Home</a></li>
+    <li><a href="design-preview-services.html">Services & Shop</a></li>
+    <li><a href="#" class="active">Builds</a></li>
+    <li><a href="design-preview-events.html">Events</a></li>
+    <li><a href="design-preview-booking.html">Book Now</a></li>
+  </ul>
+  <a href="design-preview-booking.html" class="nav-cta">Book Now</a>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-header-inner">
+    <div>
+      <div class="page-kicker">
+        <div class="kicker-line"></div>
+        <span class="kicker-text">Portfolio</span>
+      </div>
+      <h1 class="page-title">The Build<br /><em>Gallery.</em></h1>
+      <p class="page-desc">Every truck has a story. Browse the rigs we've built for off-roaders across the Philippines.</p>
+    </div>
+    <div class="header-stats">
+      <div class="header-stat">
+        <div class="header-stat-num">500+</div>
+        <div class="header-stat-label">Builds Completed</div>
+      </div>
+      <div class="header-stat">
+        <div class="header-stat-num">8</div>
+        <div class="header-stat-label">Years Active</div>
+      </div>
+      <div class="header-stat">
+        <div class="header-stat-num">12</div>
+        <div class="header-stat-label">Build Types</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURED BUILD -->
+<div class="featured">
+  <div class="featured-card">
+    <div class="featured-img-wrap">
+      <img src="public/images/build-01.jpg" alt="Featured build" />
+      <div class="featured-overlay">
+        <div class="featured-tag">
+          <div class="featured-tag-line"></div>
+          <span class="featured-tag-text">Featured Build · 2026</span>
+        </div>
+        <h2 class="featured-title">Toyota Hilux<br /><em>Full Off-Road Build.</em></h2>
+        <div class="featured-meta">
+          <span><strong>4"</strong> Suspension Lift</span>
+          <span><strong>ARB</strong> Bull Bar + Winch</span>
+          <span><strong>BFG KO2</strong> All-Terrain Tires</span>
+          <span><strong>3 weeks</strong> Build Time</span>
+        </div>
+        <div class="featured-actions">
+          <button class="btn-gold">View Build Details →</button>
+          <button class="btn-ghost">Watch Build Video</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FILTERS -->
+<div class="filter-bar">
+  <div class="filter-section">
+    <span class="filter-label">Vehicle:</span>
+    <button class="chip active">All <span class="count">42</span></button>
+    <button class="chip">Hilux <span class="count">14</span></button>
+    <button class="chip">Ranger <span class="count">8</span></button>
+    <button class="chip">Navara <span class="count">6</span></button>
+    <button class="chip">Strada <span class="count">5</span></button>
+    <button class="chip">Fortuner <span class="count">4</span></button>
+    <button class="chip">D-Max <span class="count">3</span></button>
+    <button class="chip">Other <span class="count">2</span></button>
+  </div>
+  <div class="sort-wrap">
+    Sort by:
+    <select class="sort-select">
+      <option>Most Recent</option>
+      <option>Most Popular</option>
+      <option>Vehicle Type</option>
+      <option>Build Complexity</option>
+    </select>
+  </div>
+</div>
+
+<!-- BUILDS GRID -->
+<div class="builds-section">
+
+  <div class="results-meta">Showing <strong>12</strong> of <strong>42</strong> builds</div>
+
+  <div class="builds-grid">
+
+    <div class="build-card">
+      <div class="build-thumb">
+        <div class="build-thumb-badge">Full Build</div>
+        <img src="public/images/build-01.jpg" alt="build" />
+      </div>
+      <div class="build-body">
+        <div class="build-vehicle">Toyota Hilux · 2024</div>
+        <div class="build-title">4" Lift + ARB Bull Bar Setup</div>
+        <div class="build-tags">
+          <span class="build-tag">Lift Kit</span>
+          <span class="build-tag">Suspension</span>
+          <span class="build-tag">Bull Bar</span>
+          <span class="build-tag">Winch</span>
+        </div>
+        <div class="build-foot">
+          <div class="build-meta">
+            <span>📍 Cavite</span>
+            <span>📅 Apr '26</span>
+          </div>
+          <span class="build-arrow">→</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="build-card">
+      <div class="build-thumb">
+        <div class="build-thumb-badge">Bull Bar</div>
+        <img src="public/images/build-02.jpg" alt="build" />
+      </div>
+      <div class="build-body">
+        <div class="build-vehicle">Ford Ranger · 2023</div>
+        <div class="build-title">Bull Bar + Winch Combo</div>
+        <div class="build-tags">
+          <span class="build-tag">Bull Bar</span>
+          <span class="build-tag">Winch</span>
+          <span class="build-tag">Lighting</span>
+        </div>
+        <div class="build-foot">
+          <div class="build-meta">
+            <span>📍 Bacoor</span>
+            <span>📅 Mar '26</span>
+          </div>
+          <span class="build-arrow">→</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="build-card">
+      <div class="build-thumb">
+        <div class="build-thumb-badge">Suspension</div>
+        <img src="public/images/build-03.jpg" alt="build" />
+      </div>
+      <div class="build-body">
+        <div class="build-vehicle">Mitsubishi Strada · 2022</div>
+        <div class="build-title">Complete Suspension Overhaul</div>
+        <div class="build-tags">
+          <span class="build-tag">Suspension</span>
+          <span class="build-tag">Lift Kit</span>
+          <span class="build-tag">Alignment</span>
+        </div>
+        <div class="build-foot">
+          <div class="build-meta">
+            <span>📍 Dasmariñas</span>
+            <span>📅 Mar '26</span>
+          </div>
+          <span class="build-arrow">→</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="build-card">
+      <div class="build-thumb">
+        <div class="build-thumb-badge">Wheels</div>
+        <img src="public/images/build-04.jpg" alt="build" />
+      </div>
+      <div class="build-body">
+        <div class="build-vehicle">Toyota Fortuner · 2024</div>
+        <div class="build-title">OX Wheels + KO2 Tire Setup</div>
+        <div class="build-tags">
+          <span class="build-tag">Wheels</span>
+          <span class="build-tag">Tires</span>
+          <span class="build-tag">Suspension</span>
+        </div>
+        <div class="build-foot">
+          <div class="build-meta">
+            <span>📍 General Trias</span>
+            <span>📅 Feb '26</span>
+          </div>
+          <span class="build-arrow">→</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="build-card">
+      <div class="build-thumb">
+        <div class="build-thumb-badge">Protection</div>
+        <img src="public/images/build-05.jpg" alt="build" />
+      </div>
+      <div class="build-body">
+        <div class="build-vehicle">Isuzu D-Max · 2023</div>
+        <div class="build-title">Lift Kit + Skid Plate Armor</div>
+        <div class="build-tags">
+          <span class="build-tag">Lift Kit</span>
+          <span class="build-tag">Skid Plates</span>
+          <span class="build-tag">Protection</span>
+        </div>
+        <div class="build-foot">
+          <div class="build-meta">
+            <span>📍 Imus</span>
+            <span>📅 Feb '26</span>
+          </div>
+          <span class="build-arrow">→</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="build-card">
+      <div class="build-thumb">
+        <div class="build-thumb-badge">Exterior</div>
+        <img src="public/images/build-06.jpg" alt="build" />
+      </div>
+      <div class="build-body">
+        <div class="build-vehicle">Nissan Navara · 2024</div>
+        <div class="build-title">Full Exterior Transformation</div>
+        <div class="build-tags">
+          <span class="build-tag">Bull Bar</span>
+          <span class="build-tag">Lighting</span>
+          <span class="build-tag">Side Steps</span>
+          <span class="build-tag">Rack</span>
+        </div>
+        <div class="build-foot">
+          <div class="build-meta">
+            <span>📍 Tagaytay</span>
+            <span>📅 Jan '26</span>
+          </div>
+          <span class="build-arrow">→</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="build-card">
+      <div class="build-thumb">
+        <div class="build-thumb-badge">Lift Kit</div>
+        <img src="public/images/build-02.jpg" alt="build" />
+      </div>
+      <div class="build-body">
+        <div class="build-vehicle">Ford Ranger Raptor · 2025</div>
+        <div class="build-title">3" Lift with Fox Shocks</div>
+        <div class="build-tags">
+          <span class="build-tag">Lift Kit</span>
+          <span class="build-tag">Fox Shocks</span>
+        </div>
+        <div class="build-foot">
+          <div class="build-meta">
+            <span>📍 Manila</span>
+            <span>📅 Jan '26</span>
+          </div>
+          <span class="build-arrow">→</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="build-card">
+      <div class="build-thumb">
+        <div class="build-thumb-badge">Winch</div>
+        <img src="public/images/build-01.jpg" alt="build" />
+      </div>
+      <div class="build-body">
+        <div class="build-vehicle">Toyota Hilux GR-S · 2024</div>
+        <div class="build-title">Warn Zeon Platinum Winch Setup</div>
+        <div class="build-tags">
+          <span class="build-tag">Winch</span>
+          <span class="build-tag">Recovery</span>
+          <span class="build-tag">Bumper</span>
+        </div>
+        <div class="build-foot">
+          <div class="build-meta">
+            <span>📍 Dasmariñas</span>
+            <span>📅 Dec '25</span>
+          </div>
+          <span class="build-arrow">→</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="build-card">
+      <div class="build-thumb">
+        <div class="build-thumb-badge">Snorkel</div>
+        <img src="public/images/build-03.jpg" alt="build" />
+      </div>
+      <div class="build-body">
+        <div class="build-vehicle">Mitsubishi Strada GLS · 2023</div>
+        <div class="build-title">Safari Snorkel + Water Crossing Kit</div>
+        <div class="build-tags">
+          <span class="build-tag">Snorkel</span>
+          <span class="build-tag">Recovery</span>
+        </div>
+        <div class="build-foot">
+          <div class="build-meta">
+            <span>📍 Silang</span>
+            <span>📅 Dec '25</span>
+          </div>
+          <span class="build-arrow">→</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="build-card">
+      <div class="build-thumb">
+        <div class="build-thumb-badge">Lighting</div>
+        <img src="public/images/build-05.jpg" alt="build" />
+      </div>
+      <div class="build-body">
+        <div class="build-vehicle">Toyota Fortuner LTD · 2024</div>
+        <div class="build-title">Stedi LED Lighting Setup</div>
+        <div class="build-tags">
+          <span class="build-tag">Light Bar</span>
+          <span class="build-tag">Pod Lights</span>
+          <span class="build-tag">Wiring</span>
+        </div>
+        <div class="build-foot">
+          <div class="build-meta">
+            <span>📍 Trece Martires</span>
+            <span>📅 Nov '25</span>
+          </div>
+          <span class="build-arrow">→</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="build-card">
+      <div class="build-thumb">
+        <div class="build-thumb-badge">Full Build</div>
+        <img src="public/images/build-04.jpg" alt="build" />
+      </div>
+      <div class="build-body">
+        <div class="build-vehicle">Isuzu mu-X · 2024</div>
+        <div class="build-title">Complete Overland Build</div>
+        <div class="build-tags">
+          <span class="build-tag">Lift Kit</span>
+          <span class="build-tag">Bull Bar</span>
+          <span class="build-tag">Rack</span>
+          <span class="build-tag">Lighting</span>
+        </div>
+        <div class="build-foot">
+          <div class="build-meta">
+            <span>📍 Naic</span>
+            <span>📅 Nov '25</span>
+          </div>
+          <span class="build-arrow">→</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="build-card">
+      <div class="build-thumb">
+        <div class="build-thumb-badge">Recovery</div>
+        <img src="public/images/build-06.jpg" alt="build" />
+      </div>
+      <div class="build-body">
+        <div class="build-vehicle">Nissan Navara Pro-4X · 2024</div>
+        <div class="build-title">Recovery Gear + Roof Rack</div>
+        <div class="build-tags">
+          <span class="build-tag">Recovery</span>
+          <span class="build-tag">Rack</span>
+          <span class="build-tag">Storage</span>
+        </div>
+        <div class="build-foot">
+          <div class="build-meta">
+            <span>📍 Carmona</span>
+            <span>📅 Oct '25</span>
+          </div>
+          <span class="build-arrow">→</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="load-more">
+    <button class="btn-outline-gold">Load More Builds &nbsp;↓</button>
+  </div>
+
+</div>
+
+<!-- CTA BAND -->
+<section class="cta-band">
+  <div class="cta-inner">
+    <div class="cta-text">
+      <h2>Ready for your<br /><em>own build?</em></h2>
+      <p>Tell us about your truck and what you want done. We'll build you a free, no-obligation quote in under a day.</p>
+    </div>
+    <div class="cta-actions">
+      <a href="design-preview-booking.html" class="btn-gold">Book Your Build →</a>
+      <a href="design-preview-services.html" class="btn-ghost">Get a Quote</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<div class="footer-strip">
+  <span>© 2026 Eagles 4x4 Offroad. Dasmariñas, Cavite.</span>
+  <a href="design-preview.html">← Back to Homepage</a>
+</div>
+
+<div class="badge-preview">Builds Gallery Preview</div>
+
+<script>
+  // Filter chip toggle (visual only)
+  document.querySelectorAll('.chip').forEach(c => {
+    c.addEventListener('click', () => {
+      c.parentElement.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+      c.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

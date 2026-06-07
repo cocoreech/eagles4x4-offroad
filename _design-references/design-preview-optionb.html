@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Option B Preview — What We Do Section</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=Inter:wght@300;400;500;600;700;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:     #0A0A0A;
+      --surf:   #141414;
+      --surf2:  #1A1A1A;
+      --border: #222222;
+      --text:   #F5F5F5;
+      --muted:  #888888;
+      --gold:   #C9A84C;
+      --gold2:  #E2BC6A;
+      --olive:  #4A5240;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter';
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .badge-preview {
+      position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+      background: var(--gold); color: #000;
+      font-size: 10px; font-weight: 800; letter-spacing: 0.15em;
+      text-transform: uppercase; padding: 8px 16px; border-radius: 2px;
+    }
+
+    /* ── CONTEXT LABEL ── */
+    .context-bar {
+      background: var(--surf); border-bottom: 1px solid var(--border);
+      padding: 14px 48px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .context-bar span { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+    .context-bar strong { color: var(--gold); }
+
+    /* ── FAKE STATS BAR ABOVE (for context) ── */
+    .fake-stats {
+      background: var(--surf); border-bottom: 1px solid var(--border);
+      padding: 28px 48px;
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+    }
+    .fake-stat { text-align: center; border-right: 1px solid var(--border); padding: 0 24px; }
+    .fake-stat:last-child { border-right: none; }
+    .fake-stat-num { font-family: 'Playfair Display'; font-size: 36px; font-weight: 900; color: var(--gold); line-height: 1; }
+    .fake-stat-label { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+
+    /* ══════════════════════════════════════
+       OPTION B — WHAT WE DO (services grid)
+    ══════════════════════════════════════ */
+    .what-we-do {
+      padding: 88px 48px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Header row */
+    .wwd-header {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 56px;
+    }
+    .wwd-header-left {}
+    .wwd-kicker {
+      display: inline-flex; align-items: center; gap: 10px;
+      margin-bottom: 16px;
+    }
+    .kicker-line { width: 28px; height: 1.5px; background: var(--gold); }
+    .kicker-text { font-size: 10px; font-weight: 800; letter-spacing: 0.4em; text-transform: uppercase; color: var(--gold); }
+    .wwd-header h2 {
+      font-family: 'Playfair Display'; font-weight: 900;
+      font-size: clamp(40px, 5vw, 64px); line-height: 0.95;
+    }
+    .wwd-header h2 em { font-style: italic; color: var(--gold); display: block; }
+    .wwd-header-right {
+      text-align: right;
+    }
+    .wwd-header-right p {
+      font-size: 13px; color: var(--muted); max-width: 280px; line-height: 1.7; margin-bottom: 18px;
+    }
+    .btn-gold {
+      display: inline-block;
+      background: var(--gold); color: #000;
+      font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 12px 28px; border-radius: 2px;
+    }
+
+    /* 6-card grid */
+    .wwd-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: var(--border);
+    }
+    .wwd-card {
+      background: var(--surf);
+      padding: 40px 36px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: background 0.25s;
+    }
+    .wwd-card:hover { background: var(--surf2); }
+
+    /* Gold top accent line on hover */
+    .wwd-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: var(--gold);
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+    .wwd-card:hover::before { transform: scaleX(1); }
+
+    /* Ghost number watermark */
+    .wwd-ghost {
+      position: absolute; bottom: -16px; right: 16px;
+      font-family: 'Rajdhani'; font-weight: 700; font-size: 96px;
+      color: rgba(201,168,76,0.05); line-height: 1;
+      pointer-events: none; letter-spacing: -0.05em;
+    }
+
+    .wwd-icon {
+      width: 48px; height: 48px;
+      background: rgba(201,168,76,0.08);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      margin-bottom: 24px;
+    }
+    .wwd-card-num {
+      font-size: 9px; font-weight: 800; letter-spacing: 0.25em;
+      text-transform: uppercase; color: var(--gold);
+      margin-bottom: 10px;
+    }
+    .wwd-card h3 {
+      font-family: 'Playfair Display'; font-weight: 700;
+      font-size: 20px; color: var(--text);
+      margin-bottom: 10px; line-height: 1.2;
+      transition: color 0.2s;
+    }
+    .wwd-card:hover h3 { color: var(--gold); }
+    .wwd-card p {
+      font-size: 13px; color: var(--muted); line-height: 1.7;
+      margin-bottom: 20px;
+    }
+    .wwd-price {
+      font-size: 12px; font-weight: 700; color: rgba(201,168,76,0.7);
+      letter-spacing: 0.05em;
+    }
+    .wwd-price span { font-size: 10px; font-weight: 500; color: var(--muted); margin-right: 4px; text-transform: uppercase; letter-spacing: 0.1em; }
+
+    /* ── FAKE SERVICES BELOW (for context) ── */
+    .fake-next {
+      padding: 48px;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      border-top: 1px solid var(--border);
+    }
+    .fake-next p { font-size: 12px; color: var(--muted); letter-spacing: 0.08em; }
+    .fake-next strong { color: var(--surf2); }
+  </style>
+</head>
+<body>
+
+<!-- Context label -->
+<div class="context-bar">
+  <span>Scroll position: <strong>After Stats Bar</strong></span>
+  <span>Option B — "What We Do" services preview</span>
+</div>
+
+<!-- Fake stats above for context -->
+<div class="fake-stats">
+  <div class="fake-stat"><div class="fake-stat-num">500+</div><div class="fake-stat-label">Builds Completed</div></div>
+  <div class="fake-stat"><div class="fake-stat-num">8</div><div class="fake-stat-label">Years Experience</div></div>
+  <div class="fake-stat"><div class="fake-stat-num">4.9★</div><div class="fake-stat-label">Customer Rating</div></div>
+  <div class="fake-stat"><div class="fake-stat-num">PH</div><div class="fake-stat-label">Dasmariñas, Cavite</div></div>
+</div>
+
+<!-- ══ OPTION B — WHAT WE DO ══ -->
+<section class="what-we-do">
+
+  <div class="wwd-header">
+    <div class="wwd-header-left">
+      <div class="wwd-kicker">
+        <div class="kicker-line"></div>
+        <span class="kicker-text">Our Expertise</span>
+      </div>
+      <h2>What We<br /><em>Do Best.</em></h2>
+    </div>
+    <div class="wwd-header-right">
+      <p>Every service done in-house. No middlemen, no outsourcing — just our team and your truck.</p>
+      <a href="#" class="btn-gold">Book a Service →</a>
+    </div>
+  </div>
+
+  <div class="wwd-grid">
+
+    <div class="wwd-card">
+      <div class="wwd-ghost">01</div>
+      <div class="wwd-icon">🔧</div>
+      <div class="wwd-card-num">01 — Most Popular</div>
+      <h3>Lift Kits & Suspension</h3>
+      <p>Body lifts, suspension lifts, and full overhauls. We install and tune for real Philippine terrain.</p>
+      <div class="wwd-price"><span>From</span>₱15,000</div>
+    </div>
+
+    <div class="wwd-card">
+      <div class="wwd-ghost">02</div>
+      <div class="wwd-icon">🛡️</div>
+      <div class="wwd-card-num">02</div>
+      <h3>Bull Bars & Armor</h3>
+      <p>Custom-fabricated and brand-name bull bars. Winch-capable bumpers built to take the hit.</p>
+      <div class="wwd-price"><span>From</span>₱8,500</div>
+    </div>
+
+    <div class="wwd-card">
+      <div class="wwd-ghost">03</div>
+      <div class="wwd-icon">🪝</div>
+      <div class="wwd-card-num">03</div>
+      <h3>Winch & Recovery</h3>
+      <p>Warn, Runva, Factor 55 — professionally mounted, wired, and load-tested before you hit the trail.</p>
+      <div class="wwd-price"><span>From</span>₱12,000</div>
+    </div>
+
+    <div class="wwd-card">
+      <div class="wwd-ghost">04</div>
+      <div class="wwd-icon">💡</div>
+      <div class="wwd-card-num">04</div>
+      <h3>LED Light Bars</h3>
+      <p>Roof bars, bumper pods, rock lights — fully wired with switches, relays, and clean cable routing.</p>
+      <div class="wwd-price"><span>From</span>₱4,500</div>
+    </div>
+
+    <div class="wwd-card">
+      <div class="wwd-ghost">05</div>
+      <div class="wwd-icon">🚗</div>
+      <div class="wwd-card-num">05</div>
+      <h3>Wheels & Tires</h3>
+      <p>OX, Fuel, Method wheels paired with BFG, Maxxis, and Nitto offroad rubber. We size for your lift.</p>
+      <div class="wwd-price"><span>From</span>₱12,000</div>
+    </div>
+
+    <div class="wwd-card">
+      <div class="wwd-ghost">06</div>
+      <div class="wwd-icon">⚙️</div>
+      <div class="wwd-card-num">06 — Premium</div>
+      <h3>Full Build Packages</h3>
+      <p>Your dream rig, fully realized. Sourcing, fabrication, install, final tuning — one team, one build.</p>
+      <div class="wwd-price"><span>From</span>₱80,000</div>
+    </div>
+
+  </div>
+
+</section>
+
+<!-- Context label below -->
+<div class="fake-next">
+  <p>↓ &nbsp; Services section continues below this point</p>
+</div>
+
+<div class="badge-preview">Option B Preview</div>
+
+</body>
+</html>

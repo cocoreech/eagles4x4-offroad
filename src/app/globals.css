@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────────
+   Tactical Gold design tokens (locked Phase 3 palette)
+   ───────────────────────────────────────────── */
+:root {
+  --color-bg:             #0A0A0A;
+  --color-surface:        #141414;
+  --color-surface-2:      #1A1A1A;
+  --color-border:         #222222;
+  --color-border-2:       #2A2A2A;
+  --color-accent:         #C9A84C;  /* gold */
+  --color-accent-hover:   #E2BC6A;  /* gold light */
+  --color-secondary:      #4A5240;  /* olive */
+  --color-text-primary:   #F5F5F5;
+  --color-text-muted:     #888888;
+  --color-text-muted-2:   #555555;
+  --color-destructive:    #ef4444;
+  --color-success:        #22c55e;
+}
+
+html, body {
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-body), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: #000;
+}
+
+/* Brand text uses Rajdhani */
+.font-brand {
+  font-family: var(--font-brand), system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
