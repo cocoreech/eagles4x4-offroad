@@ -12,10 +12,10 @@ import { cancelMyBooking } from './actions'
 export default function BookingActions({
   bookingCode,
   status,
-}: {
+}: Readonly<{
   bookingCode: string
   status: string
-}) {
+}>) {
   const editable = status === 'pending' || status === 'confirmed'
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)

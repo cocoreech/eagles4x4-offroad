@@ -30,7 +30,7 @@ const CATEGORIES = [
   { value: 'protection',   label: 'Protection' },
 ]
 
-export default function ProductForm({ initial }: { initial?: Product }) {
+export default function ProductForm({ initial }: Readonly<{ initial?: Product }>) {
   const isEdit = !!initial?.id
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
@@ -140,10 +140,10 @@ export default function ProductForm({ initial }: { initial?: Product }) {
 
 function Field({
   name, label, type = 'text', defaultValue, placeholder, required, multiline, help,
-}: {
+}: Readonly<{
   name: string; label: string; type?: string; defaultValue?: string; placeholder?: string;
   required?: boolean; multiline?: boolean; help?: string
-}) {
+}>) {
   const styles = {
     background: 'var(--color-bg)',
     border: '1px solid var(--color-border)',
@@ -168,9 +168,9 @@ function Field({
 
 function Select({
   name, label, children, required, defaultValue,
-}: {
+}: Readonly<{
   name: string; label: string; children: React.ReactNode; required?: boolean; defaultValue?: string
-}) {
+}>) {
   return (
     <label className="block">
       <span className="block text-[10px] font-bold tracking-[0.15em] uppercase mb-2" style={{ color: 'var(--color-text-muted)' }}>

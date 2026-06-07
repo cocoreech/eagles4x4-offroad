@@ -3,7 +3,7 @@
 import { useTransition } from 'react'
 import { setFeatured } from './actions'
 
-export default function FeaturedToggle({ id, isFeatured }: { id: string; isFeatured: boolean }) {
+export default function FeaturedToggle({ id, isFeatured }: Readonly<{ id: string; isFeatured: boolean }>) {
   const [pending, startTransition] = useTransition()
 
   function toggle() {

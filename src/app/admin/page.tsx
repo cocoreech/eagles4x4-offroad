@@ -124,7 +124,7 @@ export default async function AdminHomePage() {
   )
 }
 
-function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function Stat({ label, value, accent }: Readonly<{ label: string; value: string; accent?: boolean }>) {
   return (
     <div
       className="rounded-md p-5"
@@ -148,9 +148,9 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
 
 function Tile({
   href, title, desc, count, ready, comingSoon,
-}: {
+}: Readonly<{
   href: string; title: string; desc: string; count?: string; ready?: boolean; comingSoon?: boolean;
-}) {
+}>) {
   const body = (
     <div
       className="block rounded-md p-5 transition h-full"

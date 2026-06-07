@@ -9,7 +9,7 @@ import BrandMark from '@/components/BrandMark'
 
 export const dynamic = 'force-dynamic'
 
-export default async function EditBuildPage({ params }: { params: { id: string } }) {
+export default async function EditBuildPage({ params }: Readonly<{ params: { id: string } }>) {
   await requireAdmin()
   const supabase = createClient()
 

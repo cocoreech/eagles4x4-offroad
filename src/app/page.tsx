@@ -549,7 +549,7 @@ function Ticker() {
   )
 }
 
-function Stat({ num, label, note }: { num: string; label: string; note: string }) {
+function Stat({ num, label, note }: Readonly<{ num: string; label: string; note: string }>) {
   return (
     <div
       className="px-6 py-10 border-r border-b md:border-b-0"
@@ -567,7 +567,7 @@ function Stat({ num, label, note }: { num: string; label: string; note: string }
   )
 }
 
-function FooterCol({ title, items }: { title: string; items: string[] }) {
+function FooterCol({ title, items }: Readonly<{ title: string; items: string[] }>) {
   return (
     <div>
       <h4 className="text-[10px] font-bold uppercase mb-5" style={{ letterSpacing: '0.2em' }}>

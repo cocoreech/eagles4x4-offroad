@@ -27,7 +27,7 @@ type Build = {
   tags?: string[] | null
 }
 
-export default function BuildForm({ initial }: { initial?: Build }) {
+export default function BuildForm({ initial }: Readonly<{ initial?: Build }>) {
   const isEdit = !!initial?.id
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
@@ -188,10 +188,10 @@ export default function BuildForm({ initial }: { initial?: Build }) {
 
 function Field({
   name, label, type = 'text', defaultValue, placeholder, required, multiline, help,
-}: {
+}: Readonly<{
   name: string; label: string; type?: string; defaultValue?: string; placeholder?: string;
   required?: boolean; multiline?: boolean; help?: string
-}) {
+}>) {
   const styles = {
     background: 'var(--color-bg)',
     border: '1px solid var(--color-border)',

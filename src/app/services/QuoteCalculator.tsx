@@ -277,7 +277,7 @@ export default function QuoteCalculator({ services, products, isSignedIn }: Prop
 
 function TabBtn({
   active, onClick, count, children,
-}: { active: boolean; onClick: () => void; count: number; children: React.ReactNode }) {
+}: Readonly<{ active: boolean; onClick: () => void; count: number; children: React.ReactNode }>) {
   return (
     <button
       type="button"
@@ -309,7 +309,7 @@ function TabBtn({
 
 function PickCard({
   picked, onClick, title, meta, desc, priceLabel, imageUrl,
-}: {
+}: Readonly<{
   picked: boolean
   onClick: () => void
   title: string
@@ -317,7 +317,7 @@ function PickCard({
   desc: string | null
   priceLabel: string
   imageUrl: string | null
-}) {
+}>) {
   return (
     <button
       type="button"
@@ -382,7 +382,7 @@ function PickCard({
   )
 }
 
-function CartSection({ label, children }: { label: string; children: React.ReactNode }) {
+function CartSection({ label, children }: Readonly<{ label: string; children: React.ReactNode }>) {
   return (
     <div className="mb-4">
       <div className="text-[9px] font-bold tracking-widest uppercase mb-2" style={{ color: 'var(--color-text-muted)' }}>
@@ -393,7 +393,7 @@ function CartSection({ label, children }: { label: string; children: React.React
   )
 }
 
-function CartRow({ name, priceLabel, onRemove }: { name: string; priceLabel: string; onRemove: () => void }) {
+function CartRow({ name, priceLabel, onRemove }: Readonly<{ name: string; priceLabel: string; onRemove: () => void }>) {
   return (
     <div className="flex items-start justify-between gap-3">
       <div className="min-w-0">
@@ -413,7 +413,7 @@ function CartRow({ name, priceLabel, onRemove }: { name: string; priceLabel: str
   )
 }
 
-function EmptyState({ label }: { label: string }) {
+function EmptyState({ label }: Readonly<{ label: string }>) {
   return (
     <div
       className="col-span-full text-center p-8 rounded-md text-[13px]"

@@ -3,7 +3,7 @@
 import { useTransition } from 'react'
 import { activateProduct, deactivateProduct } from './actions'
 
-export default function ToggleActiveButton({ id, isActive }: { id: string; isActive: boolean }) {
+export default function ToggleActiveButton({ id, isActive }: Readonly<{ id: string; isActive: boolean }>) {
   const [pending, startTransition] = useTransition()
 
   function toggle() {

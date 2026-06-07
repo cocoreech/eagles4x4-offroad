@@ -35,11 +35,11 @@ export default function BookingForm({
   services,
   products,
   defaultEmail,
-}: {
+}: Readonly<{
   services: Service[]
   products: Product[]
   defaultEmail: string
-}) {
+}>) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [prefilledNotes, setPrefilledNotes] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
@@ -250,7 +250,7 @@ function Field({
   inputMode,
   pattern,
   title,
-}: {
+}: Readonly<{
   label: string
   name: string
   type?: string
@@ -261,7 +261,7 @@ function Field({
   inputMode?: 'text' | 'tel' | 'numeric' | 'email'
   pattern?: string
   title?: string
-}) {
+}>) {
   const sharedStyle = {
     background: 'var(--color-bg)',
     border: '1px solid var(--color-border)',

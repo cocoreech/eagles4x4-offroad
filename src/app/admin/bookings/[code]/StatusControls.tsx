@@ -23,11 +23,11 @@ export default function StatusControls({
   bookingId,
   bookingCode,
   currentStatus,
-}: {
+}: Readonly<{
   bookingId: string
   bookingCode: string
   currentStatus: string
-}) {
+}>) {
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 

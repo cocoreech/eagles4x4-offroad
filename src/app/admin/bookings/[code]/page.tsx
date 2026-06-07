@@ -17,7 +17,7 @@ const STATUS_LABEL: Record<string, string> = {
   ready: 'Ready', completed: 'Completed', cancelled: 'Cancelled',
 }
 
-export default async function AdminBookingDetailPage({ params }: { params: { code: string } }) {
+export default async function AdminBookingDetailPage({ params }: Readonly<{ params: { code: string } }>) {
   await requireAdmin()
   const supabase = createClient()
 
@@ -173,7 +173,7 @@ export default async function AdminBookingDetailPage({ params }: { params: { cod
   )
 }
 
-function Card({ title, children, className = '' }: { title: string; children: React.ReactNode; className?: string }) {
+function Card({ title, children, className = '' }: Readonly<{ title: string; children: React.ReactNode; className?: string }>) {
   return (
     <div className={`rounded-md p-5 ${className}`}
          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
@@ -184,7 +184,7 @@ function Card({ title, children, className = '' }: { title: string; children: Re
   )
 }
 
-function Row({ label, value, bold }: { label: string; value: string | null | undefined; bold?: boolean }) {
+function Row({ label, value, bold }: Readonly<{ label: string; value: string | null | undefined; bold?: boolean }>) {
   if (!value) return null
   return (
     <div className="flex justify-between py-1 text-sm">

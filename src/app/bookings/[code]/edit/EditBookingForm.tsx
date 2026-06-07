@@ -37,11 +37,11 @@ export default function EditBookingForm({
   bookingCode,
   services,
   initial,
-}: {
+}: Readonly<{
   bookingCode: string
   services: Service[]
   initial: Initial
-}) {
+}>) {
   const [selected, setSelected] = useState<Set<string>>(new Set(initial.serviceIds))
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
@@ -166,7 +166,7 @@ export default function EditBookingForm({
 }
 
 // PhoneInput tries to be smart for amendments — assumes existing number is PH if no + prefix
-function PhoneRebuilt({ initial }: { initial: string }) {
+function PhoneRebuilt({ initial }: Readonly<{ initial: string }>) {
   const isE164 = initial.startsWith('+')
   // Default to +63 if not E.164
   const initialDial = isE164 ? initial.slice(0, 3) : '+63'
@@ -201,9 +201,9 @@ function PhoneRebuilt({ initial }: { initial: string }) {
 
 function Field({
   label, name, type = 'text', defaultValue, multiline, required,
-}: {
+}: Readonly<{
   label: string; name: string; type?: string; defaultValue?: string; multiline?: boolean; required?: boolean
-}) {
+}>) {
   const styles = {
     background: 'var(--color-bg)',
     border: '1px solid var(--color-border)',
@@ -225,7 +225,7 @@ function Field({
   )
 }
 
-function ReadonlyField({ label, name, value }: { label: string; name: string; value: string }) {
+function ReadonlyField({ label, name, value }: Readonly<{ label: string; name: string; value: string }>) {
   return (
     <label className="block">
       <span className="block text-[10px] font-bold tracking-widest uppercase mb-2" style={{ color: 'var(--color-text-muted)' }}>

@@ -28,10 +28,10 @@ type Availability =
 export default function DateTimePicker({
   dateName  = 'scheduledDate',
   timeName  = 'scheduledTime',
-}: {
+}: Readonly<{
   dateName?: string
   timeName?: string
-}) {
+}>) {
   // Default to tomorrow (lets us avoid same-day rush)
   const [date, setDate] = useState<string>(() => {
     const d = new Date()

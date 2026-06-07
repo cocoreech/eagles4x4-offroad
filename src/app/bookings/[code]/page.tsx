@@ -24,7 +24,7 @@ const STATUS_LABEL: Record<string, string> = {
   cancelled:        'Cancelled',
 }
 
-export default async function BookingDetailPage({ params }: { params: { code: string } }) {
+export default async function BookingDetailPage({ params }: Readonly<{ params: { code: string } }>) {
   await requireAuth()
   const supabase = createClient()
 
@@ -179,7 +179,7 @@ export default async function BookingDetailPage({ params }: { params: { code: st
   )
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children }: Readonly<{ title: string; children: React.ReactNode }>) {
   return (
     <div
       className="rounded-md p-6 mb-4"
@@ -193,7 +193,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function Row({ label, value }: { label: string; value: string | null | undefined }) {
+function Row({ label, value }: Readonly<{ label: string; value: string | null | undefined }>) {
   if (!value) return null
   return (
     <div className="flex justify-between py-2 text-sm">

@@ -80,7 +80,7 @@ export default async function ServicesPage() {
   )
 }
 
-function Pillar({ n, title, desc, last }: { n: string; title: string; desc: string; last?: boolean }) {
+function Pillar({ n, title, desc, last }: Readonly<{ n: string; title: string; desc: string; last?: boolean }>) {
   return (
     <div
       className="p-12"

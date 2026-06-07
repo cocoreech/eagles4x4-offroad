@@ -39,7 +39,7 @@ const STATUS_COLOR: Record<string, string> = {
 
 export default async function AdminBookingsPage({
   searchParams,
-}: { searchParams: { status?: string } }) {
+}: Readonly<{ searchParams: { status?: string } }>) {
   await requireAdmin()
   const supabase = createClient()
   const statusFilter = searchParams.status
@@ -180,9 +180,9 @@ export default async function AdminBookingsPage({
 
 function FilterChip({
   href, label, count, active, color,
-}: {
+}: Readonly<{
   href: string; label: string; count: number; active: boolean; color?: string;
-}) {
+}>) {
   return (
     <Link
       href={href}

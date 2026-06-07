@@ -211,7 +211,7 @@ export default function BulkForm() {
   )
 }
 
-function Th({ children, wide }: { children?: React.ReactNode; wide?: boolean }) {
+function Th({ children, wide }: Readonly<{ children?: React.ReactNode; wide?: boolean }>) {
   return (
     <th
       className={`text-left p-2 text-[9px] font-bold tracking-widest uppercase ${wide ? 'min-w-[150px]' : ''}`}
@@ -224,9 +224,9 @@ function Th({ children, wide }: { children?: React.ReactNode; wide?: boolean }) 
 
 function Input({
   value, onChange, placeholder, type = 'text',
-}: {
+}: Readonly<{
   value: string; onChange: (v: string) => void; placeholder?: string; type?: string
-}) {
+}>) {
   return (
     <input
       type={type}

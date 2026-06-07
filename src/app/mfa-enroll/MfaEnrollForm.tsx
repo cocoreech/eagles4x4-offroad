@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { verifyEnrollment } from './actions'
 
-export default function MfaEnrollForm({ factorId }: { factorId: string }) {
+export default function MfaEnrollForm({ factorId }: Readonly<{ factorId: string }>) {
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
 

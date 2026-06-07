@@ -23,7 +23,7 @@ function getIp(): string {
 
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { code: string } }
+  { params }: Readonly<{ params: { code: string } }>
 ) {
   const user = await requireAuth()
 
