@@ -195,6 +195,9 @@ export default function QuoteCalculator({ services, products, isSignedIn }: Prop
               </p>
             ) : (
               <>
+                {/* Scrollable item list — keeps the total + CTA in view no
+                    matter how many items are picked. */}
+                <div className="max-h-[48vh] overflow-y-auto -mr-3 pr-3">
                 {pickedServices.size > 0 && (
                   <CartSection label="Services">
                     {services.filter(s => pickedServices.has(s.slug)).map(s => (
@@ -219,6 +222,7 @@ export default function QuoteCalculator({ services, products, isSignedIn }: Prop
                     ))}
                   </CartSection>
                 )}
+                </div>
 
                 <div
                   className="mt-5 pt-5 flex items-baseline justify-between"
