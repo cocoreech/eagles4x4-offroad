@@ -40,3 +40,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local AI assistant / editor tooling
+.agents/
+.claude/
+.vscode/
+skills-lock.json
