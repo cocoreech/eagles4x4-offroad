@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function MfaEnrollPage() {
   await requireAuth()
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // If a TOTP factor is already verified, skip enrollment — they just need to challenge.
   const { data: factors } = await supabase.auth.mfa.listFactors()

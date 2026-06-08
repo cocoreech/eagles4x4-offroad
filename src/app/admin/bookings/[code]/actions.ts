@@ -26,15 +26,15 @@ const advanceSchema = z.object({
   newStatus: z.enum([...STATUS_PIPELINE, 'cancelled']),
 })
 
-function getIp(): string {
-  const h = headers()
+async function getIp(): Promise<string> {
+  const h = await headers()
   const xff = h.get('x-forwarded-for')
   if (xff) return xff.split(',')[0].trim()
   return h.get('x-real-ip') ?? '0.0.0.0'
 }
 
 async function adminRateGuard(actor: string) {
-  const result = await checkLimit(rlAdminGeneral, `admin-action:${actor}:${getIp()}`)
+  const result = await checkLimit(rlAdminGeneral, `admin-action:${actor}:${await getIp()}`)
   return result.allowed
 }
 
@@ -53,7 +53,7 @@ export async function advanceStatus(formData: FormData) {
   })
   if (!parsed.success) return { error: 'Invalid status change.' }
 
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Set completed_at if transitioning to completed
   const updates: Record<string, unknown> = { status: parsed.data.newStatus }
@@ -90,7 +90,7 @@ export async function cancelBookingAdmin(formData: FormData) {
     return { error: 'Invalid booking.' }
   }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase
     .from('bookings')
     .update({ status: 'cancelled' })

@@ -8,7 +8,7 @@ import { createClient } from '@/utils/supabase/server'
 import BrandMark from './BrandMark'
 
 export default async function PublicNav() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   let isAdmin = false

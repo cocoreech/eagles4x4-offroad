@@ -4,7 +4,7 @@
 // Returns a fresh client per request so it reads/writes the right cookies.
 // JWT is stored in httpOnly cookies — never localStorage.
 
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
@@ -13,47 +13,34 @@ import { cookies } from 'next/headers'
  * Reads the user's session from httpOnly cookies set by the browser.
  * Returns a per-request client — do not memoize across requests.
  */
-export function createClient() {
-  const cookieStore = cookies()
+export async function createClient() {
+  const cookieStore = await cookies()
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
+        getAll() {
+          return cookieStore.getAll()
         },
-        set(name: string, value: string, options: CookieOptions) {
+        setAll(cookiesToSet) {
           try {
-            cookieStore.set({
-              name,
-              value,
-              ...options,
-              // Hardened cookie defaults — Supabase already sets these
-              // but we re-assert them for defense-in-depth.
-              httpOnly: true,
-              secure: process.env.NODE_ENV === 'production',
-              sameSite: 'lax',
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set({
+                ...options,
+                name,
+                value,
+                // Hardened cookie defaults — Supabase already sets these
+                // but we re-assert them for defense-in-depth.
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+              })
             })
           } catch {
             // Server Component context: cookies are read-only.
             // The middleware refresh handles cookie writes — safe to ignore.
-          }
-        },
-        remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.set({
-              name,
-              value: '',
-              ...options,
-              httpOnly: true,
-              secure: process.env.NODE_ENV === 'production',
-              sameSite: 'lax',
-              maxAge: 0,
-            })
-          } catch {
-            // Same Server Component limitation — ignore.
           }
         },
       },

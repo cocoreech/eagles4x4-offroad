@@ -19,14 +19,14 @@ import { createClient } from '@/utils/supabase/server'
 import { sanitizeText, sanitizeMultiline } from '@/lib/sanitize'
 import { rlAdminGeneral, checkLimit } from '@/utils/ratelimit'
 
-function getIp(): string {
-  const h = headers()
+async function getIp(): Promise<string> {
+  const h = await headers()
   const xff = h.get('x-forwarded-for')
   if (xff) return xff.split(',')[0].trim()
   return h.get('x-real-ip') ?? '0.0.0.0'
 }
 async function adminRateGuard(userId: string) {
-  const result = await checkLimit(rlAdminGeneral, `builds-action:${userId}:${getIp()}`)
+  const result = await checkLimit(rlAdminGeneral, `builds-action:${userId}:${await getIp()}`)
   return result.allowed
 }
 
@@ -71,7 +71,7 @@ const buildSchema = z.object({
     return s.split(',')
       .map(t => sanitizeText(t, 30))
       .filter(t => t.length > 0 && /^[a-zA-Z0-9 .&\-'/]+$/.test(t))
-      .slice(0, 12)
+      .slice(0, 12);
   }),
 })
 
@@ -106,7 +106,7 @@ export async function createBuild(formData: FormData) {
   }
   const d = parsed.data
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.from('builds').insert({
     slug:               d.slug,
     title:              d.title,
@@ -147,7 +147,7 @@ export async function updateBuild(formData: FormData) {
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid input' }
   const d = parsed.data
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.from('builds').update({
     slug:               d.slug,
     title:              d.title,
@@ -186,7 +186,7 @@ export async function deleteBuild(formData: FormData) {
   const id = String(formData.get('id') ?? '')
   if (!z.string().uuid().safeParse(id).success) return { error: 'Invalid build id.' }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.from('builds').delete().eq('id', id)
   if (error) return { error: 'Could not delete.' }
 
@@ -214,7 +214,7 @@ export async function setFeatured(formData: FormData) {
   })
   if (!parsed.success) return { error: 'Invalid input' }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase
     .from('builds')
     .update({ is_featured: parsed.data.isFeatured })

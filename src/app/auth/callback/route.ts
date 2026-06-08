@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   const type = url.searchParams.get('type')
   const next = url.searchParams.get('next') ?? '/'
 
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // ── 1. OAuth / PKCE code flow ─────────────────────────────
   if (code) {

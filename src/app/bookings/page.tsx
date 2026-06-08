@@ -33,7 +33,7 @@ const STATUS_COLOR: Record<string, string> = {
 
 export default async function MyBookingsPage() {
   await requireAuth()
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // RLS limits this to the user's own bookings.
   const { data: bookings } = await supabase

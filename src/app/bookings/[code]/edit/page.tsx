@@ -14,9 +14,10 @@ import BrandMark from '@/components/BrandMark'
 
 export const dynamic = 'force-dynamic'
 
-export default async function EditBookingPage({ params }: Readonly<{ params: { code: string } }>) {
+export default async function EditBookingPage(props: Readonly<{ params: Promise<{ code: string }> }>) {
+  const params = await props.params;
   const user = await requireAuth()
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data: booking } = await supabase
     .from('bookings')

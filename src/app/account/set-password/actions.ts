@@ -32,8 +32,8 @@ const passwordSchema = z.object({
   path: ['confirm'],
 })
 
-function getIp(): string {
-  const h = headers()
+async function getIp(): Promise<string> {
+  const h = await headers()
   const xff = h.get('x-forwarded-for')
   if (xff) return xff.split(',')[0].trim()
   return h.get('x-real-ip') ?? '0.0.0.0'
@@ -51,13 +51,13 @@ export async function setPassword(formData: FormData) {
   }
 
   // Rate limit by user — same as reset-password rules
-  const ip = getIp()
+  const ip = await getIp()
   const rl = await checkLimit(rlAuthResetPassword, `set-password:${user.id}:${ip}`)
   if (!rl.allowed) {
     return { error: 'Too many password changes. Please wait a few minutes.' }
   }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.auth.updateUser({
     password: parsed.data.password,
   })

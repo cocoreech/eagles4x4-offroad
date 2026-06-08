@@ -17,9 +17,10 @@ const STATUS_LABEL: Record<string, string> = {
   ready: 'Ready', completed: 'Completed', cancelled: 'Cancelled',
 }
 
-export default async function AdminBookingDetailPage({ params }: Readonly<{ params: { code: string } }>) {
+export default async function AdminBookingDetailPage(props: Readonly<{ params: Promise<{ code: string }> }>) {
+  const params = await props.params;
   await requireAdmin()
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data: booking } = await supabase
     .from('bookings')

@@ -22,8 +22,8 @@ import { normalizeE164, getCountryByDial } from '@/lib/phone'
 import { isValidMakeModel, ALLOWED_MAKES } from '@/lib/vehicles'
 import { rlServerAction, checkLimit } from '@/utils/ratelimit'
 
-function getIp(): string {
-  const h = headers()
+async function getIp(): Promise<string> {
+  const h = await headers()
   const xff = h.get('x-forwarded-for')
   if (xff) return xff.split(',')[0].trim()
   return h.get('x-real-ip') ?? '0.0.0.0'
@@ -42,13 +42,13 @@ const cancelSchema = z.object({
 export async function cancelMyBooking(formData: FormData) {
   const user = await requireAuth()
   // Rate-limit per user — prevents spamming cancel
-  const rl = await checkLimit(rlServerAction, `cancel:${user.id}:${getIp()}`)
+  const rl = await checkLimit(rlServerAction, `cancel:${user.id}:${await getIp()}`)
   if (!rl.allowed) return { error: 'Too many requests. Wait a moment and try again.' }
 
   const parsed = cancelSchema.safeParse({ bookingCode: formData.get('bookingCode') })
   if (!parsed.success) return { error: 'Invalid booking.' }
 
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Fetch the booking — RLS ensures we can only get our own
   const { data: booking } = await supabase
@@ -128,7 +128,7 @@ const amendSchema = z.object({
 export async function amendMyBooking(formData: FormData) {
   const user = await requireAuth()
   // Rate-limit per user — prevents amendment spam
-  const rl = await checkLimit(rlServerAction, `amend:${user.id}:${getIp()}`)
+  const rl = await checkLimit(rlServerAction, `amend:${user.id}:${await getIp()}`)
   if (!rl.allowed) return { error: 'Too many requests. Wait a moment and try again.' }
 
   const serviceIds = formData.getAll('serviceIds').map(String)
@@ -151,7 +151,7 @@ export async function amendMyBooking(formData: FormData) {
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid input' }
   const d = parsed.data
 
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Verify ownership + edit allowed
   const { data: booking } = await supabase

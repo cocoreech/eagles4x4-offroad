@@ -79,8 +79,8 @@ const schema = z.object({
   }
 })
 
-function getIp(): string {
-  const h = headers()
+async function getIp(): Promise<string> {
+  const h = await headers()
   const xff = h.get('x-forwarded-for')
   if (xff) return xff.split(',')[0].trim()
   return h.get('x-real-ip') ?? '0.0.0.0'
@@ -110,14 +110,14 @@ export async function createBooking(formData: FormData) {
   const d = parsed.data
 
   // 2. Read the signed-in user from the JWT (never trust the form for identity)
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return { error: 'Please sign in to book a service.' }
   }
 
   // 3. Rate-limit per user
-  const ip = getIp()
+  const ip = await getIp()
   const rl = await checkLimit(rlServerAction, `user:${user.id}:${ip}`)
   if (!rl.allowed) {
     return { error: 'Too many requests. Try again in a moment.' }

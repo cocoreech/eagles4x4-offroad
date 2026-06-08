@@ -27,7 +27,7 @@ export async function setBuildCoverImage(formData: FormData) {
   })
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid input' }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase
     .from('builds')
     .update({ cover_image_url: parsed.data.imageUrl || null })

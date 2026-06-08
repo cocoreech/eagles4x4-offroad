@@ -23,8 +23,8 @@ const codeSchema = z.object({
   code: z.string().regex(/^\d{4,8}$/, 'Code must be 4-8 digits'),
 })
 
-function getIp(): string {
-  const h = headers()
+async function getIp(): Promise<string> {
+  const h = await headers()
   const xff = h.get('x-forwarded-for')
   if (xff) return xff.split(',')[0].trim()
   return h.get('x-real-ip') ?? '0.0.0.0'
@@ -43,7 +43,7 @@ export async function verifyMfa(formData: FormData) {
   }
 
   // Rate limit by IP AND user — prevents brute-force of the TOTP code
-  const ip = getIp()
+  const ip = await getIp()
   const rlIp   = await checkLimit(rlAuthOtp, `mfa:ip:${ip}`)
   const rlUser = await checkLimit(rlAuthOtp, `mfa:user:${user.id}`)
   if (!rlIp.allowed || !rlUser.allowed) {
@@ -52,7 +52,7 @@ export async function verifyMfa(formData: FormData) {
     return { error: 'Too many attempts. Try again in a few minutes.' }
   }
 
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // 1. List enrolled factors. We use the first verified TOTP.
   const { data: factors, error: factorsErr } = await supabase.auth.mfa.listFactors()

@@ -22,8 +22,8 @@ const otpSchema = z.object({
   token: z.string().regex(/^\d{4,8}$/, 'Code must be 4–8 digits'),
 })
 
-function getIp(): string {
-  const h = headers()
+async function getIp(): Promise<string> {
+  const h = await headers()
   const xff = h.get('x-forwarded-for')
   if (xff) return xff.split(',')[0].trim()
   return h.get('x-real-ip') ?? '0.0.0.0'
@@ -40,7 +40,7 @@ export async function sendOtp(formData: FormData) {
   const { email } = parsed.data
 
   // Email + IP combined rate limit (our app-level)
-  const ip = getIp()
+  const ip = await getIp()
   const rl = await checkAuthLimit(rlAuthOtp, ip, email)
   if (!rl.allowed) {
     return { error: 'Too many requests. Try again later.' }
@@ -57,7 +57,7 @@ export async function sendOtp(formData: FormData) {
     }
   }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
@@ -108,13 +108,13 @@ export async function verifyOtp(formData: FormData) {
   }
   const { email, token } = parsed.data
 
-  const ip = getIp()
+  const ip = await getIp()
   const rl = await checkAuthLimit(rlAuthOtp, ip, email)
   if (!rl.allowed) {
     return { error: 'Too many attempts. Try again later.' }
   }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.auth.verifyOtp({
     email,
     token,

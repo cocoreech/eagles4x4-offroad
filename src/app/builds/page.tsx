@@ -7,7 +7,7 @@ import PublicNav from '@/components/PublicNav'
 export const dynamic = 'force-dynamic'
 
 export default async function BuildsPage() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: builds } = await supabase
     .from('builds')
     .select('id, slug, title, vehicle_make, vehicle_model, vehicle_year, location, cover_image_url, tags')

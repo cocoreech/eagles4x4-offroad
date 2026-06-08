@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function AdminProductsPage() {
   await requireAdmin()
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data: products } = await supabase
     .from('products')

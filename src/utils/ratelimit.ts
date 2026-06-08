@@ -173,7 +173,7 @@ export async function checkUniqueEmailsPerIp(
   // SADD is idempotent — adding the same email twice doesn't grow the set.
   await redis.sadd(key, email.toLowerCase())
   await redis.expire(key, UNIQUE_EMAILS_WINDOW)
-  const count = (await redis.scard(key)) as number
+  const count = await redis.scard(key)
   return {
     allowed: count <= UNIQUE_EMAILS_LIMIT,
     current: count,
@@ -190,16 +190,31 @@ export async function checkUniqueEmailsPerIp(
 const AI_CUSTOMER_DAILY_GENERATIONS = 3       // 3 AI replies/day per customer
 const AI_CUSTOMER_DAILY_USD_CAP     = 0.05    // ~₱3 per customer per day
 const AI_ADMIN_DAILY_GENERATIONS    = 20      // 20 drafts/day per admin
-const AI_ADMIN_DAILY_USD_CAP        = 0.50    // ~₱30 per admin per day
-const AI_SYSTEM_DAILY_USD_CAP       = 3.00    // ~₱180 platform-wide ceiling
+const AI_ADMIN_DAILY_USD_CAP        = 0.5     // ~₱30 per admin per day
+const AI_SYSTEM_DAILY_USD_CAP       = 3       // ~₱180 platform-wide ceiling
 
 const DAY_SECONDS = 24 * 60 * 60
+
+type AiScope = 'customer' | 'admin' | 'system'
+
+// Per-scope daily limits. 'system' is the platform-wide ceiling: no per-
+// generation count limit, only the dollar cap applies.
+const AI_GENERATION_LIMITS: Record<AiScope, number> = {
+  customer: AI_CUSTOMER_DAILY_GENERATIONS,
+  admin: AI_ADMIN_DAILY_GENERATIONS,
+  system: Infinity,
+}
+const AI_USD_CAPS: Record<AiScope, number> = {
+  customer: AI_CUSTOMER_DAILY_USD_CAP,
+  admin: AI_ADMIN_DAILY_USD_CAP,
+  system: AI_SYSTEM_DAILY_USD_CAP,
+}
 
 // Check how many AI generations a user has used today + their dollar spend.
 // Returns whether the next generation should be allowed.
 export async function checkAiBudget(
-  scope: 'customer' | 'admin' | 'system',
-  userId: string | 'system'
+  scope: AiScope,
+  userId: string
 ): Promise<{ allowed: boolean; reason?: string; usedUsd: number; capUsd: number }> {
   if (!hasUpstashEnv) {
     return { allowed: true, usedUsd: 0, capUsd: 0 }
@@ -215,15 +230,8 @@ export async function checkAiBudget(
   const gens = Number(gensRaw ?? 0)
   const usd  = Number(usdRaw ?? 0)
 
-  const generationLimit =
-    scope === 'customer' ? AI_CUSTOMER_DAILY_GENERATIONS
-    : scope === 'admin'  ? AI_ADMIN_DAILY_GENERATIONS
-    : Infinity
-
-  const usdCap =
-    scope === 'customer' ? AI_CUSTOMER_DAILY_USD_CAP
-    : scope === 'admin'  ? AI_ADMIN_DAILY_USD_CAP
-    : AI_SYSTEM_DAILY_USD_CAP
+  const generationLimit = AI_GENERATION_LIMITS[scope]
+  const usdCap = AI_USD_CAPS[scope]
 
   if (gens >= generationLimit) {
     return { allowed: false, reason: 'generation_limit', usedUsd: usd, capUsd: usdCap }
@@ -236,8 +244,8 @@ export async function checkAiBudget(
 
 // Record AI usage after a generation completes (called server-side only).
 export async function recordAiUsage(
-  scope: 'customer' | 'admin' | 'system',
-  userId: string | 'system',
+  scope: AiScope,
+  userId: string,
   costUsd: number
 ): Promise<void> {
   if (!hasUpstashEnv) return

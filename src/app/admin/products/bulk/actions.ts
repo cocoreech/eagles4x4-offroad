@@ -19,8 +19,8 @@ import { createClient } from '@/utils/supabase/server'
 import { sanitizeText, sanitizeMultiline } from '@/lib/sanitize'
 import { rlAdminGeneral, checkLimit } from '@/utils/ratelimit'
 
-function getIp(): string {
-  const h = headers()
+async function getIp(): Promise<string> {
+  const h = await headers()
   const xff = h.get('x-forwarded-for')
   if (xff) return xff.split(',')[0].trim()
   return h.get('x-real-ip') ?? '0.0.0.0'
@@ -50,7 +50,7 @@ export async function bulkCreateProducts(formData: FormData) {
 
   // Rate-limit per admin — bulk imports are expensive, don't let
   // a runaway/compromised admin script hammer this.
-  const rl = await checkLimit(rlAdminGeneral, `bulk-products:${user.id}:${getIp()}`)
+  const rl = await checkLimit(rlAdminGeneral, `bulk-products:${user.id}:${await getIp()}`)
   if (!rl.allowed) {
     return { error: 'Too many bulk imports. Please wait a few minutes.' }
   }
@@ -94,7 +94,7 @@ export async function bulkCreateProducts(formData: FormData) {
   }
 
   // Insert all in one go (transaction). image_url left null — admin adds individually.
-  const supabase = createClient()
+  const supabase = await createClient()
   const payload = validRows.map(r => ({
     slug:        r.slug,
     name:        r.name,

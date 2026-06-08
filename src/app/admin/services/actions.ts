@@ -15,14 +15,14 @@ import { createClient } from '@/utils/supabase/server'
 import { sanitizeText, sanitizeMultiline } from '@/lib/sanitize'
 import { rlAdminGeneral, checkLimit } from '@/utils/ratelimit'
 
-function getIp(): string {
-  const h = headers()
+async function getIp(): Promise<string> {
+  const h = await headers()
   const xff = h.get('x-forwarded-for')
   if (xff) return xff.split(',')[0].trim()
   return h.get('x-real-ip') ?? '0.0.0.0'
 }
 async function adminRateGuard(userId: string) {
-  const result = await checkLimit(rlAdminGeneral, `services-action:${userId}:${getIp()}`)
+  const result = await checkLimit(rlAdminGeneral, `services-action:${userId}:${await getIp()}`)
   return result.allowed
 }
 
@@ -70,7 +70,7 @@ export async function createService(formData: FormData) {
   }
   const d = parsed.data
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.from('services').insert({
     slug:           d.slug,
     name:           d.name,
@@ -107,7 +107,7 @@ export async function updateService(formData: FormData) {
   }
   const d = parsed.data
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.from('services').update({
     slug:           d.slug,
     name:           d.name,
@@ -141,7 +141,7 @@ export async function deactivateService(formData: FormData) {
   const id = String(formData.get('id') ?? '')
   if (!z.string().uuid().safeParse(id).success) return { error: 'Invalid service id.' }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.from('services').update({ is_active: false }).eq('id', id)
   if (error) return { error: 'Could not deactivate.' }
   revalidatePath('/admin/services')
@@ -154,7 +154,7 @@ export async function activateService(formData: FormData) {
   const id = String(formData.get('id') ?? '')
   if (!z.string().uuid().safeParse(id).success) return { error: 'Invalid service id.' }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.from('services').update({ is_active: true }).eq('id', id)
   if (error) return { error: 'Could not activate.' }
   revalidatePath('/admin/services')
@@ -181,7 +181,7 @@ export async function setServiceImage(formData: FormData) {
   })
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid input' }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase
     .from('services')
     .update({ image_url: parsed.data.imageUrl || null })

@@ -14,26 +14,24 @@ import { rlServerAction, checkLimit } from '@/utils/ratelimit'
 
 export const dynamic = 'force-dynamic'
 
-function getIp(): string {
-  const h = headers()
+async function getIp(): Promise<string> {
+  const h = await headers()
   const xff = h.get('x-forwarded-for')
   if (xff) return xff.split(',')[0].trim()
   return h.get('x-real-ip') ?? '0.0.0.0'
 }
 
-export async function POST(
-  _req: NextRequest,
-  { params }: Readonly<{ params: { code: string } }>
-) {
+export async function POST(_req: NextRequest, props: Readonly<{ params: Promise<{ code: string }> }>) {
+  const params = await props.params;
   const user = await requireAuth()
 
   // Rate-limit retry attempts
-  const rl = await checkLimit(rlServerAction, `retry-pay:${user.id}:${getIp()}`)
+  const rl = await checkLimit(rlServerAction, `retry-pay:${user.id}:${await getIp()}`)
   if (!rl.allowed) {
     return NextResponse.json({ error: 'Too many attempts. Wait a moment.' }, { status: 429 })
   }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   // RLS already filters — booking only returned if customer_id matches
   const { data: booking } = await supabase
     .from('bookings')

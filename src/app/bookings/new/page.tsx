@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function NewBookingPage() {
   const user = await requireAuth()
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Fetch active services + products for the form to pick from / prefill from a quote
   const [{ data: services }, { data: products }] = await Promise.all([

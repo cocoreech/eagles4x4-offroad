@@ -37,11 +37,10 @@ const STATUS_COLOR: Record<string, string> = {
   cancelled:        'var(--color-destructive)',
 }
 
-export default async function AdminBookingsPage({
-  searchParams,
-}: Readonly<{ searchParams: { status?: string } }>) {
+export default async function AdminBookingsPage(props: Readonly<{ searchParams: Promise<{ status?: string }> }>) {
+  const searchParams = await props.searchParams;
   await requireAdmin()
-  const supabase = createClient()
+  const supabase = await createClient()
   const statusFilter = searchParams.status
 
   let query = supabase

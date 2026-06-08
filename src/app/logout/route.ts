@@ -8,7 +8,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 
 export async function GET(req: Request) {
-  const supabase = createClient()
+  const supabase = await createClient()
   await supabase.auth.signOut()
   const url = new URL(req.url)
   return NextResponse.redirect(new URL('/', url.origin))

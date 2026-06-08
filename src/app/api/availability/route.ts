@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
   // Count bookings per slot using the SERVICE_ROLE client so we can see
   // ALL bookings on that date (RLS would otherwise hide other users').
   // We only return counts, never personally identifiable info.
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: bookings } = await supabase
     .from('bookings')
     .select('scheduled_time, status')

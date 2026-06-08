@@ -7,7 +7,7 @@ import PublicNav from '@/components/PublicNav'
 export const dynamic = 'force-dynamic'
 
 export default async function EventsPage() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: events } = await supabase
     .from('events')
     .select('id, slug, title, description, event_type, starts_at, ends_at, location, difficulty, cover_image_url')

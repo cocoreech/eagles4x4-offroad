@@ -24,9 +24,10 @@ const STATUS_LABEL: Record<string, string> = {
   cancelled:        'Cancelled',
 }
 
-export default async function BookingDetailPage({ params }: Readonly<{ params: { code: string } }>) {
+export default async function BookingDetailPage(props: Readonly<{ params: Promise<{ code: string }> }>) {
+  const params = await props.params;
   await requireAuth()
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // RLS: this query only returns the row if the booking belongs to the user.
   const { data: booking } = await supabase

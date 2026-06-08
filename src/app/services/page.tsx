@@ -11,7 +11,7 @@ import QuoteCalculator from './QuoteCalculator'
 export const dynamic = 'force-dynamic'
 
 export default async function ServicesPage() {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const [{ data: services }, { data: products }, { data: { user } }] = await Promise.all([
     supabase

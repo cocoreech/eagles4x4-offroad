@@ -288,6 +288,9 @@ export const config = {
      * - _next/static, _next/image, favicon.ico
      * - any path with a file extension (assets)
      */
-    String.raw`/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2|ttf|eot)$).*)`,
+    // Plain string (not String.raw) so Next.js can statically parse the matcher,
+    // and a `[.]` character class instead of `\.` so there's no escaped backslash
+    // to satisfy or trip either Next or SonarQube (S7780).
+    '/((?!_next/static|_next/image|favicon.ico|.*[.](?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2|ttf|eot)$).*)',
   ],
 }

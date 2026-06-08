@@ -20,7 +20,7 @@ export class AuthError extends Error {
 // auth.getUser() validates with the Supabase server.
 // ─────────────────────────────────────────────
 export async function getUser() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   return user
 }
@@ -50,7 +50,7 @@ export async function requireConfirmed(redirectTo: string = '/verify-email') {
 // ─────────────────────────────────────────────
 export async function requireAdmin(redirectTo: string = '/') {
   const user = await requireConfirmed()
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
@@ -69,7 +69,7 @@ export async function requireAdmin(redirectTo: string = '/') {
 // ─────────────────────────────────────────────
 export async function requireSuperAdmin(redirectTo: string = '/') {
   const user = await requireConfirmed()
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
@@ -89,7 +89,7 @@ export async function requireSuperAdmin(redirectTo: string = '/') {
 // ─────────────────────────────────────────────
 export async function requireMFA(redirectTo: string = '/mfa-challenge') {
   const user = await requireConfirmed()
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
   if (error || data?.currentLevel !== 'aal2') redirect(redirectTo)
   return user
@@ -100,7 +100,7 @@ export async function requireMFA(redirectTo: string = '/mfa-challenge') {
 // ─────────────────────────────────────────────
 export async function requireAdminWithMFA(redirectTo: string = '/mfa-challenge') {
   const adminCtx = await requireAdmin()
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
   if (error || data?.currentLevel !== 'aal2') redirect(redirectTo)
   return adminCtx

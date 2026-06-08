@@ -14,8 +14,8 @@ import { createClient, createServiceRoleClient } from '@/utils/supabase/server'
 import { sanitizeText } from '@/lib/sanitize'
 import { rlUpload, checkLimit } from '@/utils/ratelimit'
 
-function getIp(): string {
-  const h = headers()
+async function getIp(): Promise<string> {
+  const h = await headers()
   const xff = h.get('x-forwarded-for')
   if (xff) return xff.split(',')[0].trim()
   return h.get('x-real-ip') ?? '0.0.0.0'
@@ -36,7 +36,7 @@ export async function uploadImage(formData: FormData) {
   const { user } = await requireAdmin()
 
   // Per-admin upload rate limit — prevents storage abuse
-  const rl = await checkLimit(rlUpload, `upload:${user.id}:${getIp()}`)
+  const rl = await checkLimit(rlUpload, `upload:${user.id}:${await getIp()}`)
   if (!rl.allowed) {
     return { error: 'Too many uploads. Please wait a bit before uploading more.' }
   }
@@ -83,7 +83,7 @@ export async function uploadImage(formData: FormData) {
   const publicUrl = publicUrlData.publicUrl
 
   // Insert a row in public.media so admin can manage uploaded images later
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: mediaRow, error: insertErr } = await supabase
     .from('media')
     .insert({
@@ -119,7 +119,7 @@ export async function deleteImage(formData: FormData) {
     return { error: 'Invalid id.' }
   }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: row } = await supabase
     .from('media')
     .select('storage_path')

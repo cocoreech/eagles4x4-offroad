@@ -9,9 +9,10 @@ import BrandMark from '@/components/BrandMark'
 
 export const dynamic = 'force-dynamic'
 
-export default async function EditProductPage({ params }: Readonly<{ params: { id: string } }>) {
+export default async function EditProductPage(props: Readonly<{ params: Promise<{ id: string }> }>) {
+  const params = await props.params;
   await requireAdmin()
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data: product } = await supabase
     .from('products')

@@ -29,7 +29,7 @@ const TESTIMONIALS = [
 ]
 
 export default async function HomePage() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   // Pull featured + recent builds from DB; fall back to hardcoded if empty

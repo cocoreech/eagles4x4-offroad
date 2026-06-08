@@ -18,8 +18,8 @@ const adminLoginSchema = z.object({
   password: z.string().min(8),
 })
 
-function getIp(): string {
-  const h = headers()
+async function getIp(): Promise<string> {
+  const h = await headers()
   const xff = h.get('x-forwarded-for')
   if (xff) return xff.split(',')[0].trim()
   return h.get('x-real-ip') ?? '0.0.0.0'
@@ -36,7 +36,7 @@ export async function adminLogin(formData: FormData) {
   const { email, password } = parsed.data
 
   // IP + email combined rate limit (middleware also limits by IP)
-  const ip = getIp()
+  const ip = await getIp()
   const rl = await checkAuthLimit(rlAuthLogin, ip, email)
   if (!rl.allowed) return { error: 'Too many attempts. Try again later.' }
 
@@ -46,7 +46,7 @@ export async function adminLogin(formData: FormData) {
     await new Promise(r => setTimeout(r, 500))
   }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.auth.signInWithPassword({ email, password })
 
   if (error) {

@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function AdminHomePage() {
   const { user, profile } = await requireAdmin()
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Aggregate counts for the stats cards
   const [bookingsAll, services, products, builds] = await Promise.all([
