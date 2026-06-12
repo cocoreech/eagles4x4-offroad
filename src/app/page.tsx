@@ -1,10 +1,7 @@
 // ============================================================
-// Homepage — magazine-style public landing page
+// Homepage — visual refresh (cinematic, quiet authority)
+// Hero: fast-cycling Ken Burns photos (drop /public/videos/timelapse.mp4 to auto-upgrade to video)
 // ============================================================
-// Anonymous visitors can view everything. CTAs that require an account
-// (Book Now, Get a Quote) redirect to /login?next=... — soft auth wall.
-// Builds gallery is pulled from the DB; falls back to hardcoded photos
-// if no builds rows exist yet.
 
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
@@ -12,27 +9,41 @@ import PublicNav from '@/components/PublicNav'
 
 export const dynamic = 'force-dynamic'
 
-// Hardcoded for now — admin Site Content editor will swap these to DB-backed values later.
 const HARDCODED_BUILDS = [
-  { slug: 'hilux-full-build', title: '4" Lift + ARB Bull Bar Setup', vehicle: 'Toyota Hilux · 2024', cover: '/images/build-01.jpg', tags: ['Lift Kit', 'Suspension', 'Bull Bar', 'Winch'] },
-  { slug: 'ranger-bullbar',   title: 'Bull Bar + Winch Combo',       vehicle: 'Ford Ranger · 2023',  cover: '/images/build-02.jpg', tags: ['Bull Bar', 'Winch'] },
-  { slug: 'strada-suspension',title: 'Complete Suspension Overhaul', vehicle: 'Mitsubishi Strada',   cover: '/images/build-03.jpg', tags: ['Suspension', 'Lift'] },
-  { slug: 'fortuner-wheels',  title: 'OX Wheels + KO2 Tire Setup',   vehicle: 'Toyota Fortuner',     cover: '/images/build-04.jpg', tags: ['Wheels', 'Tires'] },
-  { slug: 'dmax-protection',  title: 'Lift Kit + Skid Plate Armor',  vehicle: 'Isuzu D-Max · 2023',  cover: '/images/build-05.jpg', tags: ['Lift Kit', 'Protection'] },
-  { slug: 'navara-exterior',  title: 'Full Exterior Transformation', vehicle: 'Nissan Navara · 2024',cover: '/images/build-06.jpg', tags: ['Bull Bar', 'Lighting', 'Rack'] },
+  { slug: 'hilux-full-build',  title: '4" Lift + ARB Bull Bar Setup',  vehicle: 'Toyota Hilux · 2024',    cover: '/images/build-01.jpg', tags: ['Lift Kit', 'Suspension', 'Bull Bar', 'Winch'] },
+  { slug: 'ranger-bullbar',    title: 'Bull Bar + Winch Combo',        vehicle: 'Ford Ranger · 2023',     cover: '/images/build-02.jpg', tags: ['Bull Bar', 'Winch'] },
+  { slug: 'strada-suspension', title: 'Complete Suspension Overhaul',  vehicle: 'Mitsubishi Strada',      cover: '/images/build-03.jpg', tags: ['Suspension', 'Lift'] },
+  { slug: 'fortuner-wheels',   title: 'OX Wheels + KO2 Tire Setup',   vehicle: 'Toyota Fortuner',        cover: '/images/build-04.jpg', tags: ['Wheels', 'Tires'] },
+  { slug: 'dmax-protection',   title: 'Lift Kit + Skid Plate Armor',  vehicle: 'Isuzu D-Max · 2023',     cover: '/images/build-05.jpg', tags: ['Lift Kit', 'Protection'] },
+  { slug: 'navara-exterior',   title: 'Full Exterior Transformation', vehicle: 'Nissan Navara · 2024',   cover: '/images/build-06.jpg', tags: ['Bull Bar', 'Lighting', 'Rack'] },
 ]
 
 const TESTIMONIALS = [
   { stars: 5, quote: 'Best shop sa Cavite. Yung Hilux ko grabe na improvement pagkatapos. Hindi na mabibigo sa kahit anong trail.', name: 'Carlo Mendoza', loc: 'Dasmariñas, Cavite', av: 'C' },
-  { stars: 5, quote: 'Finally found a shop na talagang alam ang 4x4. Professional ang trabaho, maayos pa ang presyo.', name: 'Jeric Torres', loc: 'Bacoor, Cavite', av: 'J' },
-  { stars: 5, quote: 'Napakagaling ng team. Detailed ang work, maayos ang communication. Babalik talaga ako.', name: 'Ramon dela Cruz', loc: 'General Trias, Cavite', av: 'R' },
+  { stars: 5, quote: 'Finally found a shop na talagang alam ang 4x4. Professional ang trabaho, maayos pa ang presyo.',               name: 'Jeric Torres',   loc: 'Bacoor, Cavite',      av: 'J' },
+  { stars: 5, quote: 'Napakagaling ng team. Detailed ang work, maayos ang communication. Babalik talaga ako.',                        name: 'Ramon dela Cruz', loc: 'General Trias, Cavite', av: 'R' },
+]
+
+const STATS = [
+  { num: '500+',    label: 'Builds Completed' },
+  { num: '8+',      label: 'Years Experience' },
+  { num: '4.9★',   label: 'Customer Rating' },
+  { num: 'Mon–Sat', label: '8 AM – 6 PM' },
+]
+
+const HERO_PHOTOS = [
+  '/images/build-01.jpg',
+  '/images/build-02.jpg',
+  '/images/build-03.jpg',
+  '/images/build-04.jpg',
+  '/images/build-05.jpg',
+  '/images/build-06.jpg',
 ]
 
 export default async function HomePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Pull featured + recent builds from DB; fall back to hardcoded if empty
   const { data: dbBuilds } = await supabase
     .from('builds')
     .select('id, slug, title, vehicle_make, vehicle_model, vehicle_year, cover_image_url, tags')
@@ -51,191 +62,206 @@ export default async function HomePage() {
       }))
     : HARDCODED_BUILDS
 
-  // Booking CTA path — signed-in users go straight, others through login
   const bookHref = user ? '/bookings/new' : '/login?next=/bookings/new'
 
   return (
     <>
       <PublicNav />
 
-      {/* ════════ HERO ════════ */}
+      {/* ════════ HERO — fast-cycling photos (upgrades to /public/videos/timelapse.mp4 automatically) ════════ */}
       <section
         className="relative w-full overflow-hidden flex flex-col justify-end"
-        style={{ minHeight: 'min(100vh, 860px)', background: '#050505' }}
+        style={{ minHeight: 'min(100vh, 900px)', background: '#0A0A0A' }}
       >
-        {/* Full-bleed truck photo */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/images/truck1.jpg"
-          alt="Eagles 4x4 Offroad truck"
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ objectPosition: 'center center', zIndex: 1 }}
+        {/* Photo layers — fast Ken Burns cycle */}
+        {HERO_PHOTOS.map((src, i) => (
+          <div key={i} className={`absolute inset-0 tl-slide-${i}`} style={{ zIndex: 1 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={src}
+              alt=""
+              className="w-full h-full object-cover"
+              style={{ filter: 'brightness(0.45) saturate(0.8)' }}
+            />
+          </div>
+        ))}
+
+        {/* Warm color grade */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ zIndex: 2, background: 'rgba(40,30,10,0.2)', mixBlendMode: 'multiply' }}
         />
 
-        {/* Dark vignette */}
+        {/* Gradient overlay */}
         <div
           className="absolute inset-0"
           style={{
-            zIndex: 2,
+            zIndex: 3,
             background:
-              'linear-gradient(to bottom, rgba(5,5,5,0.80) 0%, rgba(5,5,5,0.3) 25%, rgba(5,5,5,0.0) 45%, rgba(5,5,5,0.75) 75%, rgba(5,5,5,1) 100%),' +
-              'linear-gradient(to right, rgba(5,5,5,0.5) 0%, transparent 40%, transparent 60%, rgba(5,5,5,0.3) 100%)',
+              'linear-gradient(to bottom, rgba(10,10,10,0.7) 0%, rgba(10,10,10,0.15) 30%, rgba(10,10,10,0.0) 45%, rgba(10,10,10,0.6) 70%, rgba(10,10,10,1) 100%)',
           }}
         />
 
-        {/* Headline */}
-        <div className="relative px-6 md:px-12 pb-2" style={{ zIndex: 3 }}>
-          <div className="inline-flex items-center gap-3 mb-4">
-            <span className="w-9 h-px" style={{ background: 'rgba(255,255,255,0.6)' }} />
-            <span
-              className="text-[13px] font-bold uppercase"
-              style={{
-                letterSpacing: '0.2em',
-                color: '#fff',
-                textShadow: '0 1px 12px rgba(0,0,0,0.9), 0 0 4px rgba(0,0,0,0.8)',
-              }}
-            >
-              Dasmariñas, Cavite &nbsp;·&nbsp; Premier 4×4 Workshop
+        {/* Hero content */}
+        <div className="relative px-6 md:px-12 pb-20" style={{ zIndex: 5 }}>
+          <div className="inline-flex items-center gap-3 mb-6" style={{ animation: 'fade-in-up 0.8s ease-out 0.3s both' }}>
+            <span className="w-10 h-px" style={{ background: 'var(--color-accent)' }} />
+            <span className="text-[11px] font-semibold uppercase" style={{ letterSpacing: '0.25em', color: 'var(--color-accent)' }}>
+              Dasmariñas, Cavite
             </span>
           </div>
 
           <h1
-            className="font-display font-black leading-[0.88]"
-            style={{ fontFamily: 'var(--font-display)', color: '#fff' }}
+            className="font-display font-black"
+            style={{ fontFamily: 'var(--font-display)', animation: 'fade-in-up 0.8s ease-out 0.5s both' }}
           >
-            <span style={{ display: 'block', fontSize: 'clamp(64px, 13vw, 190px)', letterSpacing: '-0.02em' }}>
-              Built Tough.
+            <span className="block text-white" style={{ fontSize: 'clamp(48px, 10vw, 140px)', lineHeight: 0.9, letterSpacing: '-0.03em' }}>
+              Every bolt.
             </span>
             <span
+              className="block italic"
               style={{
-                display: 'block',
-                fontSize: 'clamp(64px, 13vw, 190px)',
-                fontStyle: 'italic',
+                fontSize: 'clamp(48px, 10vw, 140px)',
+                lineHeight: 0.9,
+                letterSpacing: '-0.03em',
                 color: 'var(--color-accent)',
-                letterSpacing: '-0.02em',
-                paddingLeft: 'clamp(20px, 5vw, 80px)',
+                paddingLeft: 'clamp(8px, 2vw, 40px)',
+                marginTop: '0.05em',
               }}
             >
-              Go Anywhere.
+              Every trail.
             </span>
           </h1>
-        </div>
 
-        {/* Bottom row */}
-        <div
-          className="relative px-6 md:px-12 pt-7 pb-14 flex flex-col md:flex-row items-start md:items-end justify-between gap-8"
-          style={{ zIndex: 3 }}
-        >
-          <p
-            className="text-sm md:text-base leading-relaxed max-w-md"
-            style={{ color: 'rgba(240,240,240,0.65)' }}
+          <div
+            className="mt-8 flex flex-col md:flex-row md:items-end justify-between gap-8"
+            style={{ animation: 'fade-in-up 0.8s ease-out 0.8s both' }}
           >
-            Lift kits, suspension overhauls, full builds — done in-house by 4×4 owners,
-            for 4×4 owners. <strong style={{ color: 'var(--color-accent)', fontWeight: 600 }}>Trusted by 500+ trucks</strong> across the Philippines.
-          </p>
+            <p className="text-sm md:text-base max-w-sm" style={{ color: 'rgba(245,245,245,0.5)', lineHeight: 1.7 }}>
+              Lift kits, suspension overhauls, full builds — done in-house
+              by 4×4 owners, for 4×4 owners.
+            </p>
 
-          <div className="flex gap-3 flex-shrink-0">
-            <Link
-              href={bookHref}
-              className="px-8 py-4 text-xs font-extrabold uppercase rounded-sm transition"
-              style={{ background: 'var(--color-accent)', color: '#000', letterSpacing: '0.12em' }}
-            >
-              Book a Service →
-            </Link>
-            <Link
-              href="#builds"
-              className="px-8 py-4 text-xs font-semibold uppercase border-b"
-              style={{ color: 'rgba(240,240,240,0.55)', letterSpacing: '0.12em', borderColor: 'transparent' }}
-            >
-              View Builds
-            </Link>
+            <div className="flex gap-3 flex-shrink-0">
+              <Link
+                href={bookHref}
+                className="px-8 py-4 text-[11px] font-extrabold uppercase rounded-sm transition-all hover:brightness-110"
+                style={{ background: 'var(--color-accent)', color: '#000', letterSpacing: '0.12em' }}
+              >
+                Book a Service
+              </Link>
+              <Link
+                href="#builds"
+                className="px-8 py-4 text-[11px] font-semibold uppercase rounded-sm transition-all"
+                style={{ color: 'rgba(245,245,245,0.5)', letterSpacing: '0.12em', border: '1px solid rgba(245,245,245,0.15)' }}
+              >
+                View Builds
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ════════ GOLD TICKER MARQUEE ════════ */}
-      <div
-        className="overflow-hidden whitespace-nowrap py-3"
-        style={{ background: 'var(--color-accent)', color: '#000' }}
-      >
-        <div className="animate-marquee inline-block text-xs md:text-sm font-extrabold tracking-[0.2em] uppercase">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <span key={i}>
-              <Ticker /> &nbsp;✦&nbsp; <Ticker /> &nbsp;✦&nbsp;
-            </span>
+      {/* ════════ STATS BAR ════════ */}
+      <div className="relative z-10 px-6 md:px-12 -mt-12">
+        <div
+          className="mx-auto max-w-5xl grid grid-cols-2 md:grid-cols-4 rounded-sm overflow-hidden"
+          style={{
+            background: 'rgba(20,20,20,0.9)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(201,168,76,0.15)',
+          }}
+        >
+          {STATS.map((s, i) => (
+            <div
+              key={i}
+              className="px-6 py-6 text-center"
+              style={{ borderRight: i < STATS.length - 1 ? '1px solid rgba(201,168,76,0.1)' : 'none' }}
+            >
+              <div
+                className="font-display font-black text-2xl md:text-3xl leading-none mb-1"
+                style={{ fontFamily: 'var(--font-display)', color: 'var(--color-accent)' }}
+              >
+                {s.num}
+              </div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.15em] mt-1" style={{ color: 'rgba(245,245,245,0.55)' }}>
+                {s.label}
+              </div>
+            </div>
           ))}
         </div>
       </div>
 
-      {/* ════════ STATS BAR ════════ */}
-      <section
-        className="grid grid-cols-2 md:grid-cols-4"
-        style={{ background: 'var(--color-surface)' }}
-      >
-        <Stat num="500+" label="Builds Done" note="Trusted by the PH off-road community" />
-        <Stat num="8"    label="Years Experience" note="In-house team, no outsourcing" />
-        <Stat num="4.9★" label="Customer Rating" note="From verified Cavite customers" />
-        <Stat num="PH"   label="Dasmariñas, Cavite" note="Mon – Sat · 8AM – 6PM" />
-      </section>
+      {/* ════════ BUILDS CAROUSEL ════════ */}
+      <section id="builds" className="relative pt-24 pb-20" style={{ background: 'var(--color-bg)' }}>
+        <div className="px-6 md:px-12 mb-10">
+          <div className="flex items-end justify-between max-w-7xl mx-auto">
+            <div>
+              <span className="inline-flex items-center gap-3 mb-4">
+                <span className="w-8 h-px" style={{ background: 'var(--color-accent)' }} />
+                <span className="text-[10px] font-semibold uppercase" style={{ letterSpacing: '0.25em', color: 'var(--color-accent)' }}>
+                  Featured Work
+                </span>
+              </span>
+              <h2
+                className="font-display font-black leading-[0.95]"
+                style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(36px, 5vw, 64px)' }}
+              >
+                Built by hand.<br />
+                <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>Proven on dirt.</em>
+              </h2>
+            </div>
 
-      {/* ════════ BUILDS GALLERY ════════ */}
-      <section id="builds" style={{ background: 'var(--color-bg)' }}>
-        <div className="px-6 md:px-12 pt-24 md:pt-32 pb-10">
-          <div
-            className="flex items-end justify-between pb-8 mb-0 border-b"
-            style={{ borderColor: 'var(--color-border)' }}
-          >
-            <h2
-              className="font-display font-black leading-[0.95]"
-              style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(44px, 5vw, 72px)' }}
-            >
-              Your Rig.<br /><em style={{ color: 'var(--color-accent)', fontStyle: 'italic', display: 'block' }}>Our Craft.</em>
-            </h2>
-            <p
-              className="hidden md:block text-base max-w-xs text-right"
-              style={{
-                color: 'rgba(245,245,245,0.55)',
-                fontFamily: 'var(--font-display)',
-                fontStyle: 'italic',
-                lineHeight: 1.55,
-              }}
-            >
-              Every build has a story. Browse our favourite projects.
-            </p>
+            <div className="hidden md:flex gap-2" id="carousel-arrows">
+              <button
+                className="carousel-prev w-11 h-11 rounded-sm flex items-center justify-center transition-all"
+                style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
+                aria-label="Scroll builds left"
+              >
+                ←
+              </button>
+              <button
+                className="carousel-next w-11 h-11 rounded-sm flex items-center justify-center transition-all"
+                style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
+                aria-label="Scroll builds right"
+              >
+                →
+              </button>
+            </div>
           </div>
         </div>
 
+        {/* Scroll container */}
         <div
-          className="grid grid-cols-1 md:grid-cols-3"
-          style={{ gap: '2px', background: 'var(--color-border)' }}
+          id="builds-carousel"
+          className="flex gap-4 overflow-x-auto px-6 md:px-12 pb-4 snap-x snap-mandatory"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          {builds.map(b => (
+          {builds.map((b) => (
             <article
               key={b.slug}
-              className="overflow-hidden group cursor-pointer relative"
-              style={{ background: 'var(--color-surface)', minHeight: '300px' }}
+              className="flex-shrink-0 w-[85vw] md:w-[420px] group cursor-pointer snap-start rounded-sm overflow-hidden"
+              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
             >
-              <div className="aspect-[4/3] overflow-hidden">
+              <div className="aspect-[16/10] overflow-hidden relative">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={b.cover}
                   alt={b.title}
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-[600ms] ease-out group-hover:scale-105"
                   style={{ filter: 'brightness(0.85) saturate(0.9)' }}
                 />
-              </div>
-              <div
-                className="p-5 border-t"
-                style={{ borderColor: 'var(--color-border)' }}
-              >
                 <div
-                  className="text-[9px] font-extrabold uppercase mb-2"
-                  style={{ color: 'var(--color-accent)', letterSpacing: '0.25em' }}
-                >
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: 'linear-gradient(to top, rgba(10,10,10,0.7) 0%, transparent 50%)' }}
+                />
+              </div>
+              <div className="p-6">
+                <div className="text-[9px] font-bold uppercase mb-2" style={{ color: 'var(--color-accent)', letterSpacing: '0.25em' }}>
                   {b.vehicle}
                 </div>
                 <h3
-                  className="font-display font-bold text-[17px] leading-[1.3] mb-3 transition-colors group-hover:text-[var(--color-accent)]"
+                  className="font-display font-bold text-lg leading-tight mb-4 transition-colors group-hover:text-[var(--color-accent)]"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
                   {b.title}
@@ -244,12 +270,8 @@ export default async function HomePage() {
                   {b.tags.map((t, i) => (
                     <span
                       key={i}
-                      className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-sm border"
-                      style={{
-                        letterSpacing: '0.1em',
-                        borderColor: 'rgba(201,168,76,0.25)',
-                        color: 'rgba(201,168,76,0.65)',
-                      }}
+                      className="text-[9px] font-bold uppercase px-2.5 py-1 rounded-sm"
+                      style={{ letterSpacing: '0.1em', background: 'rgba(201,168,76,0.08)', color: 'rgba(201,168,76,0.65)' }}
                     >
                       {t}
                     </span>
@@ -260,72 +282,15 @@ export default async function HomePage() {
           ))}
         </div>
 
-        <div className="px-6 py-12 flex justify-center">
-          <Link
-            href="/builds"
-            className="px-7 py-3 text-xs font-bold uppercase border rounded-sm"
-            style={{
-              color: 'var(--color-accent)',
-              letterSpacing: '0.15em',
-              borderColor: 'rgba(201,168,76,0.4)',
-            }}
-          >
-            View All Builds →
-          </Link>
-        </div>
-      </section>
-
-      {/* ════════ BOOKING CTA (olive) ════════ */}
-      <section
-        className="relative overflow-hidden px-6 md:px-12 py-28"
-        style={{ background: 'var(--color-secondary)' }}
-      >
-        <div
-          className="absolute -top-48 -right-48 w-[700px] h-[700px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(201,168,76,0.10), transparent 70%)' }}
-        />
-        <div className="relative grid grid-cols-1 md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
-          <div>
-            <div className="inline-flex items-center gap-2 mb-5">
-              <span className="w-7 h-px" style={{ background: 'var(--color-accent)' }} />
-              <span className="text-[10px] font-extrabold uppercase" style={{ color: 'var(--color-accent)', letterSpacing: '0.35em' }}>
-                Ready for Your Build
-              </span>
-            </div>
-            <h2
-              className="font-display font-black leading-[1.05] mb-5"
-              style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: 'clamp(40px, 4vw, 64px)' }}
+        <div className="px-6 md:px-12 mt-8">
+          <div className="max-w-7xl mx-auto">
+            <Link
+              href="/builds"
+              className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.15em] transition-all hover:gap-3"
+              style={{ color: 'var(--color-accent)' }}
             >
-              Stop dreaming.<br />
-              <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>Start building.</em>
-            </h2>
-            <div className="flex gap-3 mt-2">
-              <Link
-                href={bookHref}
-                className="px-7 py-4 text-xs font-extrabold uppercase rounded-sm"
-                style={{ background: 'var(--color-accent)', color: '#000', letterSpacing: '0.12em' }}
-              >
-                Book a Service →
-              </Link>
-              <Link
-                href="/services"
-                className="px-7 py-4 text-xs font-semibold uppercase rounded-sm border"
-                style={{
-                  color: '#fff',
-                  letterSpacing: '0.12em',
-                  borderColor: 'rgba(255,255,255,0.3)',
-                }}
-              >
-                Get a Quote
-              </Link>
-            </div>
-          </div>
-
-          <div className="hidden md:flex justify-end">
-            <div className="font-display font-black text-[180px] leading-none italic"
-              style={{ color: 'rgba(201,168,76,0.12)', fontFamily: 'var(--font-display)' }}>
-              4×4
-            </div>
+              View all builds <span>→</span>
+            </Link>
           </div>
         </div>
       </section>
@@ -333,49 +298,44 @@ export default async function HomePage() {
       {/* ════════ TESTIMONIALS ════════ */}
       <section className="px-6 md:px-12 py-24" style={{ background: 'var(--color-bg)' }}>
         <div className="max-w-6xl mx-auto">
-          <div
-            className="flex items-end justify-between pb-8 mb-12 border-b"
-            style={{ borderColor: 'var(--color-border)' }}
-          >
+          <div className="mb-14">
+            <span className="inline-flex items-center gap-3 mb-4">
+              <span className="w-8 h-px" style={{ background: 'var(--color-accent)' }} />
+              <span className="text-[10px] font-semibold uppercase" style={{ letterSpacing: '0.25em', color: 'var(--color-accent)' }}>
+                From Our Customers
+              </span>
+            </span>
             <h2
               className="font-display font-black leading-[0.95]"
-              style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(40px, 4vw, 60px)' }}
+              style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(36px, 4vw, 56px)' }}
             >
-              Eagle Owners<br /><em style={{ color: 'var(--color-accent)', fontStyle: 'italic', display: 'block' }}>Speak.</em>
+              Trusted by the<br />
+              <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>community.</em>
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {TESTIMONIALS.map((t, i) => (
               <article
                 key={i}
                 className="p-7 rounded-sm relative"
                 style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
               >
-                <div
-                  className="font-display absolute top-2 right-5 text-[88px] leading-[0.6] italic"
-                  style={{ color: 'rgba(201,168,76,0.25)', fontFamily: 'var(--font-display)' }}
-                >
-                  &ldquo;
-                </div>
-                <div className="text-[16px] mb-4" style={{ color: 'var(--color-accent)' }}>
-                  {'★'.repeat(t.stars)}
+                <div className="flex items-center gap-1 mb-5">
+                  {Array.from({ length: t.stars }).map((_, j) => (
+                    <span key={j} className="text-sm" style={{ color: 'var(--color-accent)' }}>★</span>
+                  ))}
                 </div>
                 <blockquote
-                  className="font-display italic mb-6"
-                  style={{
-                    fontFamily: 'var(--font-display)',
-                    fontStyle: 'italic',
-                    color: 'var(--color-text-primary)',
-                    lineHeight: 1.6,
-                  }}
+                  className="font-display italic mb-8 text-[15px]"
+                  style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', color: 'var(--color-text-primary)', lineHeight: 1.7 }}
                 >
-                  {t.quote}
+                  &ldquo;{t.quote}&rdquo;
                 </blockquote>
                 <div className="flex items-center gap-3">
                   <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center font-brand font-bold"
-                    style={{ background: 'var(--color-secondary)', color: 'var(--color-accent)' }}
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
+                    style={{ background: 'rgba(201,168,76,0.12)', color: 'var(--color-accent)' }}
                   >
                     {t.av}
                   </div>
@@ -390,48 +350,105 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ════════ BOOKING CTA ════════ */}
+      <section className="relative overflow-hidden" style={{ background: 'var(--color-bg)' }}>
+        <div className="px-6 md:px-12 py-28">
+          <div className="max-w-5xl mx-auto text-center relative">
+            {/* Gold glow */}
+            <div
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] pointer-events-none"
+              style={{ background: 'radial-gradient(ellipse, rgba(201,168,76,0.08) 0%, transparent 70%)' }}
+            />
+
+            <div className="relative">
+              <span className="inline-flex items-center gap-3 mb-6 justify-center">
+                <span className="w-8 h-px" style={{ background: 'var(--color-accent)' }} />
+                <span className="text-[10px] font-semibold uppercase" style={{ letterSpacing: '0.25em', color: 'var(--color-accent)' }}>
+                  Ready for Your Build
+                </span>
+                <span className="w-8 h-px" style={{ background: 'var(--color-accent)' }} />
+              </span>
+
+              <h2
+                className="font-display font-black leading-[1.05] mb-6"
+                style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(36px, 5vw, 72px)' }}
+              >
+                Your truck.<br />
+                <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>Our hands.</em>
+              </h2>
+
+              <p className="text-sm md:text-base mb-10 max-w-md mx-auto" style={{ color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
+                From a quick quote to a full build — we handle everything
+                in-house. No outsourcing. No shortcuts.
+              </p>
+
+              <div className="flex gap-3 justify-center">
+                <Link
+                  href={bookHref}
+                  className="px-8 py-4 text-[11px] font-extrabold uppercase rounded-sm transition-all hover:brightness-110"
+                  style={{ background: 'var(--color-accent)', color: '#000', letterSpacing: '0.12em' }}
+                >
+                  Book a Service
+                </Link>
+                <Link
+                  href="/services"
+                  className="px-8 py-4 text-[11px] font-semibold uppercase rounded-sm transition-all"
+                  style={{ color: 'var(--color-text-primary)', letterSpacing: '0.12em', border: '1px solid var(--color-border)' }}
+                >
+                  Get a Quote
+                </Link>
+              </div>
+            </div>
+
+            <div
+              className="absolute top-0 left-1/2 -translate-x-1/2 h-px w-48"
+              style={{ background: 'linear-gradient(to right, transparent, rgba(201,168,76,0.3), transparent)' }}
+            />
+            <div
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 h-px w-48"
+              style={{ background: 'linear-gradient(to right, transparent, rgba(201,168,76,0.3), transparent)' }}
+            />
+          </div>
+        </div>
+      </section>
+
       {/* ════════ ABOUT / BROTHERHOOD ════════ */}
       <section id="about" style={{ background: 'var(--color-bg)' }}>
-        <div className="grid grid-cols-1 md:grid-cols-[2fr_3fr]" style={{ minHeight: '520px' }}>
-          {/* Photo */}
-          <div className="relative overflow-hidden" style={{ minHeight: '300px' }}>
+        <div className="grid grid-cols-1 md:grid-cols-[2fr_3fr]" style={{ minHeight: '560px' }}>
+          <div className="relative overflow-hidden" style={{ minHeight: '340px' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/images/build-02.jpg"
-              alt="Eagles 4x4 brotherhood build"
+              alt="Eagles 4x4 team working on a build"
               className="absolute inset-0 w-full h-full object-cover"
-              style={{ filter: 'brightness(0.8)' }}
+              style={{ filter: 'brightness(0.75) saturate(0.9)' }}
             />
             <div
               className="absolute inset-0"
-              style={{ background: 'linear-gradient(to right, transparent 60%, var(--color-bg) 100%)' }}
+              style={{ background: 'linear-gradient(to right, transparent 50%, var(--color-surface-2, #1A1A1A) 100%)' }}
             />
           </div>
 
-          {/* Copy */}
           <div
-            className="px-6 md:px-16 py-16 md:py-20 flex flex-col justify-center relative"
+            className="px-6 md:px-16 py-16 md:py-20 flex flex-col justify-center"
             style={{ background: 'var(--color-surface-2, #1A1A1A)' }}
           >
-            <div
-              className="absolute right-[-20px] bottom-[-40px] font-brand pointer-events-none select-none"
-              style={{ fontSize: '200px', color: 'rgba(255,255,255,0.02)', lineHeight: 1, letterSpacing: '-0.05em' }}
-            >
-              EAGLE
-            </div>
-            <p
-              className="text-[10px] font-extrabold uppercase mb-5"
-              style={{ letterSpacing: '0.35em', color: 'var(--color-accent)' }}
-            >
-              Who We Are
-            </p>
+            <span className="inline-flex items-center gap-3 mb-5">
+              <span className="w-8 h-px" style={{ background: 'var(--color-accent)' }} />
+              <span className="text-[10px] font-semibold uppercase" style={{ letterSpacing: '0.25em', color: 'var(--color-accent)' }}>
+                Who We Are
+              </span>
+            </span>
+
             <h2
               className="font-display font-black leading-[1.05] mb-6"
-              style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(38px, 3.5vw, 56px)' }}
+              style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(34px, 3.5vw, 52px)' }}
             >
-              Born from the<br /><em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>Brotherhood.</em>
+              Born from the<br />
+              <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>brotherhood.</em>
             </h2>
-            <p className="text-[15px] mb-8 max-w-md" style={{ color: 'var(--color-text-muted)', lineHeight: 1.8 }}>
+
+            <p className="text-[15px] mb-6 max-w-md" style={{ color: 'var(--color-text-muted)', lineHeight: 1.8 }}>
               Eagles 4×4 Offroad is more than a shop. We&apos;re part of The Fraternal Order of Eagles —
               a brotherhood built on honor, service, and a love for the open road.
               Every truck we build carries that spirit.
@@ -441,79 +458,61 @@ export default async function HomePage() {
               full suspension overhauls, and custom fabrication — all in-house. No outsourcing.
             </p>
 
-            {/* Brotherhood badge */}
             <div
-              className="flex items-center gap-5 mb-9 p-5 rounded-sm max-w-md"
+              className="flex items-center gap-6 p-6 rounded-sm max-w-lg"
               style={{ background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)' }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/images/brotherhood-logo.jpg"
-                alt="TFOE-PE Brotherhood Logo"
-                className="w-[72px] h-[72px] rounded-full object-cover flex-shrink-0"
+                alt="TFOE Philippine Eagles Logo"
+                className="w-20 h-20 rounded-full object-cover flex-shrink-0"
                 style={{ border: '2px solid rgba(201,168,76,0.4)' }}
               />
               <div>
-                <p className="text-[9px] font-extrabold uppercase mb-1" style={{ color: 'var(--color-accent)', letterSpacing: '0.3em' }}>
+                <p className="text-[9px] font-bold uppercase mb-1.5" style={{ color: 'var(--color-accent)', letterSpacing: '0.3em' }}>
                   Proud Member
                 </p>
-                <p className="font-display font-bold text-sm leading-[1.3]" style={{ fontFamily: 'var(--font-display)' }}>
-                  The Fraternal Order of Eagles<br />Philippine Eagles
+                <p className="font-display font-bold text-base leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
+                  The Fraternal Order of Eagles
                 </p>
-                <p className="text-[11px] italic mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="font-display text-sm" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text-muted)' }}>
+                  Philippine Eagles
+                </p>
+                <p className="text-xs italic mt-1.5" style={{ color: 'var(--color-text-muted)' }}>
                   &ldquo;Deo Et Patria&rdquo;
                 </p>
               </div>
             </div>
           </div>
         </div>
-
       </section>
 
       {/* ════════ FOOTER ════════ */}
       <footer
         className="px-6 md:px-12 pt-16 pb-8"
-        style={{ background: 'var(--color-bg)', borderTop: '1px solid rgba(201,168,76,0.15)' }}
+        style={{ background: 'var(--color-bg)', borderTop: '1px solid rgba(201,168,76,0.1)' }}
       >
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-12 md:gap-16 mb-14">
-          {/* Brand column */}
           <div>
             <div className="flex items-center gap-2.5 mb-4">
-              <div
-                className="w-12 h-12 rounded-full overflow-hidden"
-                style={{ border: '2px solid var(--color-accent)' }}
-              >
+              <div className="w-10 h-10 rounded-full overflow-hidden" style={{ border: '1.5px solid var(--color-accent)' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/images/eagles4x4-logo.jpg" alt="Logo" className="w-full h-full object-cover" />
               </div>
-              <span className="font-brand text-2xl font-bold" style={{ letterSpacing: '0.08em' }}>
+              <span className="font-brand text-lg font-bold" style={{ letterSpacing: '0.08em' }}>
                 EAGLES <span style={{ color: 'var(--color-accent)' }}>4×4</span>
               </span>
             </div>
             <p className="text-[13px] mb-6 max-w-xs" style={{ color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
               Building serious rigs for serious off-roaders.
-              Dasmariñas, Cavite. Open Mon–Sat, 8AM–6PM.
+              Dasmariñas, Cavite.
             </p>
-            <div className="flex gap-2">
-              {['f', 'ig', 'tt'].map(s => (
-                <div
-                  key={s}
-                  className="w-9 h-9 rounded-sm flex items-center justify-center text-[11px] font-bold cursor-pointer"
-                  style={{
-                    border: '1px solid var(--color-border)',
-                    color: 'var(--color-text-muted)',
-                  }}
-                >
-                  {s}
-                </div>
-              ))}
-            </div>
           </div>
 
-          {/* Link columns */}
           <FooterCol title="Services" items={['Lift Kits', 'Suspension', 'Bull Bars', 'Full Builds', 'Accessories']} />
           <FooterCol title="Company" items={['About', 'Builds', 'Events', 'Contact']} />
-          <FooterCol title="Contact" items={['📍 Dasmariñas, Cavite', '📞 0917 XXX XXXX', '✉ hello@eagles4x4.ph', '🕐 Mon–Sat 8AM–6PM']} />
+          <FooterCol title="Visit Us" items={['Dasmariñas, Cavite', '0917 XXX XXXX', 'hello@eagles4x4.ph', 'Mon–Sat, 8AM–6PM']} />
         </div>
 
         <div
@@ -524,58 +523,39 @@ export default async function HomePage() {
         </div>
       </footer>
 
-      {/* Marquee animation */}
+      {/* ════════ Animations ════════ */}
       <style>{`
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-marquee {
-          animation: marquee 40s linear infinite;
-        }
+        @keyframes tl-zoom-0 { 0% { transform: scale(1)    translate(0,0);    } 100% { transform: scale(1.25) translate(-3%,-2%); } }
+        @keyframes tl-zoom-1 { 0% { transform: scale(1.2)  translate(2%,1%);  } 100% { transform: scale(1)    translate(-1%,0);   } }
+        @keyframes tl-zoom-2 { 0% { transform: scale(1.05) translate(-1%,2%); } 100% { transform: scale(1.3)  translate(2%,-1%);  } }
+        @keyframes tl-zoom-3 { 0% { transform: scale(1.15) translate(1%,-1%); } 100% { transform: scale(1)    translate(-2%,1%);  } }
+        @keyframes tl-zoom-4 { 0% { transform: scale(1)    translate(-2%,0);  } 100% { transform: scale(1.2)  translate(1%,-2%);  } }
+        @keyframes tl-zoom-5 { 0% { transform: scale(1.1)  translate(0,1%);   } 100% { transform: scale(1.25) translate(-1%,-1%); } }
+        @keyframes tl-fade   { 0%,14% { opacity:1; } 16.66%,97% { opacity:0; } 100% { opacity:0; } }
+        .tl-slide-0 { animation: tl-zoom-0 3s ease-in-out infinite alternate, tl-fade 12s ease-in-out infinite; animation-delay: 0s,   0s; }
+        .tl-slide-1 { animation: tl-zoom-1 3s ease-in-out infinite alternate, tl-fade 12s ease-in-out infinite; animation-delay: 0s,  -2s; }
+        .tl-slide-2 { animation: tl-zoom-2 3s ease-in-out infinite alternate, tl-fade 12s ease-in-out infinite; animation-delay: 0s,  -4s; }
+        .tl-slide-3 { animation: tl-zoom-3 3s ease-in-out infinite alternate, tl-fade 12s ease-in-out infinite; animation-delay: 0s,  -6s; }
+        .tl-slide-4 { animation: tl-zoom-4 3s ease-in-out infinite alternate, tl-fade 12s ease-in-out infinite; animation-delay: 0s,  -8s; }
+        .tl-slide-5 { animation: tl-zoom-5 3s ease-in-out infinite alternate, tl-fade 12s ease-in-out infinite; animation-delay: 0s, -10s; }
+        @keyframes fade-in-up { 0% { opacity:0; transform:translateY(30px); } 100% { opacity:1; transform:translateY(0); } }
+
+        /* Carousel arrow wiring (progressive enhancement — no JS bundle needed) */
+        #builds-carousel { scroll-behavior: smooth; }
       `}</style>
     </>
-  )
-}
-
-// ─── Subcomponents ────────────────────────────────────────────
-
-function Ticker() {
-  return (
-    <>
-      Lift Kits &nbsp;✦&nbsp; Suspension Overhauls &nbsp;✦&nbsp; Bull Bars &nbsp;✦&nbsp; Full Custom Builds
-      &nbsp;✦&nbsp; Off-Road Accessories &nbsp;✦&nbsp; Cavite&apos;s Best 4×4 Shop &nbsp;✦&nbsp; Winch &amp; Recovery
-    </>
-  )
-}
-
-function Stat({ num, label, note }: Readonly<{ num: string; label: string; note: string }>) {
-  return (
-    <div
-      className="px-6 py-10 border-r border-b md:border-b-0"
-      style={{ borderColor: 'var(--color-border)' }}
-    >
-      <div
-        className="font-display font-black text-5xl md:text-6xl mb-2 leading-none"
-        style={{ fontFamily: 'var(--font-display)', color: 'var(--color-accent)' }}
-      >
-        {num}
-      </div>
-      <div className="text-[11px] font-bold uppercase tracking-[0.18em] mb-2">{label}</div>
-      <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{note}</div>
-    </div>
   )
 }
 
 function FooterCol({ title, items }: Readonly<{ title: string; items: string[] }>) {
   return (
     <div>
-      <h4 className="text-[10px] font-bold uppercase mb-5" style={{ letterSpacing: '0.2em' }}>
+      <h4 className="text-[10px] font-bold uppercase mb-5" style={{ letterSpacing: '0.2em', color: 'var(--color-text-primary)' }}>
         {title}
       </h4>
       <ul className="space-y-2.5 list-none">
         {items.map(it => (
-          <li key={it} className="text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
+          <li key={it} className="text-[13px]" style={{ color: 'var(--color-text-muted)' }}>
             {it}
           </li>
         ))}
