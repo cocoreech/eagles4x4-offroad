@@ -18,10 +18,12 @@
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
     "framer-motion": "^12.40.0",
+    "gsap": "^3.15.0",
     "lucide-react": "^1.16.0",
     "next": "^16.2.7",
     "react": "^18",
     "react-dom": "^18",
+    "three": "^0.184.0",
     "zod": "^4.4.3"
   },
   "overrides": {
@@ -33,6 +35,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/three": "^0.184.1",
     "eslint": "^8",
     "eslint-config-next": "^15.5.19",
     "postcss": "^8.5.10",
