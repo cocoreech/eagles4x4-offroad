@@ -318,7 +318,7 @@ export async function createBooking(formData: FormData) {
 
   if (!pkConfigured) {
     console.warn('[createBooking] PayMongo not configured — skipping deposit')
-    redirect(`/bookings/${booking.booking_code}`)
+    redirect(`/bookings/${booking.booking_code}/success`)
   }
 
   try {
@@ -327,8 +327,8 @@ export async function createBooking(formData: FormData) {
       bookingCode:  booking.booking_code,
       amountCentavos: depositCentavos,
       description:  `₱500 deposit to confirm booking ${booking.booking_code}`,
-      successUrl:   `${siteUrl}/bookings/${booking.booking_code}?payment=success`,
-      cancelUrl:    `${siteUrl}/bookings/${booking.booking_code}?payment=cancelled`,
+      successUrl:   `${siteUrl}/bookings/${booking.booking_code}/success?payment=success`,
+      cancelUrl:    `${siteUrl}/bookings/${booking.booking_code}/success?payment=cancelled`,
       customerEmail: user?.email ?? d.contactEmail,
       customerPhone: normalizeE164(d.contactPhoneDial, d.contactPhoneLocal) ?? undefined,
     })
@@ -356,7 +356,7 @@ export async function createBooking(formData: FormData) {
     redirect(session.checkoutUrl)
   } catch (err) {
     console.error('[createBooking] checkout creation failed', err)
-    // Booking row exists but no checkout — let user see it, can pay later
-    redirect(`/bookings/${booking.booking_code}?payment=error`)
+    // Booking row exists but no checkout — show the confirmation anyway.
+    redirect(`/bookings/${booking.booking_code}/success?payment=error`)
   }
 }
