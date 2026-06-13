@@ -7,18 +7,10 @@ import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { brand } from '@/content/brand'
 import { copy } from '@/content/copy'
+import { seedBuilds } from '@/content/seeds/builds'
 import PublicNav from '@/components/PublicNav'
 
 export const dynamic = 'force-dynamic'
-
-const HARDCODED_BUILDS = [
-  { slug: 'hilux-full-build',  title: '4" Lift + ARB Bull Bar Setup',  vehicle: 'Toyota Hilux · 2024',    cover: '/images/build-01.jpg', tags: ['Lift Kit', 'Suspension', 'Bull Bar', 'Winch'] },
-  { slug: 'ranger-bullbar',    title: 'Bull Bar + Winch Combo',        vehicle: 'Ford Ranger · 2023',     cover: '/images/build-02.jpg', tags: ['Bull Bar', 'Winch'] },
-  { slug: 'strada-suspension', title: 'Complete Suspension Overhaul',  vehicle: 'Mitsubishi Strada',      cover: '/images/build-03.jpg', tags: ['Suspension', 'Lift'] },
-  { slug: 'fortuner-wheels',   title: 'OX Wheels + KO2 Tire Setup',   vehicle: 'Toyota Fortuner',        cover: '/images/build-04.jpg', tags: ['Wheels', 'Tires'] },
-  { slug: 'dmax-protection',   title: 'Lift Kit + Skid Plate Armor',  vehicle: 'Isuzu D-Max · 2023',     cover: '/images/build-05.jpg', tags: ['Lift Kit', 'Protection'] },
-  { slug: 'navara-exterior',   title: 'Full Exterior Transformation', vehicle: 'Nissan Navara · 2024',   cover: '/images/build-06.jpg', tags: ['Bull Bar', 'Lighting', 'Rack'] },
-]
 
 const TESTIMONIALS = [
   { stars: 5, quote: 'Best shop sa Cavite. Yung Hilux ko grabe na improvement pagkatapos. Hindi na mabibigo sa kahit anong trail.', name: 'Carlo Mendoza', loc: 'Dasmariñas, Cavite', av: 'C' },
@@ -57,7 +49,7 @@ export default async function HomePage() {
         cover:   b.cover_image_url ?? '/images/build-01.jpg',
         tags:    Array.isArray(b.tags) ? b.tags.slice(0, 4) : [],
       }))
-    : HARDCODED_BUILDS
+    : seedBuilds
 
   const bookHref = user ? '/bookings/new' : '/login?next=/bookings/new'
 
