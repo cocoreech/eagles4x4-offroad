@@ -5,6 +5,7 @@
 
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
+import { brand } from '@/content/brand'
 import PublicNav from '@/components/PublicNav'
 
 export const dynamic = 'force-dynamic'
@@ -449,13 +450,10 @@ export default async function HomePage() {
             </h2>
 
             <p className="text-[15px] mb-6 max-w-md" style={{ color: 'var(--color-text-muted)', lineHeight: 1.8 }}>
-              Eagles 4×4 Offroad is more than a shop. We&apos;re part of The Fraternal Order of Eagles —
-              a brotherhood built on honor, service, and a love for the open road.
-              Every truck we build carries that spirit.
+              {brand.story}
             </p>
             <p className="text-[15px] mb-10 max-w-md" style={{ color: 'var(--color-text-muted)', lineHeight: 1.8 }}>
-              Based in Dasmariñas, Cavite, we specialize in 4×4 builds, lift kits,
-              full suspension overhauls, and custom fabrication — all in-house. No outsourcing.
+              {brand.story_location}
             </p>
 
             <div
@@ -464,8 +462,8 @@ export default async function HomePage() {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/images/brotherhood-logo.jpg"
-                alt="TFOE Philippine Eagles Logo"
+                src={brand.organization_logo}
+                alt={brand.organization_logo_alt}
                 className="w-20 h-20 rounded-full object-cover flex-shrink-0"
                 style={{ border: '2px solid rgba(201,168,76,0.4)' }}
               />
@@ -474,7 +472,7 @@ export default async function HomePage() {
                   Proud Member
                 </p>
                 <p className="font-display font-bold text-base leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
-                  The Fraternal Order of Eagles
+                  {brand.organization}
                 </p>
                 <p className="font-display text-sm" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text-muted)' }}>
                   Philippine Eagles
@@ -498,28 +496,28 @@ export default async function HomePage() {
             <div className="flex items-center gap-2.5 mb-4">
               <div className="w-10 h-10 rounded-full overflow-hidden" style={{ border: '1.5px solid var(--color-accent)' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/images/eagles4x4-logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+                <img src={brand.logo} alt={brand.logo_alt} className="w-full h-full object-cover" />
               </div>
               <span className="font-brand text-lg font-bold" style={{ letterSpacing: '0.08em' }}>
-                EAGLES <span style={{ color: 'var(--color-accent)' }}>4×4</span>
+                {brand.name} <span style={{ color: 'var(--color-accent)' }}>4×4</span>
               </span>
             </div>
             <p className="text-[13px] mb-6 max-w-xs" style={{ color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
               Building serious rigs for serious off-roaders.
-              Dasmariñas, Cavite.
+              {brand.location}.
             </p>
           </div>
 
           <FooterCol title="Services" items={['Lift Kits', 'Suspension', 'Bull Bars', 'Full Builds', 'Accessories']} />
           <FooterCol title="Company" items={['About', 'Builds', 'Events', 'Contact']} />
-          <FooterCol title="Visit Us" items={['Dasmariñas, Cavite', '0917 XXX XXXX', 'hello@eagles4x4.ph', 'Mon–Sat, 8AM–6PM']} />
+          <FooterCol title="Visit Us" items={[brand.location, brand.phone, brand.email, brand.hours]} />
         </div>
 
         <div
           className="text-center pt-6 text-[11px]"
           style={{ borderTop: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
         >
-          © 2026 Eagles 4×4 Offroad. All rights reserved.
+          {brand.copyright}
         </div>
       </footer>
 

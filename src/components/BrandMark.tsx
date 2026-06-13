@@ -8,6 +8,7 @@
 // uppercase tag after the wordmark.
 
 import Link from 'next/link'
+import { brand } from '@/content/brand'
 
 export default function BrandMark({
   href = '/',
@@ -24,8 +25,8 @@ export default function BrandMark({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/images/eagles4x4-logo.jpg"
-          alt="Eagles 4×4 logo"
+          src={brand.logo}
+          alt={brand.logo_alt}
           className="w-full h-full object-cover"
         />
       </div>
@@ -33,7 +34,7 @@ export default function BrandMark({
         className="font-brand text-xl md:text-2xl font-bold leading-none"
         style={{ letterSpacing: '0.06em' }}
       >
-        EAGLES <span style={{ color: 'var(--color-accent)' }}>4×4</span>
+        {brand.name} <span style={{ color: 'var(--color-accent)' }}>4×4</span>
         {suffix && (
           <span
             className="ml-3 text-[10px] tracking-[0.22em] uppercase font-bold align-middle"
