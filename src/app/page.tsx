@@ -6,6 +6,7 @@
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { brand } from '@/content/brand'
+import { copy } from '@/content/copy'
 import PublicNav from '@/components/PublicNav'
 
 export const dynamic = 'force-dynamic'
@@ -25,12 +26,7 @@ const TESTIMONIALS = [
   { stars: 5, quote: 'Napakagaling ng team. Detailed ang work, maayos ang communication. Babalik talaga ako.',                        name: 'Ramon dela Cruz', loc: 'General Trias, Cavite', av: 'R' },
 ]
 
-const STATS = [
-  { num: '500+',    label: 'Builds Completed' },
-  { num: '8+',      label: 'Years Experience' },
-  { num: '4.9★',   label: 'Customer Rating' },
-  { num: 'Mon–Sat', label: '8 AM – 6 PM' },
-]
+const STATS = copy.home.stats
 
 const HERO_PHOTOS = [
   '/images/build-01.jpg',
@@ -117,7 +113,7 @@ export default async function HomePage() {
             style={{ fontFamily: 'var(--font-display)', animation: 'fade-in-up 0.8s ease-out 0.5s both' }}
           >
             <span className="block text-white" style={{ fontSize: 'clamp(48px, 10vw, 140px)', lineHeight: 0.9, letterSpacing: '-0.03em' }}>
-              Every bolt.
+              {copy.home.hero.headline_line2_italic}
             </span>
             <span
               className="block italic"
@@ -130,7 +126,7 @@ export default async function HomePage() {
                 marginTop: '0.05em',
               }}
             >
-              Every trail.
+              {copy.home.hero.headline_line3_italic}
             </span>
           </h1>
 
@@ -139,8 +135,7 @@ export default async function HomePage() {
             style={{ animation: 'fade-in-up 0.8s ease-out 0.8s both' }}
           >
             <p className="text-sm md:text-base max-w-sm" style={{ color: 'rgba(245,245,245,0.5)', lineHeight: 1.7 }}>
-              Lift kits, suspension overhauls, full builds — done in-house
-              by 4×4 owners, for 4×4 owners.
+              {copy.home.hero.subheading}
             </p>
 
             <div className="flex gap-3 flex-shrink-0">
@@ -149,14 +144,14 @@ export default async function HomePage() {
                 className="px-8 py-4 text-[11px] font-extrabold uppercase rounded-sm transition-all hover:brightness-110"
                 style={{ background: 'var(--color-accent)', color: '#000', letterSpacing: '0.12em' }}
               >
-                Book a Service
+                {copy.home.hero.cta_primary}
               </Link>
               <Link
                 href="#builds"
                 className="px-8 py-4 text-[11px] font-semibold uppercase rounded-sm transition-all"
                 style={{ color: 'rgba(245,245,245,0.5)', letterSpacing: '0.12em', border: '1px solid rgba(245,245,245,0.15)' }}
               >
-                View Builds
+                {copy.home.hero.cta_secondary}
               </Link>
             </div>
           </div>
@@ -201,15 +196,15 @@ export default async function HomePage() {
               <span className="inline-flex items-center gap-3 mb-4">
                 <span className="w-8 h-px" style={{ background: 'var(--color-accent)' }} />
                 <span className="text-[10px] font-semibold uppercase" style={{ letterSpacing: '0.25em', color: 'var(--color-accent)' }}>
-                  Featured Work
+                  {copy.home.builds.label}
                 </span>
               </span>
               <h2
                 className="font-display font-black leading-[0.95]"
                 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(36px, 5vw, 64px)' }}
               >
-                Built by hand.<br />
-                <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>Proven on dirt.</em>
+                {copy.home.builds.headline_line1}<br />
+                <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>{copy.home.builds.headline_line2_italic}</em>
               </h2>
             </div>
 
@@ -303,15 +298,15 @@ export default async function HomePage() {
             <span className="inline-flex items-center gap-3 mb-4">
               <span className="w-8 h-px" style={{ background: 'var(--color-accent)' }} />
               <span className="text-[10px] font-semibold uppercase" style={{ letterSpacing: '0.25em', color: 'var(--color-accent)' }}>
-                From Our Customers
+                {copy.home.testimonials.label}
               </span>
             </span>
             <h2
               className="font-display font-black leading-[0.95]"
               style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(36px, 4vw, 56px)' }}
             >
-              Trusted by the<br />
-              <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>community.</em>
+              {copy.home.testimonials.headline_line1}<br />
+              <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>{copy.home.testimonials.headline_line2_italic}</em>
             </h2>
           </div>
 
@@ -365,7 +360,7 @@ export default async function HomePage() {
               <span className="inline-flex items-center gap-3 mb-6 justify-center">
                 <span className="w-8 h-px" style={{ background: 'var(--color-accent)' }} />
                 <span className="text-[10px] font-semibold uppercase" style={{ letterSpacing: '0.25em', color: 'var(--color-accent)' }}>
-                  Ready for Your Build
+                  {copy.home.booking_cta.label}
                 </span>
                 <span className="w-8 h-px" style={{ background: 'var(--color-accent)' }} />
               </span>
@@ -374,13 +369,12 @@ export default async function HomePage() {
                 className="font-display font-black leading-[1.05] mb-6"
                 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(36px, 5vw, 72px)' }}
               >
-                Your truck.<br />
-                <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>Our hands.</em>
+                {copy.home.booking_cta.headline_line1}<br />
+                <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>{copy.home.booking_cta.headline_line2_italic}</em>
               </h2>
 
               <p className="text-sm md:text-base mb-10 max-w-md mx-auto" style={{ color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
-                From a quick quote to a full build — we handle everything
-                in-house. No outsourcing. No shortcuts.
+                {copy.home.booking_cta.subheading}
               </p>
 
               <div className="flex gap-3 justify-center">
@@ -389,7 +383,7 @@ export default async function HomePage() {
                   className="px-8 py-4 text-[11px] font-extrabold uppercase rounded-sm transition-all hover:brightness-110"
                   style={{ background: 'var(--color-accent)', color: '#000', letterSpacing: '0.12em' }}
                 >
-                  Book a Service
+                  {copy.home.booking_cta.cta}
                 </Link>
                 <Link
                   href="/services"
@@ -445,8 +439,8 @@ export default async function HomePage() {
               className="font-display font-black leading-[1.05] mb-6"
               style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(34px, 3.5vw, 52px)' }}
             >
-              Born from the<br />
-              <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>brotherhood.</em>
+              {copy.home.about.headline_line1}<br />
+              <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>{copy.home.about.headline_line2_italic}</em>
             </h2>
 
             <p className="text-[15px] mb-6 max-w-md" style={{ color: 'var(--color-text-muted)', lineHeight: 1.8 }}>
@@ -503,13 +497,14 @@ export default async function HomePage() {
               </span>
             </div>
             <p className="text-[13px] mb-6 max-w-xs" style={{ color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
-              Building serious rigs for serious off-roaders.
+              {copy.home.footer.tagline}
+              <br />
               {brand.location}.
             </p>
           </div>
 
-          <FooterCol title="Services" items={['Lift Kits', 'Suspension', 'Bull Bars', 'Full Builds', 'Accessories']} />
-          <FooterCol title="Company" items={['About', 'Builds', 'Events', 'Contact']} />
+          <FooterCol title="Services" items={copy.home.footer.footer_services} />
+          <FooterCol title="Company" items={copy.home.footer.footer_company} />
           <FooterCol title="Visit Us" items={[brand.location, brand.phone, brand.email, brand.hours]} />
         </div>
 
@@ -545,7 +540,7 @@ export default async function HomePage() {
   )
 }
 
-function FooterCol({ title, items }: Readonly<{ title: string; items: string[] }>) {
+function FooterCol({ title, items }: Readonly<{ title: string; items: readonly string[] }>) {
   return (
     <div>
       <h4 className="text-[10px] font-bold uppercase mb-5" style={{ letterSpacing: '0.2em', color: 'var(--color-text-primary)' }}>
