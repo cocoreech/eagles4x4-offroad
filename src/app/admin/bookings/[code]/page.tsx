@@ -30,6 +30,7 @@ export default async function AdminBookingDetailPage(props: Readonly<{ params: P
       contact_phone, contact_email, contact_facebook,
       created_at, updated_at, estimated_ready_at, completed_at,
       service_bay, internal_status, admin_notes,
+      vehicle_make_snapshot, vehicle_model_snapshot, vehicle_year_snapshot, vehicle_transmission_snapshot,
       customer:profiles!customer_id ( full_name, email, phone ),
       vehicles ( make, model, year, transmission, plate_number ),
       booking_items ( id, item_type, name_snapshot, price_snapshot, quantity )
@@ -54,6 +55,21 @@ export default async function AdminBookingDetailPage(props: Readonly<{ params: P
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const items: any[] = (booking as any).booking_items ?? []
 
+  // Guest bookings have no linked profile or vehicle row — normalize the vehicle
+  // to either the linked row or the snapshot columns so the UI is source-agnostic.
+  const isGuest = !p
+  const veh =
+    v ??
+    (booking.vehicle_make_snapshot || booking.vehicle_model_snapshot
+      ? {
+          make: booking.vehicle_make_snapshot,
+          model: booking.vehicle_model_snapshot,
+          year: booking.vehicle_year_snapshot,
+          transmission: booking.vehicle_transmission_snapshot,
+          plate_number: null,
+        }
+      : null)
+
   return (
     <main className="min-h-screen flex flex-col">
       <nav className="px-6 py-5 flex items-center justify-between border-b" style={{ borderColor: 'var(--color-border)' }}>
@@ -72,7 +88,7 @@ export default async function AdminBookingDetailPage(props: Readonly<{ params: P
                 Booking · {booking.booking_code}
               </div>
               <h1 className="font-display font-black leading-none" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 40px)' }}>
-                {v ? `${v.year} ${v.make} ${v.model}` : 'Booking'}
+                {veh ? `${veh.year ?? ''} ${veh.make} ${veh.model}`.trim() : 'Booking'}
               </h1>
             </div>
             <span
@@ -97,7 +113,7 @@ export default async function AdminBookingDetailPage(props: Readonly<{ params: P
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
             {/* Customer */}
             <Card title="Customer">
-              <Row label="Name" value={p?.full_name || '—'} />
+              <Row label="Name" value={p?.full_name || (isGuest ? 'Guest (no account)' : '—')} />
               <Row label="Email" value={booking.contact_email || p?.email} />
               <Row label="Mobile" value={booking.contact_phone} />
             </Card>
@@ -110,13 +126,13 @@ export default async function AdminBookingDetailPage(props: Readonly<{ params: P
             </Card>
 
             {/* Vehicle */}
-            {v && (
+            {veh && (
               <Card title="Vehicle">
-                <Row label="Make" value={v.make} />
-                <Row label="Model" value={v.model} />
-                <Row label="Year" value={String(v.year)} />
-                {v.transmission && <Row label="Trans" value={v.transmission} />}
-                {v.plate_number && <Row label="Plate" value={v.plate_number} />}
+                <Row label="Make" value={veh.make} />
+                <Row label="Model" value={veh.model} />
+                <Row label="Year" value={veh.year ? String(veh.year) : null} />
+                {veh.transmission && <Row label="Trans" value={veh.transmission} />}
+                {veh.plate_number && <Row label="Plate" value={veh.plate_number} />}
               </Card>
             )}
 

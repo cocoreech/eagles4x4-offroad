@@ -47,7 +47,8 @@ export default async function AdminBookingsPage(props: Readonly<{ searchParams: 
     .from('bookings')
     .select(`
       id, booking_code, scheduled_date, scheduled_time, status,
-      total_amount, contact_phone, created_at,
+      total_amount, contact_phone, contact_email, created_at,
+      vehicle_make_snapshot, vehicle_model_snapshot, vehicle_year_snapshot,
       customer:profiles!customer_id ( full_name, email ),
       vehicles ( make, model, year )
     `)
@@ -134,6 +135,14 @@ export default async function AdminBookingsPage(props: Readonly<{ searchParams: 
                     const p: any = (b as any).customer
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const v: any = (b as any).vehicles
+                    // Guest bookings have no linked profile/vehicle — fall back to
+                    // the contact email and the vehicle snapshot columns.
+                    const isGuest = !p
+                    const vehicleLabel = v
+                      ? `${v.year ?? ''} ${v.make} ${v.model}`.trim()
+                      : [b.vehicle_year_snapshot, b.vehicle_make_snapshot, b.vehicle_model_snapshot]
+                          .filter(Boolean)
+                          .join(' ')
                     return (
                       <tr key={b.id} className="border-t transition" style={{ borderColor: 'var(--color-border)' }}>
                         <td className="p-3">
@@ -142,10 +151,20 @@ export default async function AdminBookingsPage(props: Readonly<{ searchParams: 
                           </Link>
                         </td>
                         <td className="p-3">
-                          <div className="font-medium">{p?.full_name || p?.email || '—'}</div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{p?.full_name || p?.email || b.contact_email || '—'}</span>
+                            {isGuest && (
+                              <span
+                                className="px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase rounded"
+                                style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--color-text-muted)' }}
+                              >
+                                Guest
+                              </span>
+                            )}
+                          </div>
                           <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{b.contact_phone}</div>
                         </td>
-                        <td className="p-3">{v ? `${v.year} ${v.make} ${v.model}` : '—'}</td>
+                        <td className="p-3">{vehicleLabel || '—'}</td>
                         <td className="p-3">
                           <div className="text-xs">{b.scheduled_date}</div>
                           <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{String(b.scheduled_time).slice(0, 5)}</div>
