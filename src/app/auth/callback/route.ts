@@ -9,13 +9,24 @@
 
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
+import { linkGuestBookings } from '@/lib/auth'
+
+// Attach any guest bookings made with this account's email. Best-effort —
+// a failure must not block the sign-in redirect.
+async function linkBookingsForCurrentUser() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) await linkGuestBookings(user.id, user.email)
+}
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url)
   const code = url.searchParams.get('code')
   const tokenHash = url.searchParams.get('token_hash')
   const type = url.searchParams.get('type')
-  const next = url.searchParams.get('next') ?? '/'
+  // Only same-origin relative redirects (blocks open-redirect via "//evil.com").
+  const nextRaw = url.searchParams.get('next') ?? '/'
+  const next = nextRaw.startsWith('/') && !nextRaw.startsWith('//') ? nextRaw : '/'
 
   const supabase = await createClient()
 
@@ -23,6 +34,7 @@ export async function GET(req: NextRequest) {
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+      await linkBookingsForCurrentUser()
       return NextResponse.redirect(new URL(next, url.origin))
     }
     console.error('[auth/callback] exchangeCodeForSession error', error)
@@ -35,6 +47,7 @@ export async function GET(req: NextRequest) {
       token_hash: tokenHash,
     })
     if (!error) {
+      await linkBookingsForCurrentUser()
       return NextResponse.redirect(new URL(next, url.origin))
     }
     console.error('[auth/callback] verifyOtp error', error)

@@ -12,9 +12,12 @@ type Stage = 'email' | 'code'
 
 const RESEND_COOLDOWN_SECONDS = 30
 
-export default function LoginForm() {
+export default function LoginForm({
+  defaultEmail = '',
+  next = '',
+}: Readonly<{ defaultEmail?: string; next?: string }>) {
   const [stage, setStage] = useState<Stage>('email')
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(defaultEmail)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
@@ -90,6 +93,7 @@ export default function LoginForm() {
               type="email"
               required
               autoComplete="email"
+              defaultValue={defaultEmail}
               placeholder="juan@example.com"
               className="w-full px-4 py-3 rounded-sm outline-none transition text-sm"
               style={{
@@ -141,6 +145,7 @@ export default function LoginForm() {
           </div>
 
           <input type="hidden" name="email" value={email} />
+          <input type="hidden" name="next" value={next} />
           <label className="block">
             <span
               className="block text-[10px] font-bold tracking-[0.15em] uppercase mb-2"

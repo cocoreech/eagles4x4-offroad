@@ -9,7 +9,10 @@ import BrandMark from '@/components/BrandMark'
 
 export const dynamic = 'force-dynamic'
 
-export default function LoginPage() {
+export default async function LoginPage(
+  props: Readonly<{ searchParams: Promise<{ email?: string; next?: string }> }>
+) {
+  const { email, next } = await props.searchParams
   return (
     <main className="min-h-screen flex flex-col">
       {/* Simple top nav */}
@@ -50,7 +53,7 @@ export default function LoginPage() {
           </div>
 
           {/* Form (client component for the two-step UI) */}
-          <LoginForm />
+          <LoginForm defaultEmail={email ?? ''} next={next ?? ''} />
 
           <p className="mt-8 text-center text-xs" style={{ color: 'var(--color-text-muted)' }}>
             Already used {brand.name_full} before? Same email keeps your bookings &amp; history.

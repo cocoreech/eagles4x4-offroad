@@ -8,9 +8,18 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
+import { linkGuestBookings } from '@/lib/auth'
 import { rlAuthOtp, checkAuthLimit, checkUniqueEmailsPerIp } from '@/utils/ratelimit'
 import { headers } from 'next/headers'
 import { z } from 'zod'
+
+// Only allow same-origin relative redirects (e.g. "/bookings/EG-2026-0001").
+// Blocks open-redirect attempts via "//evil.com" or absolute URLs.
+function safeNext(next: FormDataEntryValue | null): string {
+  const n = typeof next === 'string' ? next : ''
+  if (n.startsWith('/') && !n.startsWith('//')) return n
+  return '/'
+}
 
 const emailSchema = z.object({
   email: z.string().email().trim().toLowerCase(),
@@ -115,7 +124,7 @@ export async function verifyOtp(formData: FormData) {
   }
 
   const supabase = await createClient()
-  const { error } = await supabase.auth.verifyOtp({
+  const { data: { user }, error } = await supabase.auth.verifyOtp({
     email,
     token,
     type: 'email',
@@ -125,6 +134,12 @@ export async function verifyOtp(formData: FormData) {
     return { error: 'Code is invalid or expired.' }
   }
 
-  // Successful sign-in → go home (or wherever ?next= points)
-  redirect('/')
+  // Attach any guest bookings made with this email to the now-signed-in account.
+  // Best-effort — never blocks sign-in.
+  if (user) {
+    await linkGuestBookings(user.id, user.email ?? email)
+  }
+
+  // Successful sign-in → go where ?next= points (validated), else home.
+  redirect(safeNext(formData.get('next')))
 }

@@ -36,6 +36,7 @@ export default async function BookingDetailPage(props: Readonly<{ params: Promis
       id, booking_code, scheduled_date, scheduled_time, status, subtotal, labor_cost, total_amount, notes,
       contact_phone, contact_email, created_at, estimated_ready_at, completed_at,
       payment_status, payment_amount, paid_at, payment_method,
+      vehicle_make_snapshot, vehicle_model_snapshot, vehicle_year_snapshot,
       vehicles ( make, model, year, transmission ),
       booking_items ( id, item_type, name_snapshot, price_snapshot, quantity )
     `)
@@ -48,6 +49,14 @@ export default async function BookingDetailPage(props: Readonly<{ params: Promis
   const v = (booking as any).vehicles
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const items: any[] = (booking as any).booking_items ?? []
+
+  // Vehicle label: authenticated bookings reference a vehicle row; bookings that
+  // started as guest checkouts carry the details in snapshot columns instead.
+  const vehicleLabel = v
+    ? `${v.year ?? ''} ${v.make} ${v.model}`.trim()
+    : [booking.vehicle_year_snapshot, booking.vehicle_make_snapshot, booking.vehicle_model_snapshot]
+        .filter(Boolean)
+        .join(' ')
 
   return (
     <main className="min-h-screen flex flex-col">
@@ -123,7 +132,7 @@ export default async function BookingDetailPage(props: Readonly<{ params: Promis
             className="font-display font-black leading-none mb-8"
             style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4.5vw, 44px)' }}
           >
-            {v ? `${v.year} ${v.make} ${v.model}` : 'Booking Details'}
+            {vehicleLabel || 'Booking Details'}
           </h1>
 
           {/* Schedule */}
