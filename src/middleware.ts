@@ -3,6 +3,7 @@
 // ============================================================
 // Responsibilities (in order):
 //   1. Block known bad user agents
+//   1b. WAF screen: reject SQLi/XSS/traversal payloads in URL + headers
 //   2. Geo-block /admin/* if request country is outside ADMIN_ALLOWED_COUNTRIES
 //   3. Honor progressive IP block (24h-tier blocker set in ratelimit.ts)
 //   4. Rate-limit auth + anonymous form endpoints by IP
@@ -14,6 +15,7 @@
 
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { screenRequest } from '@/lib/waf'
 import {
   rlAuthLogin,
   rlAuthSignup,
@@ -216,6 +218,16 @@ export async function middleware(req: NextRequest) {
   // strict or the UA is actually present.
   const strictUaPath = pathStartsWith(pathname, ADMIN_PREFIXES) || pathname.startsWith('/auth') || pathname.startsWith('/api/auth')
   if (isBadUserAgent(ua) && (strictUaPath || ua)) {
+    return new NextResponse('Forbidden', { status: 403 })
+  }
+
+  // ── 1b. WAF: screen URL + headers for attack payloads ─────
+  // Cheap, synchronous, no network call. Catches SQLi/XSS/traversal probes in
+  // the path, query string, and reflected headers before any Supabase work.
+  // Request bodies are not screened here (would consume the stream) — handlers
+  // validate those with Zod + lib/sanitize.ts.
+  const waf = screenRequest(pathname, req.nextUrl.searchParams, req.headers)
+  if (waf.blocked) {
     return new NextResponse('Forbidden', { status: 403 })
   }
 

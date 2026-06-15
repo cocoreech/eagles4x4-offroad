@@ -4,11 +4,15 @@
 
 import LoginForm from './LoginForm'
 import Link from 'next/link'
+import { brand } from '@/content/brand'
 import BrandMark from '@/components/BrandMark'
 
 export const dynamic = 'force-dynamic'
 
-export default function LoginPage() {
+export default async function LoginPage(
+  props: Readonly<{ searchParams: Promise<{ email?: string; next?: string }> }>
+) {
+  const { email, next } = await props.searchParams
   return (
     <main className="min-h-screen flex flex-col">
       {/* Simple top nav */}
@@ -37,7 +41,7 @@ export default function LoginPage() {
               className="font-display font-black leading-none"
               style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(36px, 6vw, 56px)' }}
             >
-              Join Eagles<br />
+              Join {brand.name}<br />
               <em style={{ color: 'var(--color-accent)' }}>4×4.</em>
             </h1>
             <p
@@ -49,10 +53,10 @@ export default function LoginPage() {
           </div>
 
           {/* Form (client component for the two-step UI) */}
-          <LoginForm />
+          <LoginForm defaultEmail={email ?? ''} next={next ?? ''} />
 
           <p className="mt-8 text-center text-xs" style={{ color: 'var(--color-text-muted)' }}>
-            Already used Eagles 4×4 before? Same email keeps your bookings &amp; history.
+            Already used {brand.name_full} before? Same email keeps your bookings &amp; history.
           </p>
         </div>
       </div>

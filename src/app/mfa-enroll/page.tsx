@@ -4,6 +4,7 @@
 // Required for admin role. Customers don't need MFA.
 
 import { redirect } from 'next/navigation'
+import { brand } from '@/content/brand'
 import { createClient } from '@/utils/supabase/server'
 import { requireAuth } from '@/lib/auth'
 import MfaEnrollForm from './MfaEnrollForm'
@@ -32,7 +33,7 @@ export default async function MfaEnrollPage() {
   // Enroll a new TOTP factor. Supabase returns the QR code as SVG + raw secret.
   const { data: enroll, error } = await supabase.auth.mfa.enroll({
     factorType: 'totp',
-    issuer: 'Eagles 4x4',
+    issuer: brand.name_full,
   })
 
   if (error || !enroll) {

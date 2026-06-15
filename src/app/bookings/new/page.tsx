@@ -3,7 +3,7 @@
 // Full magazine-style UI lands in Step 4 (Frontend).
 // ============================================================
 
-import { requireAuth } from '@/lib/auth'
+import { getUser } from '@/lib/auth'
 import { createClient } from '@/utils/supabase/server'
 import BookingForm from './BookingForm'
 import Link from 'next/link'
@@ -12,7 +12,9 @@ import BrandMark from '@/components/BrandMark'
 export const dynamic = 'force-dynamic'
 
 export default async function NewBookingPage() {
-  const user = await requireAuth()
+  // Guest checkout: no auth required. `user` is null for guests; their email
+  // comes from the form field instead of the JWT.
+  const user = await getUser()
   const supabase = await createClient()
 
   // Fetch active services + products for the form to pick from / prefill from a quote
@@ -64,7 +66,7 @@ export default async function NewBookingPage() {
           <BookingForm
             services={services ?? []}
             products={products ?? []}
-            defaultEmail={user.email ?? ''}
+            defaultEmail={user?.email ?? ''}
           />
         </div>
       </div>

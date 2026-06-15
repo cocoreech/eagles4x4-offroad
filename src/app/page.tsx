@@ -5,18 +5,12 @@
 
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
+import { brand } from '@/content/brand'
+import { copy } from '@/content/copy'
+import { seedBuilds } from '@/content/seeds/builds'
 import PublicNav from '@/components/PublicNav'
 
 export const dynamic = 'force-dynamic'
-
-const HARDCODED_BUILDS = [
-  { slug: 'hilux-full-build',  title: '4" Lift + ARB Bull Bar Setup',  vehicle: 'Toyota Hilux · 2024',    cover: '/images/build-01.jpg', tags: ['Lift Kit', 'Suspension', 'Bull Bar', 'Winch'] },
-  { slug: 'ranger-bullbar',    title: 'Bull Bar + Winch Combo',        vehicle: 'Ford Ranger · 2023',     cover: '/images/build-02.jpg', tags: ['Bull Bar', 'Winch'] },
-  { slug: 'strada-suspension', title: 'Complete Suspension Overhaul',  vehicle: 'Mitsubishi Strada',      cover: '/images/build-03.jpg', tags: ['Suspension', 'Lift'] },
-  { slug: 'fortuner-wheels',   title: 'OX Wheels + KO2 Tire Setup',   vehicle: 'Toyota Fortuner',        cover: '/images/build-04.jpg', tags: ['Wheels', 'Tires'] },
-  { slug: 'dmax-protection',   title: 'Lift Kit + Skid Plate Armor',  vehicle: 'Isuzu D-Max · 2023',     cover: '/images/build-05.jpg', tags: ['Lift Kit', 'Protection'] },
-  { slug: 'navara-exterior',   title: 'Full Exterior Transformation', vehicle: 'Nissan Navara · 2024',   cover: '/images/build-06.jpg', tags: ['Bull Bar', 'Lighting', 'Rack'] },
-]
 
 const TESTIMONIALS = [
   { stars: 5, quote: 'Best shop sa Cavite. Yung Hilux ko grabe na improvement pagkatapos. Hindi na mabibigo sa kahit anong trail.', name: 'Carlo Mendoza', loc: 'Dasmariñas, Cavite', av: 'C' },
@@ -24,12 +18,7 @@ const TESTIMONIALS = [
   { stars: 5, quote: 'Napakagaling ng team. Detailed ang work, maayos ang communication. Babalik talaga ako.',                        name: 'Ramon dela Cruz', loc: 'General Trias, Cavite', av: 'R' },
 ]
 
-const STATS = [
-  { num: '500+',    label: 'Builds Completed' },
-  { num: '8+',      label: 'Years Experience' },
-  { num: '4.9★',   label: 'Customer Rating' },
-  { num: 'Mon–Sat', label: '8 AM – 6 PM' },
-]
+const STATS = copy.home.stats
 
 const HERO_PHOTOS = [
   '/images/build-01.jpg',
@@ -60,7 +49,7 @@ export default async function HomePage() {
         cover:   b.cover_image_url ?? '/images/build-01.jpg',
         tags:    Array.isArray(b.tags) ? b.tags.slice(0, 4) : [],
       }))
-    : HARDCODED_BUILDS
+    : seedBuilds
 
   const bookHref = user ? '/bookings/new' : '/login?next=/bookings/new'
 
@@ -116,7 +105,7 @@ export default async function HomePage() {
             style={{ fontFamily: 'var(--font-display)', animation: 'fade-in-up 0.8s ease-out 0.5s both' }}
           >
             <span className="block text-white" style={{ fontSize: 'clamp(48px, 10vw, 140px)', lineHeight: 0.9, letterSpacing: '-0.03em' }}>
-              Every bolt.
+              {copy.home.hero.headline_line2_italic}
             </span>
             <span
               className="block italic"
@@ -129,7 +118,7 @@ export default async function HomePage() {
                 marginTop: '0.05em',
               }}
             >
-              Every trail.
+              {copy.home.hero.headline_line3_italic}
             </span>
           </h1>
 
@@ -138,8 +127,7 @@ export default async function HomePage() {
             style={{ animation: 'fade-in-up 0.8s ease-out 0.8s both' }}
           >
             <p className="text-sm md:text-base max-w-sm" style={{ color: 'rgba(245,245,245,0.5)', lineHeight: 1.7 }}>
-              Lift kits, suspension overhauls, full builds — done in-house
-              by 4×4 owners, for 4×4 owners.
+              {copy.home.hero.subheading}
             </p>
 
             <div className="flex gap-3 flex-shrink-0">
@@ -148,14 +136,14 @@ export default async function HomePage() {
                 className="px-8 py-4 text-[11px] font-extrabold uppercase rounded-sm transition-all hover:brightness-110"
                 style={{ background: 'var(--color-accent)', color: '#000', letterSpacing: '0.12em' }}
               >
-                Book a Service
+                {copy.home.hero.cta_primary}
               </Link>
               <Link
                 href="#builds"
                 className="px-8 py-4 text-[11px] font-semibold uppercase rounded-sm transition-all"
                 style={{ color: 'rgba(245,245,245,0.5)', letterSpacing: '0.12em', border: '1px solid rgba(245,245,245,0.15)' }}
               >
-                View Builds
+                {copy.home.hero.cta_secondary}
               </Link>
             </div>
           </div>
@@ -200,15 +188,15 @@ export default async function HomePage() {
               <span className="inline-flex items-center gap-3 mb-4">
                 <span className="w-8 h-px" style={{ background: 'var(--color-accent)' }} />
                 <span className="text-[10px] font-semibold uppercase" style={{ letterSpacing: '0.25em', color: 'var(--color-accent)' }}>
-                  Featured Work
+                  {copy.home.builds.label}
                 </span>
               </span>
               <h2
                 className="font-display font-black leading-[0.95]"
                 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(36px, 5vw, 64px)' }}
               >
-                Built by hand.<br />
-                <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>Proven on dirt.</em>
+                {copy.home.builds.headline_line1}<br />
+                <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>{copy.home.builds.headline_line2_italic}</em>
               </h2>
             </div>
 
@@ -302,15 +290,15 @@ export default async function HomePage() {
             <span className="inline-flex items-center gap-3 mb-4">
               <span className="w-8 h-px" style={{ background: 'var(--color-accent)' }} />
               <span className="text-[10px] font-semibold uppercase" style={{ letterSpacing: '0.25em', color: 'var(--color-accent)' }}>
-                From Our Customers
+                {copy.home.testimonials.label}
               </span>
             </span>
             <h2
               className="font-display font-black leading-[0.95]"
               style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(36px, 4vw, 56px)' }}
             >
-              Trusted by the<br />
-              <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>community.</em>
+              {copy.home.testimonials.headline_line1}<br />
+              <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>{copy.home.testimonials.headline_line2_italic}</em>
             </h2>
           </div>
 
@@ -364,7 +352,7 @@ export default async function HomePage() {
               <span className="inline-flex items-center gap-3 mb-6 justify-center">
                 <span className="w-8 h-px" style={{ background: 'var(--color-accent)' }} />
                 <span className="text-[10px] font-semibold uppercase" style={{ letterSpacing: '0.25em', color: 'var(--color-accent)' }}>
-                  Ready for Your Build
+                  {copy.home.booking_cta.label}
                 </span>
                 <span className="w-8 h-px" style={{ background: 'var(--color-accent)' }} />
               </span>
@@ -373,13 +361,12 @@ export default async function HomePage() {
                 className="font-display font-black leading-[1.05] mb-6"
                 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(36px, 5vw, 72px)' }}
               >
-                Your truck.<br />
-                <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>Our hands.</em>
+                {copy.home.booking_cta.headline_line1}<br />
+                <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>{copy.home.booking_cta.headline_line2_italic}</em>
               </h2>
 
               <p className="text-sm md:text-base mb-10 max-w-md mx-auto" style={{ color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
-                From a quick quote to a full build — we handle everything
-                in-house. No outsourcing. No shortcuts.
+                {copy.home.booking_cta.subheading}
               </p>
 
               <div className="flex gap-3 justify-center">
@@ -388,7 +375,7 @@ export default async function HomePage() {
                   className="px-8 py-4 text-[11px] font-extrabold uppercase rounded-sm transition-all hover:brightness-110"
                   style={{ background: 'var(--color-accent)', color: '#000', letterSpacing: '0.12em' }}
                 >
-                  Book a Service
+                  {copy.home.booking_cta.cta}
                 </Link>
                 <Link
                   href="/services"
@@ -444,18 +431,15 @@ export default async function HomePage() {
               className="font-display font-black leading-[1.05] mb-6"
               style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(34px, 3.5vw, 52px)' }}
             >
-              Born from the<br />
-              <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>brotherhood.</em>
+              {copy.home.about.headline_line1}<br />
+              <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>{copy.home.about.headline_line2_italic}</em>
             </h2>
 
             <p className="text-[15px] mb-6 max-w-md" style={{ color: 'var(--color-text-muted)', lineHeight: 1.8 }}>
-              Eagles 4×4 Offroad is more than a shop. We&apos;re part of The Fraternal Order of Eagles —
-              a brotherhood built on honor, service, and a love for the open road.
-              Every truck we build carries that spirit.
+              {brand.story}
             </p>
             <p className="text-[15px] mb-10 max-w-md" style={{ color: 'var(--color-text-muted)', lineHeight: 1.8 }}>
-              Based in Dasmariñas, Cavite, we specialize in 4×4 builds, lift kits,
-              full suspension overhauls, and custom fabrication — all in-house. No outsourcing.
+              {brand.story_location}
             </p>
 
             <div
@@ -464,8 +448,8 @@ export default async function HomePage() {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/images/brotherhood-logo.jpg"
-                alt="TFOE Philippine Eagles Logo"
+                src={brand.organization_logo}
+                alt={brand.organization_logo_alt}
                 className="w-20 h-20 rounded-full object-cover flex-shrink-0"
                 style={{ border: '2px solid rgba(201,168,76,0.4)' }}
               />
@@ -474,7 +458,7 @@ export default async function HomePage() {
                   Proud Member
                 </p>
                 <p className="font-display font-bold text-base leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
-                  The Fraternal Order of Eagles
+                  {brand.organization}
                 </p>
                 <p className="font-display text-sm" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text-muted)' }}>
                   Philippine Eagles
@@ -498,28 +482,29 @@ export default async function HomePage() {
             <div className="flex items-center gap-2.5 mb-4">
               <div className="w-10 h-10 rounded-full overflow-hidden" style={{ border: '1.5px solid var(--color-accent)' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/images/eagles4x4-logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+                <img src={brand.logo} alt={brand.logo_alt} className="w-full h-full object-cover" />
               </div>
               <span className="font-brand text-lg font-bold" style={{ letterSpacing: '0.08em' }}>
-                EAGLES <span style={{ color: 'var(--color-accent)' }}>4×4</span>
+                {brand.name} <span style={{ color: 'var(--color-accent)' }}>4×4</span>
               </span>
             </div>
             <p className="text-[13px] mb-6 max-w-xs" style={{ color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
-              Building serious rigs for serious off-roaders.
-              Dasmariñas, Cavite.
+              {copy.home.footer.tagline}
+              <br />
+              {brand.location}.
             </p>
           </div>
 
-          <FooterCol title="Services" items={['Lift Kits', 'Suspension', 'Bull Bars', 'Full Builds', 'Accessories']} />
-          <FooterCol title="Company" items={['About', 'Builds', 'Events', 'Contact']} />
-          <FooterCol title="Visit Us" items={['Dasmariñas, Cavite', '0917 XXX XXXX', 'hello@eagles4x4.ph', 'Mon–Sat, 8AM–6PM']} />
+          <FooterCol title="Services" items={copy.home.footer.footer_services} />
+          <FooterCol title="Company" items={copy.home.footer.footer_company} />
+          <FooterCol title="Visit Us" items={[brand.location, brand.phone, brand.email, brand.hours]} />
         </div>
 
         <div
           className="text-center pt-6 text-[11px]"
           style={{ borderTop: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
         >
-          © 2026 Eagles 4×4 Offroad. All rights reserved.
+          {brand.copyright}
         </div>
       </footer>
 
@@ -547,7 +532,7 @@ export default async function HomePage() {
   )
 }
 
-function FooterCol({ title, items }: Readonly<{ title: string; items: string[] }>) {
+function FooterCol({ title, items }: Readonly<{ title: string; items: readonly string[] }>) {
   return (
     <div>
       <h4 className="text-[10px] font-bold uppercase mb-5" style={{ letterSpacing: '0.2em', color: 'var(--color-text-primary)' }}>

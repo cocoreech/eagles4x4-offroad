@@ -5,7 +5,7 @@
 // Throws structured errors that callers can map to redirects or 401/403.
 
 import { redirect } from 'next/navigation'
-import { createClient } from '@/utils/supabase/server'
+import { createClient, createServiceRoleClient } from '@/utils/supabase/server'
 
 export class AuthError extends Error {
   constructor(public code: 'unauthenticated' | 'unconfirmed' | 'no-mfa' | 'not-admin', message: string) {
@@ -23,6 +23,42 @@ export async function getUser() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   return user
+}
+
+// ─────────────────────────────────────────────
+// Link guest bookings to a freshly-authenticated account.
+// Guest checkout creates bookings with customer_id = NULL and the customer's
+// email in contact_email. When that person later signs in with the same email,
+// we attach those bookings to their account so they appear under /bookings.
+//
+// Uses the service-role client: guest rows are invisible to the user-scoped
+// client under RLS, and the UPDATE claims rows the user does not yet own.
+// Email is matched case-insensitively against the lowercased stored value.
+// Best-effort — a failure here is logged but must never block sign-in.
+// Returns the number of bookings linked.
+// ─────────────────────────────────────────────
+export async function linkGuestBookings(
+  userId: string,
+  email: string | null | undefined
+): Promise<number> {
+  if (!email) return 0
+  try {
+    const admin = createServiceRoleClient()
+    const { data, error } = await admin
+      .from('bookings')
+      .update({ customer_id: userId })
+      .is('customer_id', null)
+      .eq('contact_email', email.toLowerCase())
+      .select('id')
+    if (error) {
+      console.error('[linkGuestBookings]', error)
+      return 0
+    }
+    return data?.length ?? 0
+  } catch (err) {
+    console.error('[linkGuestBookings] unexpected', err)
+    return 0
+  }
 }
 
 // ─────────────────────────────────────────────
