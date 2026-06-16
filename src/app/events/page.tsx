@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
-import PublicNav from '@/components/PublicNav'
+import PublicNav from '@/components/PublicNavServer'
 
 export const dynamic = 'force-dynamic'
 

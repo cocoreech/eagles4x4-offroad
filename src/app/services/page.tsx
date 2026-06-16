@@ -5,7 +5,7 @@
 // Sign-in is only required when they click "Proceed to Book".
 
 import { createClient } from '@/utils/supabase/server'
-import PublicNav from '@/components/PublicNav'
+import PublicNav from '@/components/PublicNavServer'
 import QuoteCalculator from './QuoteCalculator'
 
 export const dynamic = 'force-dynamic'

@@ -39,3 +39,13 @@ html, body {
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+
+/* Social icon links in footer */
+.social-icon {
+  color: rgba(245, 245, 245, 0.4);
+  border: 1px solid rgba(245, 245, 245, 0.1);
+}
+.social-icon:hover {
+  color: var(--color-accent);
+  border-color: rgba(201, 168, 76, 0.4);
+}

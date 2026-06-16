@@ -3,12 +3,13 @@
 // Hero: fast-cycling Ken Burns photos (drop /public/videos/timelapse.mp4 to auto-upgrade to video)
 // ============================================================
 
+import type React from 'react'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { brand } from '@/content/brand'
 import { copy } from '@/content/copy'
 import { seedBuilds } from '@/content/seeds/builds'
-import PublicNav from '@/components/PublicNav'
+import PublicNav from '@/components/PublicNavServer'
 
 export const dynamic = 'force-dynamic'
 
@@ -493,6 +494,13 @@ export default async function HomePage() {
               <br />
               {brand.location}.
             </p>
+            {/* Social media links */}
+            <div className="flex items-center gap-4">
+              <SocialIcon href="https://www.facebook.com" label="Facebook" icon={<path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />} />
+              <SocialIcon href="https://www.instagram.com" label="Instagram" icon={<><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></>} />
+              <SocialIcon href="https://www.tiktok.com" label="TikTok" icon={<path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z" />} />
+              <SocialIcon href="https://www.youtube.com" label="YouTube" icon={<><path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 00-1.95 1.96A29 29 0 001 12a29 29 0 00.46 5.58A2.78 2.78 0 003.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.4a2.78 2.78 0 001.95-1.95A29 29 0 0023 12a29 29 0 00-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></>} />
+            </div>
           </div>
 
           <FooterCol title="Services" items={copy.home.footer.footer_services} />
@@ -529,6 +537,23 @@ export default async function HomePage() {
         #builds-carousel { scroll-behavior: smooth; }
       `}</style>
     </>
+  )
+}
+
+function SocialIcon({ href, label, icon }: Readonly<{ href: string; label: string; icon: React.ReactNode }>) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={label}
+      className="social-icon w-8 h-8 flex items-center justify-center rounded-sm transition-all hover:scale-110 focus-visible:outline focus-visible:outline-2"
+      style={{ outlineColor: 'var(--color-accent)' }}
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        {icon}
+      </svg>
+    </a>
   )
 }
 

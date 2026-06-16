@@ -3,7 +3,7 @@
 // List via the in-page toggle; reduced-motion / no-WebGL clients get List.
 
 import { createClient } from '@/utils/supabase/server'
-import PublicNav from '@/components/PublicNav'
+import PublicNav from '@/components/PublicNavServer'
 import SphereGallery, { type GalleryBuild } from '@/components/SphereGallery'
 
 export const dynamic = 'force-dynamic'
