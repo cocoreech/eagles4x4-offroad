@@ -15,11 +15,12 @@ export default async function AdminHomePage() {
   const supabase = await createClient()
 
   // Aggregate counts for the stats cards
-  const [bookingsAll, services, products, builds] = await Promise.all([
+  const [bookingsAll, services, products, builds, events] = await Promise.all([
     supabase.from('bookings').select('id, status, total_amount, created_at'),
     supabase.from('services').select('id, is_active'),
     supabase.from('products').select('id, is_active'),
     supabase.from('builds').select('id'),
+    supabase.from('events').select('id, is_published'),
   ])
 
   const allBookings = bookingsAll.data ?? []
@@ -98,6 +99,13 @@ export default async function AdminHomePage() {
               href="/admin/builds"
               title="Builds Gallery"
               desc={`${builds.data?.length ?? 0} entries in portfolio`}
+              count="Manage"
+              ready
+            />
+            <Tile
+              href="/admin/events"
+              title="Events"
+              desc={`${events.data?.length ?? 0} events · ${events.data?.filter(e => e.is_published).length ?? 0} published`}
               count="Manage"
               ready
             />
