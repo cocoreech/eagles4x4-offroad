@@ -7,6 +7,7 @@
 import { createClient } from '@/utils/supabase/server'
 import PublicNav from '@/components/PublicNavServer'
 import QuoteCalculator from './QuoteCalculator'
+import BrandMarquee from '@/components/BrandMarquee'
 
 export const dynamic = 'force-dynamic'
 
@@ -75,6 +76,8 @@ export default async function ServicesPage() {
           <Pillar n="03" title="Full Warranty on Labor" last
             desc="We stand behind every build. If something isn't right, we fix it — no arguments, no extra charge." />
         </section>
+
+        <BrandMarquee />
       </main>
     </>
   )

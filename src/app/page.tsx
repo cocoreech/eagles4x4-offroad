@@ -10,6 +10,7 @@ import { brand } from '@/content/brand'
 import { copy } from '@/content/copy'
 import { seedBuilds } from '@/content/seeds/builds'
 import PublicNav from '@/components/PublicNavServer'
+import BrandMarquee from '@/components/BrandMarquee'
 
 export const dynamic = 'force-dynamic'
 
@@ -283,6 +284,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ════════ BRAND PARTNERS ════════ */}
+      <BrandMarquee />
 
       {/* ════════ TESTIMONIALS ════════ */}
       <section className="px-6 md:px-12 py-24" style={{ background: 'var(--color-bg)' }}>

@@ -40,6 +40,24 @@ html, body {
   text-transform: uppercase;
 }
 
+/* Brand marquee — hover gold reveal */
+.brand-chip-label {
+  color: rgba(245, 245, 245, 0.3);
+  transition: color 250ms ease-out;
+}
+.brand-chip:hover .brand-chip-label {
+  color: var(--color-accent);
+}
+.brand-chip-img {
+  filter: brightness(0) invert(1);
+  opacity: 0.3;
+  transition: opacity 250ms ease-out, filter 250ms ease-out;
+}
+.brand-chip:hover .brand-chip-img {
+  filter: brightness(0) saturate(100%) invert(72%) sepia(42%) saturate(500%) hue-rotate(5deg);
+  opacity: 0.9;
+}
+
 /* Social icon links in footer */
 .social-icon {
   color: rgba(245, 245, 245, 0.4);
