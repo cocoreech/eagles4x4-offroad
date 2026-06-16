@@ -126,8 +126,74 @@ export default function QuoteCalculator({ services, products, isSignedIn }: Prop
     setPickedProducts(new Set())
   }
 
+  // Group products by category for the showcase grid
+  const productsByCategory = useMemo(() => {
+    const map = new Map<string, Product[]>()
+    for (const p of products) {
+      const cat = p.category ?? 'Other'
+      if (!map.has(cat)) map.set(cat, [])
+      map.get(cat)!.push(p)
+    }
+    return map
+  }, [products])
+
   return (
-    <section className="px-6 md:px-12 pb-16">
+    <>
+    {/* ── Product Showcase ─────────────────────────────────────── */}
+    {products.length > 0 && (
+      <section
+        id="products"
+        className="px-6 md:px-12 pb-20 pt-4"
+        style={{ borderBottom: '1px solid var(--color-border)' }}
+      >
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-10">
+            <div className="inline-flex items-center gap-2 mb-3">
+              <div className="w-7 h-px" style={{ background: 'var(--color-accent)' }} />
+              <span className="text-[10px] font-extrabold tracking-[0.4em] uppercase" style={{ color: 'var(--color-accent)' }}>
+                Products &amp; Accessories
+              </span>
+            </div>
+            <h2
+              className="font-display font-black leading-tight"
+              style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 3.5vw, 48px)' }}
+            >
+              Shop by <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>Category.</em>
+            </h2>
+            <p className="mt-2 text-sm max-w-md" style={{ color: 'var(--color-text-muted)', lineHeight: 1.65 }}>
+              Tap any item to add it to your quote. Mix services and parts for a full build estimate.
+            </p>
+          </div>
+
+          {Array.from(productsByCategory.entries()).map(([cat, catProducts]) => (
+            <div key={cat} className="mb-12">
+              <div className="flex items-center gap-4 mb-5">
+                <span
+                  className="text-[10px] font-extrabold uppercase tracking-[0.25em]"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  {cat}
+                </span>
+                <div className="flex-1 h-px" style={{ background: 'var(--color-border)' }} />
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {catProducts.map(p => (
+                  <ProductShowcaseCard
+                    key={p.id}
+                    product={p}
+                    picked={pickedProducts.has(p.slug)}
+                    onToggle={() => toggleProduct(p.slug)}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+
+    {/* ── Quote Builder ─────────────────────────────────────────── */}
+    <section id="services" className="px-6 md:px-12 pb-16 pt-12">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8">
         {/* Left — picker */}
         <div>
@@ -274,6 +340,7 @@ export default function QuoteCalculator({ services, products, isSignedIn }: Prop
         </aside>
       </div>
     </section>
+    </>
   )
 }
 
@@ -429,5 +496,79 @@ function EmptyState({ label }: Readonly<{ label: string }>) {
     >
       {label}
     </div>
+  )
+}
+
+function ProductShowcaseCard({
+  product,
+  picked,
+  onToggle,
+}: Readonly<{ product: Product; picked: boolean; onToggle: () => void }>) {
+  const priceLabel = product.price != null
+    ? `₱${Number(product.price).toLocaleString('en-PH')}`
+    : 'Inquire'
+
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={picked}
+      className="group text-left rounded-sm overflow-hidden transition focus:outline-none focus-visible:outline-2"
+      style={{
+        background: picked ? 'rgba(201,168,76,0.08)' : 'var(--color-surface)',
+        border: '1px solid ' + (picked ? 'var(--color-accent)' : 'var(--color-border)'),
+        outlineColor: 'var(--color-accent)',
+      }}
+    >
+      {/* Image */}
+      <div className="aspect-square overflow-hidden" style={{ background: 'var(--color-bg)' }}>
+        {product.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={product.image_url}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div
+            className="w-full h-full flex items-center justify-center font-display font-black text-3xl"
+            style={{ color: 'var(--color-border)' }}
+          >
+            {product.name.charAt(0)}
+          </div>
+        )}
+      </div>
+
+      {/* Info */}
+      <div className="p-3">
+        {product.brand && (
+          <div className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--color-text-muted)' }}>
+            {product.brand}
+          </div>
+        )}
+        <div
+          className="font-display font-bold text-sm leading-tight line-clamp-2"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
+          {product.name}
+        </div>
+        <div className="mt-2 flex items-center justify-between">
+          <span className="text-[11px] font-bold" style={{ color: 'var(--color-accent)' }}>
+            {priceLabel}
+          </span>
+          <span
+            className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-black transition"
+            style={{
+              background: picked ? 'var(--color-accent)' : 'transparent',
+              color: picked ? '#000' : 'var(--color-accent)',
+              border: '1.5px solid var(--color-accent)',
+            }}
+            aria-hidden
+          >
+            {picked ? '✓' : '+'}
+          </span>
+        </div>
+      </div>
+    </button>
   )
 }
