@@ -33,6 +33,15 @@ A vehicle project shared by a user in the gallery. Two types:
 ### Build (internal)
 A portfolio piece showcasing a vehicle project we completed. Displayed on `/builds` (sphere gallery). Owner-managed in admin panel. Not user-generated.
 
+### Touchpoint
+A scheduled, drafted, trackable outreach to a customer about a Booking. One unified concept differentiated by **type** + **timing** + **template**:
+- **Reminder** — a pre-service Touchpoint ("your appointment is tomorrow").
+- **Follow-up** — a post-service Touchpoint (post-service check-in, maintenance/PMS reminder, etc.).
+
+A Touchpoint carries a message drafted from a template, which **admins can edit before sending** (so it doesn't sound robotic); **AI may suggest** draft wording. Delivery is hybrid: auto by email where possible, otherwise one-tap click-to-chat by staff. Every Touchpoint tracks a status (e.g. pending → sent → replied/no-response).
+
+**Key decision:** Reminders and Follow-ups are NOT separate systems — both are Touchpoints, differing only by type/timing/template.
+
 ---
 
 ## Feature Areas
