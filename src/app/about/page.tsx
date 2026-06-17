@@ -122,12 +122,11 @@ export default function AboutPage() {
                 Mission
               </div>
               <h2 className="font-display font-black text-2xl md:text-3xl mb-5" style={{ fontFamily: 'var(--font-display)' }}>
-                To build rigs that never let you down on the trail.
+                To empower offroad enthusiasts with high-quality equipment, expert craftsmanship, and reliable systems.
               </h2>
               <p className="text-sm" style={{ color: 'var(--color-text-muted)', lineHeight: 1.75 }}>
-                We exist to give every 4×4 owner in the Philippines access to world-class builds —
-                using OEM-grade parts, in-house fabrication, and the knowledge that only comes from
-                people who actually use what they build.
+                Helping them conquer any terrain safely, confidently, and responsibly. We are committed
+                to excellence, community, and raising the standard of offroad builds in the Philippines.
               </p>
             </div>
 
@@ -140,12 +139,11 @@ export default function AboutPage() {
                 Vision
               </div>
               <h2 className="font-display font-black text-2xl md:text-3xl mb-5" style={{ fontFamily: 'var(--font-display)' }}>
-                To be the 4×4 workshop every Filipino off-roader trusts.
+                To become a trusted and leading offroad brand, known for innovation, quality, and consistency.
               </h2>
               <p className="text-sm" style={{ color: 'var(--color-text-muted)', lineHeight: 1.75 }}>
-                Expanding beyond Cavite to serve the entire Philippine off-road community — with the
-                same uncompromising standards, the same Brotherhood values, and the same commitment
-                to getting every build right.
+                Every vehicle built by Eagles 4x4 is prepared for extreme terrain and unforgettable
+                adventures, while promoting responsible and sustainable offroading.
               </p>
             </div>
           </div>
