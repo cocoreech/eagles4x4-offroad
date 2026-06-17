@@ -99,13 +99,22 @@ interface TouchpointSender {
 - `email` → Resend (implemented).
 - `sms`, `whatsapp` → stubs that throw "channel not enabled" until Phase 2.
 
-Click-to-chat links are built (not "sent") for the manual queue, reusing **`src/lib/phone.ts`** for PH formatting (`09171234567` → `639171234567`):
-- WhatsApp `https://wa.me/<intl>?text=<enc>` · SMS `sms:+<intl>?body=<enc>` · Call `tel:+<intl>` · Messenger `https://m.me/<fb>` only when `contact_facebook` exists.
+Click-to-chat links are built (not "sent") for the manual queue, reusing **`src/lib/phone.ts`** for PH formatting (`09171234567` → `639171234567`). PH channel priority — **Viber and Messenger are top consumer chat apps in PH** (Viber especially), so they are first-class, not afterthoughts:
+
+| Channel | Link | Pre-fills text? |
+|---|---|---|
+| **Viber** | `viber://chat?number=%2B<intl>` | ❌ opens chat only → use Copy |
+| **Messenger** | `https://m.me/<fb>` (only if `contact_facebook` exists) | ❌ → use Copy |
+| **WhatsApp** | `https://wa.me/<intl>?text=<enc>` | ✅ |
+| **SMS** | `sms:+<intl>?body=<enc>` | ✅ |
+| **Call** | `tel:+<intl>` | — |
+
+Because Viber/Messenger can't pre-fill, **every queue row has a "Copy message" button**: staff taps Copy, the Viber/Messenger chat opens, paste, send. One extra tap; keeps Viber fully first-class and free. Channel buttons are gated by available contact info (Viber/WhatsApp/SMS/Call need a phone; Messenger needs `contact_facebook`).
 
 ## 6. Admin dashboard — `/admin/touchpoints`
 
 New tile on the `/admin` hub. Single page, two sections:
-- **Needs sending** — `channel=chat`, `status=pending`, due ≤ today. Each row: customer + booking code + type badge + due + **editable rendered draft** + ✨ Suggest (Phase: last) + **contact-gated channel buttons** + **Mark sent** (→ `status=sent`, `sent_at`, `sent_by`, persists final text).
+- **Needs sending** — `channel=chat`, `status=pending`, due ≤ today. Each row: customer + booking code + type badge + due + **editable rendered draft** + ✨ Suggest (Phase: last) + **Copy** + **contact-gated channel buttons** (Viber · Messenger · WhatsApp · SMS · Call) + **Mark sent** (→ `status=sent`, `sent_at`, `sent_by`, persists final text).
 - **Recently sent** — `status in (sent, replied, no_response)`, newest first. Status dropdown to set `replied` / `no_response` (manual labels, no automation). Chat rows labelled "marked sent by <staff>"; email rows "auto-email".
 - **Manual early-send** entry point (e.g. from booking detail, or a picker) to fire any type now.
 
