@@ -18,7 +18,7 @@ export const BRAND_PARTNERS: Brand[] = [
   { name: 'Würth',                abbr: 'WÜRTH',       logo: '/images/brands/wurth.png',         url: 'https://www.wurth.com' },
   { name: 'Old Man Emu',          abbr: 'OME',                                                    url: 'https://www.arb.com.au/ome' },
   { name: 'Black Rhino Wheels',   abbr: 'BLACK RHINO',                                            url: 'https://www.blackrhinowheels.com' },
-  { name: 'Profender Suspension',  abbr: 'PROFENDER' },
+  { name: 'Profender Suspension',  abbr: 'PROFENDER',  logo: '/images/brands/profender.png' },
   { name: 'Amsoil',               abbr: 'AMSOIL',                                                 url: 'https://www.amsoil.com' },
   { name: 'Totachi',              abbr: 'TOTACHI',                                                url: 'https://www.totachi.com' },
   { name: 'Mountain Top',         abbr: 'MTN TOP' },
