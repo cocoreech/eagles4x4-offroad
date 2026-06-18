@@ -60,39 +60,23 @@ export default function BrandMarquee() {
 }
 
 function BrandChip({ brand }: Readonly<{ brand: typeof BRAND_PARTNERS[number] }>) {
-  const inner = brand.logo ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={brand.logo}
-      alt={brand.name}
-      className="brand-chip-img h-7 w-auto object-contain"
-    />
-  ) : (
-    <span
-      className="brand-chip-label font-display font-black text-sm whitespace-nowrap"
-      style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }}
-    >
-      {brand.abbr}
-    </span>
-  )
-
-  if (brand.url) {
-    return (
-      <a
-        href={brand.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={brand.name}
-        className="brand-chip flex-shrink-0"
-      >
-        {inner}
-      </a>
-    )
-  }
-
   return (
     <div className="brand-chip flex-shrink-0" aria-label={brand.name}>
-      {inner}
+      {brand.logo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={brand.logo}
+          alt={brand.name}
+          className="brand-chip-img h-7 w-auto object-contain"
+        />
+      ) : (
+        <span
+          className="brand-chip-label font-display font-black text-sm whitespace-nowrap"
+          style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }}
+        >
+          {brand.abbr}
+        </span>
+      )}
     </div>
   )
 }
