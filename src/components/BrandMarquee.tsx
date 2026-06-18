@@ -36,7 +36,7 @@ export default function BrandMarquee() {
           style={{ background: 'linear-gradient(to left, var(--color-surface), transparent)' }}
         />
 
-        <div className="brand-marquee-track flex gap-12 items-center w-max">
+        <div className="brand-marquee-track flex gap-4 items-center w-max">
           {items.map((b, i) => (
             <BrandChip key={`${b.abbr}-${i}`} brand={b} />
           ))}
@@ -45,7 +45,7 @@ export default function BrandMarquee() {
 
       <style>{`
         .brand-marquee-track {
-          animation: brand-scroll 28s linear infinite;
+          animation: brand-scroll 40s linear infinite;
         }
         @media (prefers-reduced-motion: reduce) {
           .brand-marquee-track { animation: none; }
@@ -61,18 +61,23 @@ export default function BrandMarquee() {
 
 function BrandChip({ brand }: Readonly<{ brand: typeof BRAND_PARTNERS[number] }>) {
   return (
-    <div className="brand-chip flex-shrink-0" aria-label={brand.name}>
+    <div
+      className="brand-chip flex-shrink-0 flex items-center justify-center rounded-md px-5 py-3"
+      style={{ background: '#ffffff', minWidth: '120px', height: '56px' }}
+      aria-label={brand.name}
+    >
       {brand.logo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={brand.logo}
           alt={brand.name}
-          className="brand-chip-img h-7 w-auto object-contain"
+          className="h-8 w-auto object-contain"
+          style={{ maxWidth: '100px' }}
         />
       ) : (
         <span
-          className="brand-chip-label font-display font-black text-sm whitespace-nowrap"
-          style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }}
+          className="font-display font-black text-xs whitespace-nowrap"
+          style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em', color: '#111' }}
         >
           {brand.abbr}
         </span>
