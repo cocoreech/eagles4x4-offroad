@@ -4,7 +4,7 @@ const TOKEN_RE = /\{\{\s*(\w+)\s*\}\}/g
 
 export function renderTemplate(template: string, tokens: TouchpointTokens): string {
   return template.replace(TOKEN_RE, (_m, key: string) => {
-    const v = (tokens as Record<string, string>)[key]
+    const v = (tokens as unknown as Record<string, string>)[key]
     return v ?? ''
   })
 }
