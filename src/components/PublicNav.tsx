@@ -185,6 +185,13 @@ export default function PublicNav({ user, isAdmin }: Readonly<{ user?: { id: str
               >
                 My Bookings
               </Link>
+              <Link
+                href="/inbox"
+                className="hidden sm:inline-block text-[11px] font-semibold tracking-[0.1em] uppercase"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                Inbox
+              </Link>
               {isAdmin && (
                 <Link
                   href="/admin"
@@ -212,7 +219,7 @@ export default function PublicNav({ user, isAdmin }: Readonly<{ user?: { id: str
                 Sign In
               </Link>
               <Link
-                href="/login?next=/bookings/new"
+                href="/bookings/new"
                 className="px-5 py-2.5 text-[11px] font-extrabold tracking-[0.12em] uppercase rounded-sm"
                 style={{ background: 'var(--color-accent)', color: '#000' }}
               >
@@ -272,6 +279,9 @@ export default function PublicNav({ user, isAdmin }: Readonly<{ user?: { id: str
                   <Link href="/bookings" onClick={() => setMobileOpen(false)} className="block px-6 py-4 text-center text-[11px] font-bold uppercase tracking-[0.12em] rounded-sm" style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
                     My Bookings
                   </Link>
+                  <Link href="/inbox" onClick={() => setMobileOpen(false)} className="block px-6 py-4 text-center text-[11px] font-bold uppercase tracking-[0.12em] rounded-sm" style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
+                    Inbox
+                  </Link>
                   <Link href="/bookings/new" onClick={() => setMobileOpen(false)} className="block px-6 py-4 text-center text-[11px] font-extrabold uppercase tracking-[0.12em] rounded-sm" style={{ background: 'var(--color-accent)', color: '#000' }}>
                     Book Now
                   </Link>
@@ -281,7 +291,7 @@ export default function PublicNav({ user, isAdmin }: Readonly<{ user?: { id: str
                   <Link href="/login" onClick={() => setMobileOpen(false)} className="block px-6 py-4 text-center text-[11px] font-bold uppercase tracking-[0.12em] rounded-sm" style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
                     Sign In
                   </Link>
-                  <Link href="/login?next=/bookings/new" onClick={() => setMobileOpen(false)} className="block px-6 py-4 text-center text-[11px] font-extrabold uppercase tracking-[0.12em] rounded-sm" style={{ background: 'var(--color-accent)', color: '#000' }}>
+                  <Link href="/bookings/new" onClick={() => setMobileOpen(false)} className="block px-6 py-4 text-center text-[11px] font-extrabold uppercase tracking-[0.12em] rounded-sm" style={{ background: 'var(--color-accent)', color: '#000' }}>
                     Book Now
                   </Link>
                 </>
