@@ -55,6 +55,8 @@ export function getSender(channel: TouchpointChannel): TouchpointSender {
       })
     case 'chat':
       throw new Error('chat is sent manually (no automated sender)')
+    case 'inbox':
+      throw new Error('inbox is delivered via deliverToInbox, not getSender')
     default:
       // Defensive fallback for when Phase-2 channels are added to the enum
       return notEnabled(channel satisfies never as string)
