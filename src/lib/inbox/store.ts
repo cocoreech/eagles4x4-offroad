@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Conversation, ConversationMessage, MessageSender } from '@/types/inbox'
+import type { Conversation, ConversationMessage, ConversationStatus, MessageSender } from '@/types/inbox'
 
 export function createInboxStore(client: SupabaseClient) {
   return {
@@ -82,6 +82,25 @@ export function createInboxStore(client: SupabaseClient) {
         .update({ doorbell_sent_at: new Date().toISOString() })
         .eq('id', conversationId)
       if (error) throw new Error(`markDoorbellSent: ${error.message}`)
+    },
+
+    async isAnyMerchantOnline(): Promise<boolean> {
+      const { data, error } = await client
+        .from('merchant_presence')
+        .select('merchant_id')
+        .eq('online', true)
+        .limit(1)
+        .maybeSingle()
+      if (error) throw new Error(`isAnyMerchantOnline: ${error.message}`)
+      return data !== null
+    },
+
+    async setStatus(conversationId: string, status: ConversationStatus): Promise<void> {
+      const { error } = await client
+        .from('conversations')
+        .update({ status })
+        .eq('id', conversationId)
+      if (error) throw new Error(`setStatus: ${error.message}`)
     },
 
     async listConversations(): Promise<(Conversation & { customer_name: string | null })[]> {
