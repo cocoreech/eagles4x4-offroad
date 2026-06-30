@@ -110,6 +110,13 @@ export default async function AdminHomePage() {
               ready
             />
             <Tile
+              href="/admin/inbox"
+              title="Inbox"
+              desc="Live chat with customers"
+              count="Open"
+              ready
+            />
+            <Tile
               href="#"
               title="Site Content"
               desc="Edit hero text, about section, shop info"
