@@ -53,8 +53,9 @@ export function createInboxStore(client: SupabaseClient) {
         .from('conversations')
         .update({
           last_message_at: new Date().toISOString(),
-          // A customer message means the merchant must act; flag it.
-          ...(input.sender === 'customer' ? { status: 'awaiting_merchant' } : {}),
+          // A customer message flags the merchant to act; a merchant/bot reply
+          // clears that flag so the "new" badge doesn't stick forever.
+          status: input.sender === 'customer' ? 'awaiting_merchant' : 'open',
         })
         .eq('id', input.conversationId)
       if (touch.error) throw new Error(`insertMessage touch: ${touch.error.message}`)
