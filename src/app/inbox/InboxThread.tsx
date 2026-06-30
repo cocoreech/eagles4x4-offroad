@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useTransition } from 'react'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 import { createClient } from '@/utils/supabase/client'
 import type { ConversationMessage } from '@/types/inbox'
 import { inboxCopy } from '@/content/inbox'
@@ -24,24 +25,37 @@ export function InboxThread({ conversationId, initial, isAdmin = false, onSend }
 
   useEffect(() => {
     const supabase = createClient()
-    const channel = supabase
-      .channel(`inbox:${conversationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'conversation_messages',
-          filter: `conversation_id=eq.${conversationId}`,
-        },
-        payload => {
-          const row = payload.new as ConversationMessage
-          setMessages(prev => (prev.some(m => m.id === row.id) ? prev : [...prev, row]))
-        },
-      )
-      .subscribe()
+    let channel: RealtimeChannel | undefined
+
+    const setup = async () => {
+      // Pass the user's JWT to the realtime socket so RLS can resolve
+      // auth.uid() — without it the socket is anon and postgres_changes
+      // events for the (auth-gated) conversation never reach this client.
+      const { data } = await supabase.auth.getSession()
+      const token = data.session?.access_token
+      if (token) await supabase.realtime.setAuth(token)
+
+      channel = supabase
+        .channel(`inbox:${conversationId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'conversation_messages',
+            filter: `conversation_id=eq.${conversationId}`,
+          },
+          payload => {
+            const row = payload.new as ConversationMessage
+            setMessages(prev => (prev.some(m => m.id === row.id) ? prev : [...prev, row]))
+          },
+        )
+        .subscribe()
+    }
+    void setup()
+
     return () => {
-      void supabase.removeChannel(channel)
+      if (channel) void supabase.removeChannel(channel)
     }
   }, [conversationId])
 
