@@ -51,6 +51,9 @@ const schema = z.object({
   scheduledTime:       z.string().regex(/^\d{2}:\d{2}$/, 'Pick a time slot above'),
   // PhoneInput posts both the assembled E.164 string AND the parts so we can
   // re-validate server-side rather than trusting the client-built string.
+  contactName:         z.string()
+                        .transform(s => sanitizeText(s, 80))
+                        .refine(v => v.length >= 2, 'Please enter your name.'),
   contactPhone:        z.string().min(1, 'Enter your mobile number.'),
   contactPhoneDial:    z.string().min(2, 'Pick a country code.'),
   contactPhoneLocal:   z.string().min(1, 'Enter the digits after the country code.'),
@@ -108,6 +111,7 @@ export async function createBooking(formData: FormData) {
     vehicleTransmission: formData.get('vehicleTransmission') || undefined,
     scheduledDate:       formData.get('scheduledDate'),
     scheduledTime:       formData.get('scheduledTime'),
+    contactName:         formData.get('contactName') || '',
     contactPhone:        formData.get('contactPhone'),
     contactPhoneDial:    formData.get('contactPhoneDial'),
     contactPhoneLocal:   formData.get('contactPhoneLocal'),
@@ -273,6 +277,7 @@ export async function createBooking(formData: FormData) {
       // Store the SERVER-rebuilt E.164 string — never the raw client value
       contact_phone:   normalizeE164(d.contactPhoneDial, d.contactPhoneLocal)!,
       contact_email:   d.contactEmail || user?.email || null,
+      contact_name:    d.contactName,
       // Vehicle snapshot — populated only for guests (vehicle_id is NULL).
       vehicle_make_snapshot:         user ? null : d.vehicleMake,
       vehicle_model_snapshot:        user ? null : d.vehicleModel,

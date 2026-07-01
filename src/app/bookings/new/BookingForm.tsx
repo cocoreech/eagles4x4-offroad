@@ -35,10 +35,12 @@ export default function BookingForm({
   services,
   products,
   defaultEmail,
+  defaultName,
 }: Readonly<{
   services: Service[]
   products: Product[]
   defaultEmail: string
+  defaultName: string
 }>) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [prefilledNotes, setPrefilledNotes] = useState<string>('')
@@ -171,6 +173,14 @@ export default function BookingForm({
           Contact <em style={{ color: 'var(--color-accent)' }}>Info</em>
         </h2>
         <div className="grid grid-cols-1 gap-4">
+          <Field
+            label="Full Name"
+            name="contactName"
+            type="text"
+            placeholder="Juan dela Cruz"
+            defaultValue={defaultName}
+            required
+          />
           <PhoneInput />
           <Field
             label="Email"

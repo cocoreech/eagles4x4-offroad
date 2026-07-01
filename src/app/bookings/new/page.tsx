@@ -17,8 +17,9 @@ export default async function NewBookingPage() {
   const user = await getUser()
   const supabase = await createClient()
 
-  // Fetch active services + products for the form to pick from / prefill from a quote
-  const [{ data: services }, { data: products }] = await Promise.all([
+  // Fetch active services + products for the form to pick from / prefill from a quote.
+  // For authenticated users, also pull their profile name to prefill the form.
+  const [{ data: services }, { data: products }, { data: profile }] = await Promise.all([
     supabase
       .from('services')
       .select('id, slug, name, description, starting_price, category, icon')
@@ -28,6 +29,9 @@ export default async function NewBookingPage() {
       .from('products')
       .select('id, slug, name, brand, price')
       .eq('is_active', true),
+    user
+      ? supabase.from('profiles').select('full_name').eq('id', user.id).maybeSingle()
+      : Promise.resolve({ data: null }),
   ])
 
   return (
@@ -67,6 +71,7 @@ export default async function NewBookingPage() {
             services={services ?? []}
             products={products ?? []}
             defaultEmail={user?.email ?? ''}
+            defaultName={profile?.full_name ?? ''}
           />
         </div>
       </div>
