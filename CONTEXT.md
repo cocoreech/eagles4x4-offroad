@@ -17,10 +17,12 @@ A service request from a customer for work on their vehicle. Includes:
 
 ### Account / User
 An authenticated user account. Required only to:
-- Upload and share builds
+- Upload and share community Builds (the "membership"-equivalent value)
 - Moderate/admin access (owner)
 
-**Key decision:** Account creation is optional at booking time but required to participate in community (uploads).
+**Key decision:** Login exists only where there is real value behind it. Bookings need NO login (like Rapide PH, which has no customer accounts at all). The future customer-login value is loyalty/aftercare — warranty registration, points, member promos (the Seng Li model) — not just community uploads.
+
+**Launch decision:** NO customer login at launch. Only admin/owner login exists. Customer-facing login (whatever value it eventually carries) is post-launch. Login plays **no role in the booking flow**, ever.
 
 ### Build (community)
 A vehicle project shared by a user in the gallery. Two types:
@@ -53,9 +55,11 @@ A Touchpoint carries a message drafted from a template, which **admins can edit 
 - `/events` — event listings (if any)
 
 ### Booking Flow
-- `/login` → email magic link → `/bookings/new` → book → pay (PayMongo) → confirmation email with account claim link
-- Guest checkout; no signup required before payment
-- Link to create account offered post-booking
+- `/bookings/new` → book → pay (PayMongo) → confirmation (Touchpoint message)
+- Guest checkout; NO login anywhere in the booking path
+
+### Booking Tracking
+**Key decision:** There is no customer-facing tracking surface. Customers do NOT log in, do NOT browse a "my bookings" list, and there is NO track-my-build page, link, lookup form, or progress photos. Status updates are **pushed** to the customer as Touchpoint messages (Viber/SMS/email) when the admin changes the booking status — the message IS the update (the Rapide model). The only on-site screen is the post-booking confirmation (`/bookings/[code]/success`), shown once right after submitting; it confirms receipt, it is not a tracking page.
 
 ### Community (Future)
 - `/community` or `/builds/shared` — community gallery of user-submitted builds (verified + moderated)
