@@ -37,6 +37,9 @@ import { sanitizeText, sanitizeMultiline } from '@/lib/sanitize'
 import { normalizeE164, getCountryByDial } from '@/lib/phone'
 import { isValidMakeModel, ALLOWED_MAKES } from '@/lib/vehicles'
 import { createCheckoutSession } from '@/lib/paymongo'
+import { emailSender } from '@/lib/touchpoints/channels'
+import { buildBookingConfirmationEmail } from '@/lib/bookings/confirmationEmail'
+import { brand } from '@/content/brand'
 
 // Make/Model now constrained to the allow-list in vehicles.ts.
 // Phone is country-code + number → normalized to E.164 (+639XXXXXXXXX).
@@ -312,6 +315,31 @@ export async function createBooking(formData: FormData) {
     return {
       error: 'Booking created but services could not be attached. Please contact us with code ' + booking.booking_code,
     }
+  }
+
+  // 7b. Best-effort confirmation email — booking + items already persisted, so a
+  //     failure here (incl. missing RESEND_API_KEY) is logged and ignored.
+  try {
+    const emailSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+    const { subject, body } = buildBookingConfirmationEmail({
+      customerName: d.contactName,
+      bookingCode: booking.booking_code,
+      date: d.scheduledDate,
+      time: d.scheduledTime,
+      items: services.map(s => ({ name: s.name, quantity: 1, lineTotal: Number(s.starting_price) })),
+      total: subtotal,
+      successUrl: `${emailSiteUrl}/bookings/${booking.booking_code}/success`,
+      shopName: brand.name,
+      shopContact: `${brand.phone} · ${brand.email}`,
+    })
+    const sender = emailSender({
+      apiKey: process.env.RESEND_API_KEY ?? '',
+      from: process.env.TOUCHPOINT_EMAIL_FROM ?? 'Eagles 4x4 <onboarding@resend.dev>',
+    })
+    const res = await sender.send({ to: d.contactEmail, subject, body })
+    if (!res.ok) console.error('[createBooking] confirmation email', res.error)
+  } catch (err) {
+    console.error('[createBooking] confirmation email', err)
   }
 
   // 8. Create PayMongo checkout session for ₱500 deposit
