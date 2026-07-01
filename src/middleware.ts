@@ -31,6 +31,7 @@ import {
   rateLimitedResponse,
   recordAttempt,
 } from '@/utils/ratelimit'
+import { requiresAuth, pathHasPrefix, ADMIN_PREFIXES } from '@/lib/routeProtection'
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -57,30 +58,8 @@ const BLOCKED_UA_PATTERNS = [
   'curl/7.0', // generic curl that's almost always a scanner; allow modern curl
 ] as const
 
-// Routes that must be protected (require an authenticated session)
-const PROTECTED_PREFIXES = ['/dashboard', '/admin', '/profile', '/bookings', '/quotes', '/track']
-
-// Routes that require admin role + MFA (aal2)
-const ADMIN_PREFIXES = ['/admin']
-
-// Routes used by the unauthenticated visitor flow — never blocked.
-const PUBLIC_ALLOWLIST = [
-  '/',
-  '/login',
-  '/signup',
-  '/verify-email',
-  '/mfa-challenge',
-  '/auth/callback',
-  '/auth/confirm',
-  '/services',
-  '/builds',
-  '/events',
-  '/about',
-  '/api/webhooks/paymongo', // external webhook receiver — auth via HMAC signature
-  '/_next', // assets
-  '/favicon.ico',
-  '/manifest.webmanifest',
-]
+// Route-gating prefixes + the public allowlist live in @/lib/routeProtection
+// (pure + unit-tested). ADMIN_PREFIXES is imported for the geo/UA checks below.
 
 // Country allow-list for /admin/* (ISO 3166-1 alpha-2)
 const ADMIN_ALLOWED_COUNTRIES = new Set(
@@ -107,14 +86,6 @@ function isBadUserAgent(ua: string | null): boolean {
   if (!ua) return true // empty UA on /admin or auth routes is suspicious
   const lower = ua.toLowerCase()
   return BLOCKED_UA_PATTERNS.some(p => lower.includes(p))
-}
-
-function pathStartsWith(pathname: string, prefixes: readonly string[]): boolean {
-  return prefixes.some(p => pathname === p || pathname.startsWith(p + '/') || pathname.startsWith(p))
-}
-
-function isPublicPath(pathname: string): boolean {
-  return PUBLIC_ALLOWLIST.some(p => pathname === p || pathname.startsWith(p + '/') || pathname.startsWith(p))
 }
 
 // ─────────────────────────────────────────────
@@ -175,9 +146,7 @@ function buildRouteRedirect(
   user: { email_confirmed_at?: string } | null,
   pathname: string,
 ): NextResponse | null {
-  const isProtected = pathStartsWith(pathname, PROTECTED_PREFIXES)
-  const isPublic = isPublicPath(pathname)
-  if (!isProtected || isPublic) return null
+  if (!requiresAuth(pathname)) return null
 
   // No session → /login
   if (!user) {
@@ -216,7 +185,7 @@ export async function middleware(req: NextRequest) {
   // Public pages tolerate empty UAs (so link previews / curl docs work) but still
   // block tool UAs. Combined: block when the UA is bad AND either the path is
   // strict or the UA is actually present.
-  const strictUaPath = pathStartsWith(pathname, ADMIN_PREFIXES) || pathname.startsWith('/auth') || pathname.startsWith('/api/auth')
+  const strictUaPath = pathHasPrefix(pathname, ADMIN_PREFIXES) || pathname.startsWith('/auth') || pathname.startsWith('/api/auth')
   if (isBadUserAgent(ua) && (strictUaPath || ua)) {
     return new NextResponse('Forbidden', { status: 403 })
   }
@@ -233,7 +202,7 @@ export async function middleware(req: NextRequest) {
 
   // ── 2. Geo-block /admin/* ─────────────────────────────────
   // Vercel injects x-vercel-ip-country. In local dev it's missing — we allow.
-  if (pathStartsWith(pathname, ADMIN_PREFIXES)) {
+  if (pathHasPrefix(pathname, ADMIN_PREFIXES)) {
     const country = req.headers.get('x-vercel-ip-country')?.toUpperCase()
     if (country && !ADMIN_ALLOWED_COUNTRIES.has(country)) {
       return new NextResponse('Forbidden', { status: 403 })
