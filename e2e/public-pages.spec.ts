@@ -6,7 +6,9 @@ import { test, expect } from "@playwright/test";
  * clean load here confirms the Next 16 async-request-API migration works at
  * runtime, not just at type-check time.
  */
-const publicPages = ["/", "/services", "/builds", "/events", "/login"];
+// `/bookings/new` is public on purpose: guest checkout means a visitor can
+// reach the booking form without an account (see createBooking's guest path).
+const publicPages = ["/", "/services", "/builds", "/events", "/login", "/bookings/new"];
 
 for (const path of publicPages) {
   test(`public page ${path} renders without a server error`, async ({ page }) => {
@@ -22,7 +24,7 @@ for (const path of publicPages) {
  * exercises the middleware route-protection path (which itself refreshes the
  * Supabase session via the async server client).
  */
-const protectedPages = ["/bookings", "/bookings/new"];
+const protectedPages = ["/bookings"];
 
 for (const path of protectedPages) {
   test(`protected page ${path} redirects unauthenticated user to /login`, async ({ page }) => {

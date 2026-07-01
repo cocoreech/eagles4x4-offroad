@@ -33,7 +33,6 @@ const HERO_PHOTOS = [
 
 export default async function HomePage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
 
   const { data: dbBuilds } = await supabase
     .from('builds')
@@ -53,7 +52,9 @@ export default async function HomePage() {
       }))
     : seedBuilds
 
-  const bookHref = user ? '/bookings/new' : '/login?next=/bookings/new'
+  // Guest checkout is supported — send everyone straight to the form. Guests
+  // who'd rather sign in first can still use the "Sign In" link in the nav.
+  const bookHref = '/bookings/new'
 
   return (
     <>

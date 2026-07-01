@@ -206,7 +206,7 @@ export default async function BuildDetailPage({ params }: Props) {
                   Our team builds every rig in-house. Book a consultation and we&apos;ll quote your exact setup.
                 </p>
                 <Link
-                  href="/login?next=/bookings/new"
+                  href="/bookings/new"
                   className="block w-full text-center px-5 py-4 text-[10px] font-extrabold uppercase rounded-sm transition hover:brightness-110"
                   style={{ background: 'var(--color-accent)', color: '#000', letterSpacing: '0.14em' }}
                 >

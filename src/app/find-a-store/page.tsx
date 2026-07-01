@@ -130,7 +130,7 @@ export default function FindAStorePage() {
               to bring Eagles to your area.
             </p>
             <Link
-              href="/login?next=/bookings/new"
+              href="/bookings/new"
               className="inline-block px-8 py-4 text-[10px] font-extrabold uppercase rounded-sm transition-all hover:brightness-110"
               style={{ background: 'var(--color-accent)', color: '#000', letterSpacing: '0.12em' }}
             >
