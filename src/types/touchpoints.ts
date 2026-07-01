@@ -1,5 +1,5 @@
 export type TouchpointType = 'appointment_reminder' | 'post_service' | 'pms_reminder'
-export type TouchpointChannel = 'email' | 'chat'
+export type TouchpointChannel = 'email' | 'chat' | 'inbox'
 export type TouchpointStatus = 'pending' | 'sent' | 'replied' | 'no_response'
 
 export const TOUCHPOINT_TYPES: readonly TouchpointType[] = [

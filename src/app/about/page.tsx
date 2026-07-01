@@ -64,7 +64,7 @@ export default function AboutPage() {
               </h2>
               <div className="space-y-5 text-base" style={{ color: 'var(--color-text-muted)', lineHeight: 1.75 }}>
                 <p>
-                  Eagles 4×4 Offroad is Dasmariñas, Cavite's premier 4×4 workshop — specializing in lift kits,
+                  Eagles 4×4 Offroad is Dasmariñas, Cavite&apos;s premier 4×4 workshop — specializing in lift kits,
                   suspension overhauls, bull bars, and full custom builds for the Philippine off-road community.
                 </p>
                 <p>
@@ -218,13 +218,13 @@ export default function AboutPage() {
                   a collective of 4×4 enthusiasts across the Philippines united by one thing: a love for the trail.
                 </p>
                 <p>
-                  That Brotherhood doesn't stay inside the club. It shapes how we treat every customer, every
-                  build, every recommendation. When you bring your truck to Eagles, you're dealing with
+                  That Brotherhood doesn&apos;t stay inside the club. It shapes how we treat every customer, every
+                  build, every recommendation. When you bring your truck to Eagles, you&apos;re dealing with
                   people who spend their weekends on the same trails you do.
                 </p>
                 <p>
                   We organize community trail rides, product demo days, and charity events across Luzon.
-                  Not because it's good marketing — because it's who we are.
+                  Not because it&apos;s good marketing — because it&apos;s who we are.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3 mt-8">
