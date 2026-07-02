@@ -130,10 +130,11 @@ export default async function AdminHomePage() {
               comingSoon
             />
             <Tile
-              href="#"
+              href="/admin/customers"
               title="Customers"
-              desc="View customer accounts"
-              comingSoon
+              desc="Everyone who signed up · export CSV/PDF"
+              count="View"
+              ready
             />
           </div>
 
