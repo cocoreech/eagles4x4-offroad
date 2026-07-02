@@ -117,6 +117,13 @@ export default async function AdminHomePage() {
               ready
             />
             <Tile
+              href="/admin/availability"
+              title="Availability"
+              desc="Shop hours, capacity, closed dates"
+              count="Manage"
+              ready
+            />
+            <Tile
               href="#"
               title="Site Content"
               desc="Edit hero text, about section, shop info"
