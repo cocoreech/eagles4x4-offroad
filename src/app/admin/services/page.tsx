@@ -8,6 +8,7 @@ import { createClient } from '@/utils/supabase/server'
 import ToggleActiveButton from './ToggleActiveButton'
 import InlineImageCell from '@/components/InlineImageCell'
 import { setServiceImage } from './actions'
+import DeleteServiceButton from './DeleteServiceButton'
 import BrandMark from '@/components/BrandMark'
 
 export const dynamic = 'force-dynamic'
@@ -102,6 +103,9 @@ export default async function AdminServicesPage() {
                         <Link href={`/admin/services/${s.id}`} className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--color-accent)' }}>
                           Edit →
                         </Link>
+                        <span className="ml-3">
+                          <DeleteServiceButton id={s.id} name={s.name} />
+                        </span>
                       </td>
                     </tr>
                   ))}
