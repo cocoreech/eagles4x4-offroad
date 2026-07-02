@@ -8,6 +8,7 @@ import { createInboxStore } from '@/lib/inbox/store'
 import { messageBodySchema } from '@/lib/inbox/message'
 import { buildConciergeSystemPrompt, type ConciergeContext, type GroundingBooking } from '@/lib/inbox/grounding'
 import { generateConciergeReply, type ConciergeTurn } from '@/lib/inbox/concierge'
+import { resolveGreetingName } from '@/lib/name'
 import { rlServerAction, checkLimit, checkAiBudget, recordAiUsage } from '@/utils/ratelimit'
 
 async function getIp(): Promise<string> {
@@ -83,10 +84,11 @@ async function maybeRunConcierge(conversationId: string, customerId: string): Pr
     if (!budget.allowed) return // stays awaiting_merchant; a human will pick it up
 
     // Build grounding context.
-    const [servicesRes, productsRes, bookingsRes, messages] = await Promise.all([
+    const [servicesRes, productsRes, bookingsRes, profileRes, messages] = await Promise.all([
       admin.from('services').select('name, category, starting_price, duration_hours').eq('is_active', true),
       admin.from('products').select('name, brand, category, price, stock').eq('is_active', true),
       admin.from('bookings').select(CONTEXT_BOOKING_SELECT).eq('customer_id', customerId).returns<RawContextBooking[]>(),
+      admin.from('profiles').select('preferred_name, full_name').eq('id', customerId).maybeSingle(),
       store.listMessages(conversationId),
     ])
     if (servicesRes.error || productsRes.error || bookingsRes.error) {
@@ -101,6 +103,10 @@ async function maybeRunConcierge(conversationId: string, customerId: string): Pr
       service_name: bookingServiceName(b),
     }))
     const ctx: ConciergeContext = {
+      customerName: resolveGreetingName({
+        preferredName: profileRes.data?.preferred_name,
+        fullName: profileRes.data?.full_name,
+      }),
       services: (servicesRes.data ?? []).map(s => ({
         name: s.name, category: s.category, starting_price: Number(s.starting_price), duration_hours: s.duration_hours,
       })),

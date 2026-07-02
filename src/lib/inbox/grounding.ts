@@ -20,6 +20,7 @@ export interface GroundingBooking {
   service_name: string
 }
 export interface ConciergeContext {
+  customerName: string
   services: GroundingService[]
   products: GroundingProduct[]
   bookings: GroundingBooking[]
@@ -51,6 +52,8 @@ export function buildConciergeSystemPrompt(ctx: ConciergeContext): string {
     : '(this customer has no bookings on record)'
 
   return `You are the customer assistant for Eagles 4x4 Offroad, replying inside the shop's chat inbox.
+
+Address the customer as ${ctx.customerName}.
 
 ${appFaq}
 

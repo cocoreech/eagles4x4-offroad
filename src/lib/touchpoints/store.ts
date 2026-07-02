@@ -8,6 +8,7 @@ import {
 } from '@/lib/touchpoints/schedule'
 import { createInboxStore } from '@/lib/inbox/store'
 import { shouldSendDoorbell, sendDoorbellEmail } from '@/lib/inbox/doorbell'
+import { resolveGreetingName } from '@/lib/name'
 
 // Bookings still "in flight" — eligible for an appointment reminder. Mirrors the
 // active set used for slot-capacity counting in createBooking.
@@ -16,10 +17,10 @@ const ACTIVE_STATUSES = ['pending', 'confirmed', 'in_progress', 'parts_installed
 // The booking columns + joins the engine needs, fetched in one round-trip.
 const BOOKING_SELECT = `
   id, booking_code, customer_id, vehicle_id,
-  contact_email, contact_phone, contact_facebook, contact_name,
+  contact_email, contact_phone, contact_facebook, contact_name, preferred_name,
   scheduled_date, scheduled_time, completed_at,
   vehicle_make_snapshot, vehicle_model_snapshot, vehicle_year_snapshot,
-  customer:profiles!customer_id ( full_name ),
+  customer:profiles!customer_id ( full_name, preferred_name ),
   vehicles ( make, model, year ),
   booking_items ( name_snapshot, item_type )
 `
@@ -33,13 +34,14 @@ interface RawBooking {
   contact_phone: string | null
   contact_facebook: string | null
   contact_name: string | null
+  preferred_name: string | null
   scheduled_date: string | null
   scheduled_time: string | null
   completed_at: string | null
   vehicle_make_snapshot: string | null
   vehicle_model_snapshot: string | null
   vehicle_year_snapshot: number | null
-  customer: { full_name: string | null } | null
+  customer: { full_name: string | null; preferred_name: string | null } | null
   vehicles: { make: string | null; model: string | null; year: number | null } | null
   booking_items: { name_snapshot: string; item_type: string }[] | null
 }
@@ -70,9 +72,13 @@ function toDueBooking(b: RawBooking): DueBooking {
     scheduled_date: b.scheduled_date,
     scheduled_time: b.scheduled_time,
     completed_at: b.completed_at,
-    // Linked profile wins; guests fall back to the name they entered, then a
-    // friendly generic so a message never reads "Hi !".
-    customer_name: b.customer?.full_name ?? b.contact_name ?? 'there',
+    // Preferred name wins; then profile full name, then the name they entered,
+    // then a friendly generic so a message never reads "Hi !".
+    customer_name: resolveGreetingName({
+      preferredName: b.preferred_name ?? b.customer?.preferred_name,
+      fullName: b.customer?.full_name,
+      contactName: b.contact_name,
+    }),
     service_name: serviceName(b),
     vehicle_label: vehicleLabel(b),
   }

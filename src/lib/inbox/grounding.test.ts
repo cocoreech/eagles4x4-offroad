@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { buildConciergeSystemPrompt, type ConciergeContext } from './grounding'
 
 const ctx: ConciergeContext = {
+  customerName: 'JD',
   services: [
     { name: 'Suspension Lift', category: 'suspension', starting_price: 25000, duration_hours: 6 },
   ],
@@ -40,8 +41,14 @@ describe('buildConciergeSystemPrompt', () => {
   })
 
   it('handles empty context without throwing', () => {
-    const p = buildConciergeSystemPrompt({ services: [], products: [], bookings: [] })
+    const p = buildConciergeSystemPrompt({ customerName: 'there', services: [], products: [], bookings: [] })
     expect(typeof p).toBe('string')
     expect(p.length).toBeGreaterThan(0)
+  })
+
+  it('tells the bot how to address the customer', () => {
+    const p = buildConciergeSystemPrompt({ ...ctx, customerName: 'JD' })
+    expect(p).toContain('JD')
+    expect(p).toMatch(/address the customer/i)
   })
 })

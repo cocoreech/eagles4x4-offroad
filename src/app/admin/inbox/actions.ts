@@ -8,6 +8,7 @@ import { createClient, createServiceRoleClient } from '@/utils/supabase/server'
 import { createInboxStore } from '@/lib/inbox/store'
 import { messageBodySchema } from '@/lib/inbox/message'
 import { shouldSendDoorbell, sendDoorbellEmail } from '@/lib/inbox/doorbell'
+import { resolveGreetingName } from '@/lib/name'
 import { rlAdminGeneral, checkLimit } from '@/utils/ratelimit'
 
 async function getIp(): Promise<string> {
@@ -51,7 +52,7 @@ interface ConversationWithCustomer {
   id: string
   doorbell_sent_at: string | null
   // Supabase types a to-one embed as an object here (matched on FK).
-  customer: { email: string | null; full_name: string | null } | null
+  customer: { email: string | null; full_name: string | null; preferred_name: string | null } | null
 }
 
 // Service-role: read the customer's email + doorbell state, decide, send, stamp.
@@ -59,7 +60,7 @@ async function maybeRingDoorbell(conversationId: string): Promise<void> {
   const admin = createServiceRoleClient()
   const { data, error } = await admin
     .from('conversations')
-    .select('id, doorbell_sent_at, customer:profiles!customer_id ( email, full_name )')
+    .select('id, doorbell_sent_at, customer:profiles!customer_id ( email, full_name, preferred_name )')
     .eq('id', conversationId)
     .maybeSingle<ConversationWithCustomer>()
   if (error || !data) {
@@ -73,7 +74,7 @@ async function maybeRingDoorbell(conversationId: string): Promise<void> {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? ''
   const res = await sendDoorbellEmail({
     to: customer.email,
-    customerName: customer.full_name ?? 'there',
+    customerName: resolveGreetingName({ preferredName: customer.preferred_name, fullName: customer.full_name }),
     inboxUrl: `${base}/inbox`,
   })
   if (!res.ok) {
