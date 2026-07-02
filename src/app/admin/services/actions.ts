@@ -14,6 +14,7 @@ import { requireAdmin } from '@/lib/auth'
 import { createClient } from '@/utils/supabase/server'
 import { sanitizeText, sanitizeMultiline } from '@/lib/sanitize'
 import { rlAdminGeneral, checkLimit } from '@/utils/ratelimit'
+import { deleteMode } from '@/lib/services/deleteDecision'
 
 async function getIp(): Promise<string> {
   const h = await headers()
@@ -146,6 +147,43 @@ export async function deactivateService(formData: FormData) {
   if (error) return { error: 'Could not deactivate.' }
   revalidatePath('/admin/services')
   return { success: true }
+}
+
+// Smart-delete: remove services with no booking history; deactivate those
+// referenced by past bookings (booking_items.service_id) to preserve records.
+export async function deleteService(formData: FormData): Promise<{ error?: string; success?: boolean; softened?: boolean }> {
+  const { user } = await requireAdmin()
+  if (!(await adminRateGuard(user.id))) return { error: 'Too many admin actions. Please slow down.' }
+  const id = String(formData.get('id') ?? '')
+  if (!z.string().uuid().safeParse(id).success) return { error: 'Invalid service id.' }
+
+  const supabase = await createClient()
+
+  const { data: ref, error: refErr } = await supabase
+    .from('booking_items')
+    .select('id')
+    .eq('service_id', id)
+    .limit(1)
+    .maybeSingle()
+  if (refErr) {
+    console.error('[deleteService] ref check', refErr)
+    return { error: 'Could not delete the service.' }
+  }
+
+  const mode = deleteMode(ref !== null)
+  if (mode === 'soft') {
+    const { error } = await supabase.from('services').update({ is_active: false }).eq('id', id)
+    if (error) return { error: 'Could not delete the service.' }
+    revalidatePath('/admin/services')
+    revalidatePath('/services')
+    return { success: true, softened: true }
+  }
+
+  const { error } = await supabase.from('services').delete().eq('id', id)
+  if (error) return { error: 'Could not delete the service.' }
+  revalidatePath('/admin/services')
+  revalidatePath('/services')
+  return { success: true, softened: false }
 }
 
 export async function activateService(formData: FormData) {
