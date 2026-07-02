@@ -40,6 +40,8 @@ import { createCheckoutSession } from '@/lib/paymongo'
 import { emailSender } from '@/lib/touchpoints/channels'
 import { buildBookingConfirmationEmail } from '@/lib/bookings/confirmationEmail'
 import { resolveGreetingName } from '@/lib/name'
+import { createAvailabilityStore } from '@/lib/availability/store'
+import { computeDaySlots } from '@/lib/availability/schedule'
 import { brand } from '@/content/brand'
 
 // Make/Model now constrained to the allow-list in vehicles.ts.
@@ -170,40 +172,32 @@ export async function createBooking(formData: FormData) {
   // slot-capacity count (RLS would otherwise hide other customers' bookings).
   const admin = createServiceRoleClient()
 
-  // 3b. Server-side slot validation — reject past dates, closed days,
-  //     and already-full slots. The client UI hides these, but a malicious
-  //     client could POST anything, so we re-check here.
-  const date = new Date(d.scheduledDate + 'T00:00:00')
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  if (date < today) return { error: 'Cannot book a past date.' }
-  const sixMonthsOut = new Date(today)
-  sixMonthsOut.setMonth(sixMonthsOut.getMonth() + 6)
-  if (date > sixMonthsOut) return { error: 'Bookings open up to 6 months in advance.' }
-  if (date.getDay() === 0) return { error: 'Shop is closed on Sundays.' }
-
-  const hour = parseInt(d.scheduledTime.slice(0, 2), 10)
-  const allowedHours = date.getDay() === 6
-    ? [8, 9, 10, 11, 13, 14, 15, 16]
-    : [8, 9, 10, 11, 13, 14, 15, 16, 17]
-  if (!allowedHours.includes(hour)) {
-    return { error: 'Selected time is outside shop hours.' }
+  // 3b. Server-side slot validation via the shared availability engine — honors
+  //     admin-edited hours/capacity/window AND per-date closures. The client UI
+  //     hides unavailable slots, but a malicious client could POST anything.
+  //     Uses the admin (service-role) client so slot counts see ALL bookings.
+  const availStore = createAvailabilityStore(admin)
+  const todayIso = new Date().toISOString().slice(0, 10)
+  const [availWeekly, availSettings, availOverride, availCounts] = await Promise.all([
+    availStore.loadWeekly(),
+    availStore.loadSettings(),
+    availStore.loadOverride(d.scheduledDate),
+    availStore.countBookingsByHour(d.scheduledDate),
+  ])
+  const day = computeDaySlots({
+    date: d.scheduledDate,
+    today: todayIso,
+    weekly: availWeekly,
+    settings: availSettings,
+    override: availOverride,
+    bookedCounts: availCounts,
+  })
+  if (day.closed) {
+    return { error: 'That date is not available for booking. Please pick another.' }
   }
-
-  // Count active bookings already in that slot. Must use the admin client:
-  // the RLS SELECT policy is owner/admin-only, so the user-scoped client would
-  // only see the caller's own bookings and let everyone overbook a full slot.
-  const { data: slotBookings } = await admin
-    .from('bookings')
-    .select('id, scheduled_time, status')
-    .eq('scheduled_date', d.scheduledDate)
-    .in('status', ['pending','confirmed','in_progress','parts_installed','quality_check','ready'])
-  const sameHour = (slotBookings ?? []).filter(b =>
-    parseInt(String(b.scheduled_time).slice(0, 2), 10) === hour
-  )
-  if (sameHour.length >= 3) {
-    return { error: 'That slot just filled up. Please pick another time.' }
-  }
+  const chosenSlot = day.slots.find(s => s.time === d.scheduledTime.slice(0, 5))
+  if (!chosenSlot) return { error: 'Selected time is outside shop hours.' }
+  if (!chosenSlot.available) return { error: 'That slot just filled up. Please pick another time.' }
 
   // 4. Resolve the vehicle.
   //    - Authenticated: find an existing vehicle for this user or create one.
