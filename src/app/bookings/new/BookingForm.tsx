@@ -36,11 +36,15 @@ export default function BookingForm({
   products,
   defaultEmail,
   defaultName,
+  defaultPreferredName,
+  hasPreferredName,
 }: Readonly<{
   services: Service[]
   products: Product[]
   defaultEmail: string
   defaultName: string
+  defaultPreferredName: string
+  hasPreferredName: boolean
 }>) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [prefilledNotes, setPrefilledNotes] = useState<string>('')
@@ -173,6 +177,18 @@ export default function BookingForm({
           Contact <em style={{ color: 'var(--color-accent)' }}>Info</em>
         </h2>
         <div className="grid grid-cols-1 gap-4">
+          {hasPreferredName ? (
+            <input type="hidden" name="preferredName" value={defaultPreferredName} />
+          ) : (
+            <Field
+              label="What should we call you?"
+              name="preferredName"
+              type="text"
+              placeholder="e.g. Juan, JD"
+              defaultValue={defaultPreferredName}
+              required
+            />
+          )}
           <Field
             label="Full Name"
             name="contactName"

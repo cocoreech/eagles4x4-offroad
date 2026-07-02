@@ -39,6 +39,7 @@ import { isValidMakeModel, ALLOWED_MAKES } from '@/lib/vehicles'
 import { createCheckoutSession } from '@/lib/paymongo'
 import { emailSender } from '@/lib/touchpoints/channels'
 import { buildBookingConfirmationEmail } from '@/lib/bookings/confirmationEmail'
+import { resolveGreetingName } from '@/lib/name'
 import { brand } from '@/content/brand'
 
 // Make/Model now constrained to the allow-list in vehicles.ts.
@@ -57,6 +58,9 @@ const schema = z.object({
   contactName:         z.string()
                         .transform(s => sanitizeText(s, 80))
                         .refine(v => v.length >= 2, 'Please enter your name.'),
+  preferredName:       z.string()
+                        .transform(s => sanitizeText(s, 40))
+                        .refine(v => v.length >= 1, 'Tell us what to call you.'),
   contactPhone:        z.string().min(1, 'Enter your mobile number.'),
   contactPhoneDial:    z.string().min(2, 'Pick a country code.'),
   contactPhoneLocal:   z.string().min(1, 'Enter the digits after the country code.'),
@@ -115,6 +119,7 @@ export async function createBooking(formData: FormData) {
     scheduledDate:       formData.get('scheduledDate'),
     scheduledTime:       formData.get('scheduledTime'),
     contactName:         formData.get('contactName') || '',
+    preferredName:       formData.get('preferredName') || '',
     contactPhone:        formData.get('contactPhone'),
     contactPhoneDial:    formData.get('contactPhoneDial'),
     contactPhoneLocal:   formData.get('contactPhoneLocal'),
@@ -281,6 +286,7 @@ export async function createBooking(formData: FormData) {
       contact_phone:   normalizeE164(d.contactPhoneDial, d.contactPhoneLocal)!,
       contact_email:   d.contactEmail || user?.email || null,
       contact_name:    d.contactName,
+      preferred_name:  d.preferredName,
       // Vehicle snapshot — populated only for guests (vehicle_id is NULL).
       vehicle_make_snapshot:         user ? null : d.vehicleMake,
       vehicle_model_snapshot:        user ? null : d.vehicleModel,
@@ -293,6 +299,15 @@ export async function createBooking(formData: FormData) {
   if (bookErr || !booking) {
     console.error('[createBooking] booking insert', bookErr)
     return { error: 'Could not create the booking. Please try again.' }
+  }
+
+  // Persist the preferred name on the profile so returning customers aren't re-asked.
+  if (user) {
+    const { error: profErr } = await admin
+      .from('profiles')
+      .update({ preferred_name: d.preferredName })
+      .eq('id', user.id)
+    if (profErr) console.error('[createBooking] profile preferred_name', profErr)
   }
 
   // 7. Insert booking_items rows (one per service)
@@ -322,7 +337,7 @@ export async function createBooking(formData: FormData) {
   try {
     const emailSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
     const { subject, body } = buildBookingConfirmationEmail({
-      customerName: d.contactName,
+      customerName: resolveGreetingName({ preferredName: d.preferredName, contactName: d.contactName }),
       bookingCode: booking.booking_code,
       date: d.scheduledDate,
       time: d.scheduledTime,

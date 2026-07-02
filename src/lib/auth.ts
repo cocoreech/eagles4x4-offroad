@@ -49,11 +49,24 @@ export async function linkGuestBookings(
       .update({ customer_id: userId })
       .is('customer_id', null)
       .eq('contact_email', email.toLowerCase())
-      .select('id')
+      .select('id, preferred_name, created_at')
     if (error) {
       console.error('[linkGuestBookings]', error)
       return 0
     }
+
+    // Adopt the preferred name from the latest linked booking if the profile lacks one.
+    const latest = (data ?? [])
+      .filter(b => b.preferred_name)
+      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))[0]
+    if (latest?.preferred_name) {
+      await admin
+        .from('profiles')
+        .update({ preferred_name: latest.preferred_name })
+        .eq('id', userId)
+        .is('preferred_name', null)
+    }
+
     return data?.length ?? 0
   } catch (err) {
     console.error('[linkGuestBookings] unexpected', err)

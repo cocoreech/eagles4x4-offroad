@@ -30,7 +30,7 @@ export default async function NewBookingPage() {
       .select('id, slug, name, brand, price')
       .eq('is_active', true),
     user
-      ? supabase.from('profiles').select('full_name').eq('id', user.id).maybeSingle()
+      ? supabase.from('profiles').select('full_name, preferred_name').eq('id', user.id).maybeSingle()
       : Promise.resolve({ data: null }),
   ])
 
@@ -72,6 +72,8 @@ export default async function NewBookingPage() {
             products={products ?? []}
             defaultEmail={user?.email ?? ''}
             defaultName={profile?.full_name ?? ''}
+            defaultPreferredName={profile?.preferred_name ?? ''}
+            hasPreferredName={!!profile?.preferred_name}
           />
         </div>
       </div>
