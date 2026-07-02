@@ -1,9 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import type { CustomerCsvRow } from '@/lib/admin/customersCsv'
 import { sortCustomers, type CustomerSortKey, type SortDir } from '@/lib/admin/sortCustomers'
 import CustomerExportBar from './CustomerExportBar'
+
+export type CustomerRow = CustomerCsvRow & { id: string }
 
 const COLUMNS: { key: CustomerSortKey; label: string }[] = [
   { key: 'preferredName', label: 'Preferred' },
@@ -14,7 +17,7 @@ const COLUMNS: { key: CustomerSortKey; label: string }[] = [
   { key: 'bookings', label: 'Bookings' },
 ]
 
-export default function CustomersTable({ rows }: Readonly<{ rows: CustomerCsvRow[] }>) {
+export default function CustomersTable({ rows }: Readonly<{ rows: CustomerRow[] }>) {
   const [sortKey, setSortKey] = useState<CustomerSortKey>('joined')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
 
@@ -63,7 +66,11 @@ export default function CustomersTable({ rows }: Readonly<{ rows: CustomerCsvRow
             )}
             {sorted.map((r, i) => (
               <tr key={i} className="border-t" style={{ borderColor: 'var(--color-border)' }}>
-                <td className="p-3" style={{ color: 'var(--color-text-primary)' }}>{r.preferredName || '—'}</td>
+                <td className="p-3">
+                  <Link href={`/admin/customers/${r.id}`} className="font-medium hover:underline" style={{ color: 'var(--color-accent)' }}>
+                    {r.preferredName || '—'}
+                  </Link>
+                </td>
                 <td className="p-3" style={{ color: 'var(--color-text-primary)' }}>{r.fullName || '—'}</td>
                 <td className="p-3" style={muted}>{r.email || '—'}</td>
                 <td className="p-3" style={muted}>{r.phone || '—'}</td>

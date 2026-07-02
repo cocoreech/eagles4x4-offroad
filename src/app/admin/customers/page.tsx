@@ -1,8 +1,7 @@
 import Link from 'next/link'
 import { requireAdmin } from '@/lib/auth'
 import { createClient } from '@/utils/supabase/server'
-import type { CustomerCsvRow } from '@/lib/admin/customersCsv'
-import CustomersTable from './CustomersTable'
+import CustomersTable, { type CustomerRow } from './CustomersTable'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,7 +22,8 @@ export default async function AdminCustomersPage() {
     if (b.customer_id) counts.set(b.customer_id, (counts.get(b.customer_id) ?? 0) + 1)
   }
 
-  const rows: CustomerCsvRow[] = (profilesRes.data ?? []).map(p => ({
+  const rows: CustomerRow[] = (profilesRes.data ?? []).map(p => ({
+    id: p.id,
     preferredName: p.preferred_name ?? '',
     fullName: p.full_name ?? '',
     email: p.email ?? '',
