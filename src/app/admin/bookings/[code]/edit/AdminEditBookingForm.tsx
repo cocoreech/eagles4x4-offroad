@@ -9,6 +9,7 @@
 
 import { useState, useTransition } from 'react'
 import { adminUpdateBooking } from '../actions'
+import { ALLOWED_MAKES } from '@/lib/vehicles'
 
 type Service = {
   id: string
@@ -96,14 +97,14 @@ export default function AdminEditBookingForm({
         </div>
       </section>
 
-      {/* Vehicle (read-only) */}
+      {/* Vehicle (editable) */}
       <section>
         <h2 className="font-display font-bold text-xl mb-4">Vehicle</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <ReadonlyField label="Make" value={initial.vehicleMake} />
-          <ReadonlyField label="Model" value={initial.vehicleModel} />
-          <ReadonlyField label="Year" value={String(initial.vehicleYear)} />
-          <ReadonlyField label="Transmission" value={initial.vehicleTransmission} />
+          <SelectField label="Make" name="vehicleMake" defaultValue={initial.vehicleMake} options={ALLOWED_MAKES} />
+          <Field label="Model" name="vehicleModel" defaultValue={initial.vehicleModel} required />
+          <Field label="Year" name="vehicleYear" type="number" defaultValue={String(initial.vehicleYear)} required />
+          <SelectField label="Transmission" name="vehicleTransmission" defaultValue={initial.vehicleTransmission} options={['automatic', 'manual']} allowBlank />
         </div>
       </section>
 
@@ -184,11 +185,17 @@ function Field({ label, name, type = 'text', defaultValue, multiline, required }
   )
 }
 
-function ReadonlyField({ label, value }: Readonly<{ label: string; value: string }>) {
+function SelectField({ label, name, defaultValue, options, allowBlank }: Readonly<{ label: string; name: string; defaultValue: string; options: readonly string[]; allowBlank?: boolean }>) {
+  const styles = { background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' } as const
+  const known = options.includes(defaultValue) || (allowBlank && defaultValue === '')
   return (
     <label className="block">
       <span className="block text-[10px] font-bold tracking-widest uppercase mb-2" style={{ color: 'var(--color-text-muted)' }}>{label}</span>
-      <input value={value} readOnly className="w-full px-4 py-3 rounded-sm outline-none text-sm cursor-not-allowed" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }} />
+      <select name={name} defaultValue={defaultValue} className="w-full px-4 py-3 rounded-sm outline-none text-sm" style={styles}>
+        {allowBlank && <option value="">—</option>}
+        {!known && defaultValue !== '' && <option value={defaultValue}>{defaultValue}</option>}
+        {options.map(o => <option key={o} value={o}>{o}</option>)}
+      </select>
     </label>
   )
 }

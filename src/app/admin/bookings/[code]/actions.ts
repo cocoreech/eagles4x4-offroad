@@ -17,6 +17,7 @@ import { requireAdmin } from '@/lib/auth'
 import { createClient, createServiceRoleClient } from '@/utils/supabase/server'
 import { sanitizeText, sanitizeMultiline } from '@/lib/sanitize'
 import { normalizeE164, getCountryByDial } from '@/lib/phone'
+import { isValidMakeModel, ALLOWED_MAKES } from '@/lib/vehicles'
 import { resolveGreetingName } from '@/lib/name'
 import { emailSender } from '@/lib/touchpoints/channels'
 import { createTouchpointStore } from '@/lib/touchpoints/store'
@@ -117,6 +118,10 @@ const adminEditSchema = z.object({
   serviceIds:  z.array(z.string().uuid()).min(1, 'Select at least one service.'),
   scheduledDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date.'),
   scheduledTime: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time.'),
+  vehicleMake:  z.string().refine(v => ALLOWED_MAKES.includes(v), 'Pick a make from the list.'),
+  vehicleModel: z.string().min(1, 'Pick a model.'),
+  vehicleYear:  z.coerce.number().int().min(1990).max(new Date().getFullYear() + 1),
+  vehicleTransmission: z.enum(['automatic', 'manual']).optional().or(z.literal('')),
   contactName:  z.string().transform(s => sanitizeText(s, 80)).refine(v => v.length >= 2, 'Name required.'),
   preferredName: z.string().transform(s => sanitizeText(s, 40)).refine(v => v.length >= 1, 'Preferred name required.'),
   contactPhone:     z.string().min(1),
@@ -126,6 +131,9 @@ const adminEditSchema = z.object({
                  .refine(v => /^[a-z0-9._+-]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(v), 'Invalid email.'),
   notes: z.string().transform(s => sanitizeMultiline(s, 1000)).optional(),
 }).superRefine((d, ctx) => {
+  if (!isValidMakeModel(d.vehicleMake, d.vehicleModel)) {
+    ctx.addIssue({ code: 'custom', path: ['vehicleModel'], message: 'Model does not match selected make.' })
+  }
   const e164 = normalizeE164(d.contactPhoneDial, d.contactPhoneLocal)
   if (!e164) {
     const c = getCountryByDial(d.contactPhoneDial)
@@ -147,6 +155,10 @@ export async function adminUpdateBooking(formData: FormData) {
     serviceIds,
     scheduledDate: formData.get('scheduledDate'),
     scheduledTime: formData.get('scheduledTime'),
+    vehicleMake: formData.get('vehicleMake'),
+    vehicleModel: formData.get('vehicleModel'),
+    vehicleYear: formData.get('vehicleYear'),
+    vehicleTransmission: formData.get('vehicleTransmission') || '',
     contactName: formData.get('contactName') || '',
     preferredName: formData.get('preferredName') || '',
     contactPhone: formData.get('contactPhone'),
@@ -162,7 +174,7 @@ export async function adminUpdateBooking(formData: FormData) {
 
   const { data: booking } = await admin
     .from('bookings')
-    .select('id, booking_code, customer_id, scheduled_date, scheduled_time, contact_email, contact_name, preferred_name')
+    .select('id, booking_code, customer_id, vehicle_id, scheduled_date, scheduled_time, contact_email, contact_name, preferred_name')
     .eq('id', d.bookingId)
     .maybeSingle()
   if (!booking) return { error: 'Booking not found.' }
@@ -177,6 +189,17 @@ export async function adminUpdateBooking(formData: FormData) {
   }
   const subtotal = services.reduce((sum, s) => sum + Number(s.starting_price), 0)
 
+  // Guest bookings carry the vehicle as snapshot columns; account-holders
+  // reference a vehicles row (updated separately below).
+  const vehicleSnapshot = booking.vehicle_id
+    ? {}
+    : {
+        vehicle_make_snapshot: d.vehicleMake,
+        vehicle_model_snapshot: d.vehicleModel,
+        vehicle_year_snapshot: d.vehicleYear,
+        vehicle_transmission_snapshot: d.vehicleTransmission || null,
+      }
+
   const { error: updErr } = await admin
     .from('bookings')
     .update({
@@ -189,11 +212,25 @@ export async function adminUpdateBooking(formData: FormData) {
       contact_email: d.contactEmail,
       contact_name: d.contactName,
       preferred_name: d.preferredName,
+      ...vehicleSnapshot,
     })
     .eq('id', booking.id)
   if (updErr) {
     console.error('[adminUpdateBooking] update', updErr)
     return { error: 'Could not save changes.' }
+  }
+
+  if (booking.vehicle_id) {
+    const { error: vehErr } = await admin
+      .from('vehicles')
+      .update({
+        make: d.vehicleMake,
+        model: d.vehicleModel,
+        year: d.vehicleYear,
+        transmission: d.vehicleTransmission || null,
+      })
+      .eq('id', booking.vehicle_id)
+    if (vehErr) console.error('[adminUpdateBooking] vehicle', vehErr)
   }
 
   await admin.from('booking_items').delete().eq('booking_id', booking.id).eq('item_type', 'service')
