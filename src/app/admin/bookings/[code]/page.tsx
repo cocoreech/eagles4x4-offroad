@@ -110,6 +110,12 @@ export default async function AdminBookingDetailPage(props: Readonly<{ params: P
             currentStatus={booking.status}
           />
 
+          <div className="mt-4">
+            <Link href={`/admin/bookings/${booking.booking_code}/edit`} className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--color-accent)' }}>
+              Edit booking →
+            </Link>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
             {/* Customer */}
             <Card title="Customer">
