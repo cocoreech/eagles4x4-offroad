@@ -201,6 +201,13 @@ export default function PublicNav({ user, isAdmin }: Readonly<{ user?: { id: str
                   Admin
                 </Link>
               )}
+              <a
+                href="/logout"
+                className="hidden sm:inline-block text-[11px] font-semibold tracking-[0.1em] uppercase"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                Sign Out
+              </a>
               <Link
                 href="/bookings/new"
                 className="px-5 py-2.5 text-[11px] font-extrabold tracking-[0.12em] uppercase rounded-sm"
@@ -282,9 +289,17 @@ export default function PublicNav({ user, isAdmin }: Readonly<{ user?: { id: str
                   <Link href="/inbox" onClick={() => setMobileOpen(false)} className="block px-6 py-4 text-center text-[11px] font-bold uppercase tracking-[0.12em] rounded-sm" style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
                     Inbox
                   </Link>
+                  {isAdmin && (
+                    <Link href="/admin" onClick={() => setMobileOpen(false)} className="block px-6 py-4 text-center text-[11px] font-bold uppercase tracking-[0.12em] rounded-sm" style={{ border: '1px solid var(--color-border)', color: 'var(--color-accent)' }}>
+                      Admin
+                    </Link>
+                  )}
                   <Link href="/bookings/new" onClick={() => setMobileOpen(false)} className="block px-6 py-4 text-center text-[11px] font-extrabold uppercase tracking-[0.12em] rounded-sm" style={{ background: 'var(--color-accent)', color: '#000' }}>
                     Book Now
                   </Link>
+                  <a href="/logout" className="block px-6 py-4 text-center text-[11px] font-bold uppercase tracking-[0.12em] rounded-sm" style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
+                    Sign Out
+                  </a>
                 </>
               ) : (
                 <>
