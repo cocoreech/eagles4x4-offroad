@@ -13,7 +13,6 @@
     { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Book a service", "url": "/bookings/new" },
-    { "name": "Admin", "url": "/admin" }
+    { "name": "Book a service", "url": "/bookings/new" }
   ]
 }
