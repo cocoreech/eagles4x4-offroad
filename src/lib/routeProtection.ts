@@ -15,6 +15,7 @@ export const ADMIN_PREFIXES = ['/admin'] as const
 const PUBLIC_ALLOWLIST = [
   '/',
   '/login',
+  '/admin/login',
   '/signup',
   '/verify-email',
   '/mfa-challenge',

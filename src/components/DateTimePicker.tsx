@@ -56,7 +56,10 @@ export default function DateTimePicker({
     setLoading(true)
     let cancelled = false
     fetch(`/api/availability?date=${date}`)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error('availability fetch failed')
+        return r.json()
+      })
       .then((data: Availability) => {
         if (!cancelled) setAvailability(data)
       })

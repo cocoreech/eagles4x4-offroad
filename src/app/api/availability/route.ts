@@ -6,7 +6,7 @@
 // Privacy: never exposes WHICH customer booked WHICH slot — only booked counts.
 
 import { NextResponse, type NextRequest } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
+import { createServiceRoleClient } from '@/utils/supabase/server'
 import { createAvailabilityStore } from '@/lib/availability/store'
 import { computeDaySlots } from '@/lib/availability/schedule'
 
@@ -19,7 +19,9 @@ export async function GET(req: NextRequest) {
   }
 
   const today = new Date().toISOString().slice(0, 10)
-  const store = createAvailabilityStore(await createClient())
+  // Service-role client: this route is public (anon visitors need slot counts)
+  // and countBookingsByHour must see all bookings across users regardless of RLS.
+  const store = createAvailabilityStore(createServiceRoleClient())
   try {
     const [weekly, settings, override, bookedCounts] = await Promise.all([
       store.loadWeekly(),
