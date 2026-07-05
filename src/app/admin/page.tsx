@@ -68,7 +68,7 @@ export default async function AdminHomePage() {
             <Stat label="Pending"    value={String(pendingCount)} accent />
             <Stat label="In Progress" value={String(inProgressCount)} />
             <Stat label="Ready"      value={String(readyCount)} />
-            <Stat label="Lifetime ₱" value={'₱' + Math.round(totalRevenue).toLocaleString('en-PH')} />
+            <Stat label="Lifetime Revenue" value={Math.round(totalRevenue).toLocaleString('en-PH')} prefix="₱" />
           </div>
 
           {/* Module tiles */}
@@ -149,7 +149,7 @@ export default async function AdminHomePage() {
   )
 }
 
-function Stat({ label, value, accent }: Readonly<{ label: string; value: string; accent?: boolean }>) {
+function Stat({ label, value, prefix, accent }: Readonly<{ label: string; value: string; prefix?: string; accent?: boolean }>) {
   return (
     <div
       className="rounded-md p-5"
@@ -165,6 +165,9 @@ function Stat({ label, value, accent }: Readonly<{ label: string; value: string;
         className="font-display font-black text-3xl"
         style={{ color: accent ? 'var(--color-accent)' : 'var(--color-text-primary)' }}
       >
+        {prefix && (
+          <span className="font-body" style={{ fontFamily: 'var(--font-body)' }}>{prefix}</span>
+        )}
         {value}
       </div>
     </div>

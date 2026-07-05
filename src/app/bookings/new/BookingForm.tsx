@@ -181,12 +181,11 @@ export default function BookingForm({
             <input type="hidden" name="preferredName" value={defaultPreferredName} />
           ) : (
             <Field
-              label="What should we call you?"
+              label="What should we call you? (optional)"
               name="preferredName"
               type="text"
-              placeholder="e.g. Juan, JD"
+              placeholder="e.g. Juan, JD — leave blank to use your full name"
               defaultValue={defaultPreferredName}
-              required
             />
           )}
           <Field

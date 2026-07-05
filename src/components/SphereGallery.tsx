@@ -604,10 +604,11 @@ export default function SphereGallery({ builds }: Readonly<{ builds: GalleryBuil
         <div className="absolute inset-0 overflow-y-auto pt-48 px-6 md:px-12 pb-16">
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {builds.map(b => (
-              <button
+              <a
                 key={b.slug}
-                onClick={() => openBuild(b, false)}
-                className="text-left overflow-hidden rounded-sm transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2"
+                href={`/builds/${b.slug}`}
+                onClick={(e) => { e.preventDefault(); openBuild(b, false) }}
+                className="block text-left overflow-hidden rounded-sm transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2"
                 style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', outlineColor: 'var(--color-accent)' }}
               >
                 <div className="aspect-[16/10] overflow-hidden">
@@ -620,7 +621,7 @@ export default function SphereGallery({ builds }: Readonly<{ builds: GalleryBuil
                   </div>
                   <h3 className="font-display font-bold text-lg" style={{ fontFamily: 'var(--font-display)' }}>{b.title}</h3>
                 </div>
-              </button>
+              </a>
             ))}
           </div>
         </div>

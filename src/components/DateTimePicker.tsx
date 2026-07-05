@@ -32,10 +32,11 @@ export default function DateTimePicker({
   dateName?: string
   timeName?: string
 }>) {
-  // Default to tomorrow (lets us avoid same-day rush)
+  // Default to the next open day (skip Sunday — always closed)
   const [date, setDate] = useState<string>(() => {
     const d = new Date()
     d.setDate(d.getDate() + 1)
+    if (d.getDay() === 0) d.setDate(d.getDate() + 1) // Sunday → Monday
     return d.toISOString().slice(0, 10)
   })
   const [time, setTime] = useState<string>('')
