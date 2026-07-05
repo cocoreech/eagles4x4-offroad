@@ -56,7 +56,7 @@ export default async function LoginPage(
           <LoginForm defaultEmail={email ?? ''} next={next ?? ''} />
 
           <p className="mt-8 text-center text-xs" style={{ color: 'var(--color-text-muted)' }}>
-            Already used {brand.name_full} before? Same email keeps your bookings &amp; history.
+            Already used {brand.name_full}{' '}before? Same email keeps your bookings &amp; history.
           </p>
         </div>
       </div>

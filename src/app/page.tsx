@@ -11,6 +11,7 @@ import { copy } from '@/content/copy'
 import { seedBuilds } from '@/content/seeds/builds'
 import PublicNav from '@/components/PublicNavServer'
 import BrandMarquee from '@/components/BrandMarquee'
+import { TfoeLogoImage } from '@/components/TfoeLogoImage'
 
 export const dynamic = 'force-dynamic'
 
@@ -452,13 +453,7 @@ export default async function HomePage() {
               className="flex items-center gap-6 p-6 rounded-sm max-w-lg"
               style={{ background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)' }}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={brand.organization_logo}
-                alt={brand.organization_logo_alt}
-                className="w-20 h-20 rounded-full object-cover flex-shrink-0"
-                style={{ border: '2px solid rgba(201,168,76,0.4)' }}
-              />
+              <TfoeLogoImage />
               <div>
                 <p className="text-[9px] font-bold uppercase mb-1.5" style={{ color: 'var(--color-accent)', letterSpacing: '0.3em' }}>
                   Proud Member

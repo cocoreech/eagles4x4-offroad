@@ -38,7 +38,9 @@ export default async function AdminHomePage() {
         <div className="flex gap-4 items-center text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
           <span>{profile?.role}</span>
           <Link href="/" style={{ color: 'var(--color-text-muted)' }}>← Home</Link>
-          <Link href="/logout" style={{ color: 'var(--color-text-muted)' }}>Sign out</Link>
+          <form action="/logout" method="post" className="inline">
+            <button type="submit" className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>Sign out</button>
+          </form>
         </div>
       </nav>
 
@@ -139,7 +141,7 @@ export default async function AdminHomePage() {
           </div>
 
           <p className="mt-10 text-xs text-center" style={{ color: 'var(--color-text-muted)' }}>
-            More admin modules coming in Phase 4 Step 3 (Content Editor).
+            Content editor coming soon.
           </p>
         </div>
       </div>

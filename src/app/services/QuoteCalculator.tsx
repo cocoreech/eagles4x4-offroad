@@ -252,7 +252,7 @@ export default function QuoteCalculator({ services, products, isSignedIn }: Prop
             )}
 
             <p className="mt-5 text-[10px] tracking-wider" style={{ color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
-              Booking confirmed with a <strong style={{ color: 'var(--color-accent)' }}>₱500 deposit</strong>. Balance paid at the shop.
+              Balance paid at the shop on the day of service.
             </p>
           </div>
         </aside>

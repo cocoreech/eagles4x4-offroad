@@ -5,12 +5,11 @@
 import Link from 'next/link'
 import { requireAdmin } from '@/lib/auth'
 import { createClient } from '@/utils/supabase/server'
+import BrandMark from '@/components/BrandMark'
 import { saveWeeklyHours, saveSettings, addClosedDate, removeClosedDate } from './actions'
+import { WeeklyHoursGrid } from './WeeklyHoursGrid'
 
 export const dynamic = 'force-dynamic'
-
-const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-const HOURS = Array.from({ length: 25 }, (_, h) => h) // 0..24
 
 interface HoursRow {
   weekday: number
@@ -49,31 +48,31 @@ export default async function AdminAvailabilityPage() {
   const closed = (closedRes.data ?? []) as ClosedRow[]
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="font-display text-2xl" style={{ color: 'var(--color-text-primary)' }}>Availability</h1>
-        <Link href="/admin" className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--color-accent)' }}>← Admin</Link>
+    <main className="min-h-screen flex flex-col">
+      <nav className="px-6 py-5 flex items-center justify-between border-b" style={{ borderColor: 'var(--color-border)' }}>
+        <BrandMark href="/admin" suffix="Admin" />
+        <Link href="/admin" className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
+          ← Admin
+        </Link>
+      </nav>
+
+      <div className="flex-1 px-6 py-10">
+      <div className="max-w-3xl mx-auto">
+      <div className="mb-8">
+        <div className="inline-flex items-center gap-2 mb-3">
+          <div className="w-7 h-px" style={{ background: 'var(--color-accent)' }} />
+          <span className="text-[10px] font-extrabold tracking-[0.4em] uppercase" style={{ color: 'var(--color-accent)' }}>Availability</span>
+        </div>
+        <h1 className="font-display font-black leading-none" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 44px)' }}>
+          Shop <em style={{ color: 'var(--color-accent)' }}>Schedule.</em>
+        </h1>
       </div>
 
       {/* Weekly hours */}
       <section className="mb-10 rounded-md p-5" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
         <h2 className="font-display text-lg mb-4" style={{ color: 'var(--color-text-primary)' }}>Weekly hours</h2>
         <form action={async (fd: FormData) => { 'use server'; await saveWeeklyHours(fd) }} className="space-y-3">
-          {DAY_LABELS.map((label, wd) => {
-            const row = hours.find(h => h.weekday === wd)
-            return (
-              <div key={wd} className="grid grid-cols-12 items-center gap-2 text-xs">
-                <label className="col-span-3 flex items-center gap-2" style={{ color: 'var(--color-text-primary)' }}>
-                  <input type="checkbox" name={`is_open_${wd}`} defaultChecked={row?.is_open ?? false} />
-                  {label}
-                </label>
-                <HourSelect name={`open_hour_${wd}`} value={row?.open_hour ?? 8} span="col-span-2" title="Open" />
-                <HourSelect name={`close_hour_${wd}`} value={row?.close_hour ?? 18} span="col-span-2" title="Close" />
-                <HourSelect name={`lunch_start_${wd}`} value={row?.lunch_start_hour ?? null} span="col-span-2" title="Lunch from" allowNone />
-                <HourSelect name={`lunch_end_${wd}`} value={row?.lunch_end_hour ?? null} span="col-span-3" title="Lunch to" allowNone />
-              </div>
-            )
-          })}
+          <WeeklyHoursGrid hours={hours} />
           <button type="submit" className="mt-2 rounded-sm px-5 py-2 text-[11px] font-extrabold uppercase tracking-[0.12em]" style={{ background: 'var(--color-accent)', color: '#000' }}>
             Save weekly hours
           </button>
@@ -129,18 +128,8 @@ export default async function AdminAvailabilityPage() {
           </button>
         </form>
       </section>
+      </div>
+      </div>
     </main>
-  )
-}
-
-function HourSelect({ name, value, span, title, allowNone }: Readonly<{ name: string; value: number | null; span: string; title: string; allowNone?: boolean }>) {
-  return (
-    <label className={span}>
-      <span className="block text-[9px] uppercase tracking-widest mb-1" style={muted}>{title}</span>
-      <select name={name} defaultValue={value == null ? '' : String(value)} className="w-full rounded-sm px-2 py-1 text-xs" style={inputStyle}>
-        {allowNone && <option value="">—</option>}
-        {HOURS.map(h => <option key={h} value={h}>{h}:00</option>)}
-      </select>
-    </label>
   )
 }

@@ -114,7 +114,7 @@ export default async function AdminBookingsPage(props: Readonly<{ searchParams: 
           {/* Bookings table */}
           {!bookings || bookings.length === 0 ? (
             <div className="text-center py-16 text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              No bookings {statusFilter ? `with status "${STATUS_LABEL[statusFilter]}"` : ''}.
+              No bookings{statusFilter ? ` with status "${STATUS_LABEL[statusFilter]}"` : ''}.
             </div>
           ) : (
             <div className="rounded-md overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
