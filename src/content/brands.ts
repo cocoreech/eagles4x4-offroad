@@ -12,7 +12,7 @@ export const BRAND_PARTNERS: Brand[] = [
   { name: 'ARB 4x4 Accessories',  abbr: 'ARB',         logo: '/images/brands/arb.png' },
   { name: 'BFGoodrich Tires',     abbr: 'BFGOODRICH',  logo: '/images/brands/bfgoodrich.png' },
   { name: 'Toyo Tires',           abbr: 'TOYO',        logo: '/images/brands/toyo.svg' },
-  { name: 'Ironman 4×4',          abbr: 'IRONMAN',     logo: '/images/brands/ironman.webp' },
+  { name: 'Ironman 4×4',          abbr: 'IRONMAN 4×4' },
   { name: 'Maxxis Tires',         abbr: 'MAXXIS',      logo: '/images/brands/maxxis.svg' },
   { name: 'Fuel Off-Road',        abbr: 'FUEL',        logo: '/images/brands/fuel-wheels.png' },
   { name: 'Würth',                abbr: 'WÜRTH',       logo: '/images/brands/wurth.png' },
