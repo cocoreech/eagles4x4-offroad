@@ -3,8 +3,9 @@
 
 export type Brand = {
   name: string
-  abbr: string  // short label shown when no logo image is available
-  logo?: string // path under /public — optional, falls back to text chip
+  abbr: string   // short label shown when no logo image is available
+  logo?: string  // path under /public — optional, falls back to text chip
+  dark?: boolean // logo artwork is white-on-dark; chip renders with a dark background
 }
 
 export const BRAND_PARTNERS: Brand[] = [
@@ -12,10 +13,10 @@ export const BRAND_PARTNERS: Brand[] = [
   { name: 'BFGoodrich Tires',     abbr: 'BFGOODRICH',  logo: '/images/brands/bfgoodrich.png' },
   { name: 'Toyo Tires',           abbr: 'TOYO',        logo: '/images/brands/toyo.svg' },
   { name: 'Ironman 4×4',          abbr: 'IRONMAN',     logo: '/images/brands/ironman.webp' },
-  { name: 'Maxxis Tires',         abbr: 'MAXXIS',      logo: '/images/brands/maxxis.png' },
+  { name: 'Maxxis Tires',         abbr: 'MAXXIS',      logo: '/images/brands/maxxis.svg' },
   { name: 'Fuel Off-Road',        abbr: 'FUEL',        logo: '/images/brands/fuel-wheels.png' },
   { name: 'Würth',                abbr: 'WÜRTH',       logo: '/images/brands/wurth.png' },
-  { name: 'Profender Suspension',  abbr: 'PROFENDER',   logo: '/images/brands/profender.png' },
+  { name: 'Profender Suspension',  abbr: 'PROFENDER',   logo: '/images/brands/profender.png', dark: true },
   { name: 'Old Man Emu',          abbr: 'OME' },
   { name: 'Black Rhino Wheels',   abbr: 'BLACK RHINO' },
   { name: 'Amsoil',               abbr: 'AMSOIL' },
