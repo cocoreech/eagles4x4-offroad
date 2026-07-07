@@ -86,6 +86,14 @@ export default function FindAStorePage() {
                     <span>✉️</span>
                     <a href="mailto:hello@eagles4x4.ph" className="hover:underline">hello@eagles4x4.ph</a>
                   </div>
+                  {main.facebook && (
+                    <div className="flex items-start gap-2">
+                      <span>📘</span>
+                      <a href={main.facebook} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                        Facebook Page
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -182,16 +190,16 @@ function BranchCard({ branch }: Readonly<{ branch: Branch }>) {
             <a href={`tel:${branch.phone.replace(/\s/g, '')}`} className="hover:underline">{branch.phone}</a>
           </div>
         )}
-        {branch.instagram && (
+        {branch.facebook && (
           <div className="flex items-start gap-2">
-            <span>📷</span>
+            <span>📘</span>
             <a
-              href={`https://instagram.com/${branch.instagram}`}
+              href={branch.facebook}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:underline"
             >
-              @{branch.instagram}
+              Facebook Page
             </a>
           </div>
         )}

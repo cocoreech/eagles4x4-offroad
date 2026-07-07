@@ -8,8 +8,8 @@ export type Branch = {
   address: string     // full street address
   phone?: string      // contact number, if the branch has one
   hours: string       // opening hours
-  instagram?: string  // IG handle without the @, if any
-  isMain?: boolean    // main/HQ branch — featured with a map
+  facebook?: string   // full Facebook page URL, if any
+  isMain?: boolean    // main branch — featured with a map
 }
 
 // The address string is also used to build Google Maps / Waze links.
@@ -17,9 +17,10 @@ export const BRANCHES: Branch[] = [
   {
     name: 'Dasmariñas, Cavite',
     region: 'Cavite — Main Branch',
-    tag: 'Main Branch · HQ',
+    tag: 'Main Branch',
     address: '6147-A Congressional Ave., Dasmariñas, Cavite',
     hours: 'Mon – Sat · 8:00 AM – 6:00 PM',
+    facebook: 'https://www.facebook.com/share/17psWHocRi/',
     isMain: true,
   },
   {
@@ -29,6 +30,7 @@ export const BRANCHES: Branch[] = [
     address: '111 Bambang ni Felix, Taguig, 1637',
     phone: '+63 999 333 7173',
     hours: 'Open daily',
+    facebook: 'https://www.facebook.com/share/14hAzjrRS9y/',
   },
   {
     name: 'Quezon City',
@@ -37,7 +39,7 @@ export const BRANCHES: Branch[] = [
     address: '14 East Avenue, Quezon City',
     phone: '+63 994 338 1107',
     hours: 'Open daily',
-    instagram: 'eagles4x4qc',
+    facebook: 'https://www.facebook.com/share/17ikRn1G6y/',
   },
   {
     name: 'Valenzuela',
@@ -45,6 +47,7 @@ export const BRANCHES: Branch[] = [
     tag: 'Now Open',
     address: '48 Maysan Road, Maysan, Valenzuela',
     hours: 'Open daily',
+    facebook: 'https://www.facebook.com/share/1DeZGGjN1L/',
   },
 ]
 
