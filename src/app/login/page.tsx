@@ -34,21 +34,22 @@ export default async function LoginPage(
             <div className="inline-flex items-center gap-2 mb-4">
               <div className="w-7 h-px" style={{ background: 'var(--color-accent)' }} />
               <span className="text-[10px] font-extrabold tracking-[0.4em] uppercase" style={{ color: 'var(--color-accent)' }}>
-                Get Started
+                Sign In · Sign Up
               </span>
             </div>
             <h1
               className="font-display font-black leading-none"
               style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(36px, 6vw, 56px)' }}
             >
-              Join {brand.name}<br />
-              <em style={{ color: 'var(--color-accent)' }}>4×4.</em>
+              Sign in to<br />
+              <em style={{ color: 'var(--color-accent)' }}>{brand.name} 4×4.</em>
             </h1>
             <p
               className="mt-4 text-sm"
               style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-display)', fontStyle: 'italic' }}
             >
-              One-time setup with your email — no passwords. After this, you&apos;re in for good.
+              Enter your email and we&apos;ll send a 6-digit code — no passwords.
+              New or returning, it&apos;s the same email.
             </p>
           </div>
 
