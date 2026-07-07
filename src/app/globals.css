@@ -40,6 +40,16 @@ html, body {
   text-transform: uppercase;
 }
 
+/* Product tiles — Seng Li-style uniform cards with a subtle hover lift */
+.product-card {
+  transition: transform 200ms ease-out, box-shadow 200ms ease-out, border-color 200ms ease-out;
+}
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+  border-color: var(--color-accent);
+}
+
 /* Social icon links in footer */
 .social-icon {
   color: rgba(245, 245, 245, 0.4);

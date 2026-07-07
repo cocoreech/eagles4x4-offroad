@@ -47,12 +47,14 @@ export default function ProductForm({ initial }: Readonly<{ initial?: Product }>
 
   return (
     <form action={handleSubmit} className="space-y-6">
-      {/* Image */}
+      {/* Image — square recommended so every product renders at a uniform
+          size on the storefront (white tile, object-contain). */}
       <ImageUpload
         folder="products"
         hiddenInputName="imageUrl"
         initialUrl={initial?.image_url ?? null}
         label="Product image"
+        recommendedSize="Square · 1000×1000"
       />
 
       {/* Identity */}

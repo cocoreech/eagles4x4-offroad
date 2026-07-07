@@ -300,7 +300,7 @@ export default function QuoteCalculator({ services, products, isSignedIn }: Prop
             {visibleProducts.length === 0 ? (
               <EmptyState label="No products in this category yet." />
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {visibleProducts.map(p => (
                   <ProductCard
                     key={p.id}
@@ -406,37 +406,38 @@ function ProductCard({
       type="button"
       onClick={onToggle}
       aria-pressed={picked}
-      className="group relative text-left rounded-sm overflow-hidden transition focus:outline-none focus-visible:outline-2 w-full"
+      className="product-card group relative text-left rounded-md overflow-hidden transition focus:outline-none focus-visible:outline-2 w-full flex flex-col"
       style={{
         background: 'var(--color-surface)',
-        border: '2px solid ' + (picked ? 'var(--color-accent)' : 'transparent'),
+        border: '2px solid ' + (picked ? 'var(--color-accent)' : 'var(--color-border)'),
         outlineColor: 'var(--color-accent)',
       }}
     >
-      {/* Image — object-contain so parts show fully, white-ish tinted bg */}
+      {/* Image — white tile, object-contain: every product renders at a uniform
+          size on a clean background, Seng Li-style, regardless of source image. */}
       <div
-        className="aspect-square overflow-hidden flex items-center justify-center p-3"
-        style={{ background: 'rgba(255,255,255,0.06)' }}
+        className="aspect-square w-full flex items-center justify-center p-4"
+        style={{ background: '#ffffff' }}
       >
         {product.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={product.image_url}
             alt={product.name}
-            className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+            className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <span
-            className="font-display font-black text-3xl"
-            style={{ color: 'var(--color-border)' }}
+            className="font-display font-black text-4xl"
+            style={{ color: '#d4d4d4' }}
           >
             {product.name.charAt(0)}
           </span>
         )}
       </div>
 
-      {/* Name + pick indicator */}
-      <div className="px-2 py-2.5 text-center">
+      {/* Name + price */}
+      <div className="px-2.5 py-3 text-center flex-1 flex flex-col justify-center">
         <div
           className="text-[12px] font-semibold leading-snug line-clamp-2"
           style={{ color: picked ? 'var(--color-accent)' : 'var(--color-text-primary)' }}
@@ -444,7 +445,7 @@ function ProductCard({
           {product.name}
         </div>
         {product.price != null && (
-          <div className="mt-1 text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+          <div className="mt-1 text-[11px] font-bold" style={{ color: 'var(--color-accent)' }}>
             ₱{Number(product.price).toLocaleString('en-PH')}
           </div>
         )}
@@ -453,7 +454,7 @@ function ProductCard({
       {/* Picked checkmark overlay */}
       {picked && (
         <div
-          className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black"
+          className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shadow"
           style={{ background: 'var(--color-accent)', color: '#000' }}
           aria-hidden
         >
