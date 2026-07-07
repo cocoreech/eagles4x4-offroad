@@ -51,15 +51,27 @@ export default async function AdminHomePage() {
   const { data: trafficRaw } = await supabase.rpc('get_traffic_stats')
   const traffic = (trafficRaw ?? null) as TrafficStats | null
 
+  const roleLabel = (profile?.role ?? '').replace('_', ' ')
+  const today = new Date().toLocaleDateString('en-PH', {
+    weekday: 'long', month: 'long', day: 'numeric', timeZone: 'Asia/Manila',
+  })
+
   return (
-    <main className="min-h-screen flex flex-col">
+    <main className="min-h-screen flex flex-col" style={{ background: 'var(--color-bg)' }}>
       <nav className="px-6 py-5 flex items-center justify-between border-b" style={{ borderColor: 'var(--color-border)' }}>
         <BrandMark href="/" suffix="Admin" />
-        <div className="flex gap-4 items-center text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
-          <span>{profile?.role}</span>
-          <Link href="/" style={{ color: 'var(--color-text-muted)' }}>← Home</Link>
+        <div className="flex gap-3 items-center text-[11px] font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
+          {roleLabel && (
+            <span
+              className="px-2.5 py-1 rounded-full text-[9px]"
+              style={{ background: 'rgba(201,168,76,0.12)', color: 'var(--color-accent)', border: '1px solid rgba(201,168,76,0.25)' }}
+            >
+              {roleLabel}
+            </span>
+          )}
+          <Link href="/" className="hover:opacity-70 transition" style={{ color: 'var(--color-text-muted)' }}>← Home</Link>
           <form action="/logout" method="post" className="inline">
-            <button type="submit" className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>Sign out</button>
+            <button type="submit" className="text-[11px] font-semibold tracking-widest uppercase hover:opacity-70 transition" style={{ color: 'var(--color-text-muted)' }}>Sign out</button>
           </form>
         </div>
       </nav>
@@ -81,169 +93,169 @@ export default async function AdminHomePage() {
               Welcome,<br />
               <em style={{ color: 'var(--color-accent)' }}>{user.email?.split('@')[0]}.</em>
             </h1>
+            <p className="mt-4 text-xs" style={{ color: 'var(--color-text-muted)' }}>{today}</p>
           </div>
 
-          {/* Stats */}
+          {/* Operations stats */}
+          <SectionLabel>Operations</SectionLabel>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-9">
+            <Stat icon="⏳" label="Pending"     value={String(pendingCount)} accent
+              href="/admin/bookings" />
+            <Stat icon="🔧" label="In Progress" value={String(inProgressCount)} href="/admin/bookings" />
+            <Stat icon="✅" label="Ready"       value={String(readyCount)} href="/admin/bookings" />
+            <Stat icon="💰" label="Lifetime Revenue" value={Math.round(totalRevenue).toLocaleString('en-PH')} prefix="₱" />
+          </div>
+
+          {/* Traffic stats */}
+          <SectionLabel hint="Unique visitors · public pages only">Traffic</SectionLabel>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
-            <Stat label="Pending"    value={String(pendingCount)} accent />
-            <Stat label="In Progress" value={String(inProgressCount)} />
-            <Stat label="Ready"      value={String(readyCount)} />
-            <Stat label="Lifetime Revenue" value={Math.round(totalRevenue).toLocaleString('en-PH')} prefix="₱" />
+            <Stat icon="👁" label="Visitors Today"     value={fmtCount(traffic?.visitors_today)} accent />
+            <Stat icon="📈" label="Visitors · 7 Days"  value={fmtCount(traffic?.visitors_7d)} />
+            <Stat icon="📄" label="Page Views · 7 Days" value={fmtCount(traffic?.pageviews_7d)} />
+            <Stat icon="🌐" label="Visitors · All-Time" value={fmtCount(traffic?.visitors_total)} />
           </div>
 
-          {/* Traffic */}
-          <div className="flex items-baseline justify-between mb-4">
-            <h2 className="text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
-              Traffic
-            </h2>
-            <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
-              Unique visitors · public pages only
-            </span>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
-            <Stat label="Visitors Today"   value={fmtCount(traffic?.visitors_today)} accent />
-            <Stat label="Visitors · 7 Days" value={fmtCount(traffic?.visitors_7d)} />
-            <Stat label="Page Views · 7 Days" value={fmtCount(traffic?.pageviews_7d)} />
-            <Stat label="Visitors · All-Time" value={fmtCount(traffic?.visitors_total)} />
-          </div>
-
-          {/* Module tiles */}
-          <h2 className="text-[10px] font-bold tracking-widest uppercase mb-4" style={{ color: 'var(--color-text-muted)' }}>
-            Manage
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {/* Operations modules */}
+          <SectionLabel>Manage · Operations</SectionLabel>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-9">
             <Tile
-              href="/admin/bookings"
-              title="Bookings"
+              href="/admin/bookings" icon="📋" title="Bookings"
               desc="View all bookings, advance status, cancel"
               count={`${allBookings.length} total · ${pendingCount} pending`}
-              ready
             />
             <Tile
-              href="/admin/services"
-              title="Services Catalog"
-              desc={`${services.data?.length ?? 0} services · ${services.data?.filter(s => s.is_active).length ?? 0} active`}
-              count="Manage"
-              ready
-            />
-            <Tile
-              href="/admin/products"
-              title="Products / Shop"
-              desc={`${products.data?.length ?? 0} products · ${products.data?.filter(p => p.is_active).length ?? 0} active`}
-              count="Manage"
-              ready
-            />
-            <Tile
-              href="/admin/builds"
-              title="Builds Gallery"
-              desc={`${builds.data?.length ?? 0} entries in portfolio`}
-              count="Manage"
-              ready
-            />
-            <Tile
-              href="/admin/events"
-              title="Events"
-              desc={`${events.data?.length ?? 0} events · ${events.data?.filter(e => e.is_published).length ?? 0} published`}
-              count="Manage"
-              ready
-            />
-            <Tile
-              href="/admin/inbox"
-              title="Inbox"
+              href="/admin/inbox" icon="💬" title="Inbox"
               desc="Live chat with customers"
-              count="Open"
-              ready
+              count="Open messages"
             />
             <Tile
-              href="/admin/availability"
-              title="Availability"
+              href="/admin/availability" icon="📅" title="Availability"
               desc="Shop hours, capacity, closed dates"
               count="Manage"
-              ready
             />
             <Tile
-              href="#"
-              title="Site Content"
+              href="/admin/customers" icon="👥" title="Customers"
+              desc="Everyone who signed up · export CSV/PDF"
+              count="View"
+            />
+          </div>
+
+          {/* Catalog & content modules */}
+          <SectionLabel>Manage · Catalog &amp; Content</SectionLabel>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            <Tile
+              href="/admin/services" icon="🔧" title="Services Catalog"
+              desc="Lift kits, suspension, install work"
+              count={`${services.data?.length ?? 0} services · ${services.data?.filter(s => s.is_active).length ?? 0} active`}
+            />
+            <Tile
+              href="/admin/products" icon="🛒" title="Products / Shop"
+              desc="Parts, wheels, accessories"
+              count={`${products.data?.length ?? 0} products · ${products.data?.filter(p => p.is_active).length ?? 0} active`}
+            />
+            <Tile
+              href="/admin/builds" icon="🚙" title="Builds Gallery"
+              desc="Portfolio of completed rigs"
+              count={`${builds.data?.length ?? 0} entries`}
+            />
+            <Tile
+              href="/admin/events" icon="📣" title="Events"
+              desc="Trail rides, launches, promos"
+              count={`${events.data?.length ?? 0} events · ${events.data?.filter(e => e.is_published).length ?? 0} live`}
+            />
+            <Tile
+              href="#" icon="📝" title="Site Content"
               desc="Edit hero text, about section, shop info"
               comingSoon
             />
-            <Tile
-              href="/admin/customers"
-              title="Customers"
-              desc="Everyone who signed up · export CSV/PDF"
-              count="View"
-              ready
-            />
           </div>
-
-          <p className="mt-10 text-xs text-center" style={{ color: 'var(--color-text-muted)' }}>
-            Content editor coming soon.
-          </p>
         </div>
       </div>
     </main>
   )
 }
 
-function Stat({ label, value, prefix, accent }: Readonly<{ label: string; value: string; prefix?: string; accent?: boolean }>) {
+function SectionLabel({ children, hint }: Readonly<{ children: React.ReactNode; hint?: string }>) {
   return (
+    <div className="flex items-baseline justify-between mb-4">
+      <h2 className="text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
+        {children}
+      </h2>
+      {hint && (
+        <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>{hint}</span>
+      )}
+    </div>
+  )
+}
+
+function Stat({
+  icon, label, value, prefix, accent, href,
+}: Readonly<{ icon: string; label: string; value: string; prefix?: string; accent?: boolean; href?: string }>) {
+  const card = (
     <div
-      className="rounded-md p-5"
+      className="stat-card rounded-md p-5 h-full"
       style={{
         background: 'var(--color-surface)',
         border: '1px solid ' + (accent ? 'var(--color-accent)' : 'var(--color-border)'),
       }}
     >
-      <div className="text-[10px] font-bold tracking-widest uppercase mb-2" style={{ color: 'var(--color-text-muted)' }}>
-        {label}
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
+          {label}
+        </span>
+        <span className="text-sm opacity-70" aria-hidden>{icon}</span>
       </div>
       <div
-        className="font-display font-black text-3xl"
+        className="font-display font-black text-3xl leading-none"
         style={{ color: accent ? 'var(--color-accent)' : 'var(--color-text-primary)' }}
       >
         {prefix && (
-          <span className="font-body" style={{ fontFamily: 'var(--font-body)' }}>{prefix}</span>
+          <span className="font-body text-2xl" style={{ fontFamily: 'var(--font-body)' }}>{prefix}</span>
         )}
         {value}
       </div>
     </div>
   )
+  return href ? <Link href={href} className="block h-full">{card}</Link> : card
 }
 
 function Tile({
-  href, title, desc, count, ready, comingSoon,
+  href, icon, title, desc, count, comingSoon,
 }: Readonly<{
-  href: string; title: string; desc: string; count?: string; ready?: boolean; comingSoon?: boolean;
+  href: string; icon: string; title: string; desc: string; count?: string; comingSoon?: boolean;
 }>) {
   const body = (
     <div
-      className="block rounded-md p-5 transition h-full"
+      className={'admin-tile block rounded-md p-5 h-full' + (comingSoon ? ' is-soon' : '')}
       style={{
         background: 'var(--color-surface)',
-        border: '1px solid ' + (ready ? 'var(--color-accent)' : 'var(--color-border)'),
-        opacity: comingSoon ? 0.5 : 1,
+        border: '1px solid var(--color-border)',
+        opacity: comingSoon ? 0.55 : 1,
         cursor: comingSoon ? 'not-allowed' : 'pointer',
       }}
     >
-      <div className="flex items-start justify-between">
-        <div className="font-display font-bold text-lg">{title}</div>
+      <div className="flex items-start justify-between mb-3">
+        <span
+          className="flex items-center justify-center w-10 h-10 rounded-md text-lg"
+          style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)' }}
+          aria-hidden
+        >
+          {icon}
+        </span>
         {comingSoon && (
           <span className="text-[9px] font-bold tracking-widest uppercase px-2 py-0.5 rounded" style={{ background: 'var(--color-border)', color: 'var(--color-text-muted)' }}>
             Soon
           </span>
         )}
-        {ready && (
-          <span className="text-[9px] font-bold tracking-widest uppercase px-2 py-0.5 rounded" style={{ background: 'rgba(201,168,76,0.15)', color: 'var(--color-accent)' }}>
-            Ready
-          </span>
-        )}
       </div>
-      <div className="mt-2 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+      <div className="font-display font-bold text-lg leading-tight">{title}</div>
+      <div className="mt-1.5 text-xs" style={{ color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
         {desc}
       </div>
       {count && (
-        <div className="mt-3 text-xs font-bold" style={{ color: 'var(--color-accent)' }}>
-          {count} →
+        <div className="mt-4 pt-3 flex items-center justify-between text-[11px] font-bold" style={{ borderTop: '1px solid var(--color-border)', color: 'var(--color-accent)' }}>
+          <span>{count}</span>
+          <span className="admin-tile-arrow inline-block" aria-hidden>→</span>
         </div>
       )}
     </div>

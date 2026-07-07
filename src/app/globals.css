@@ -50,6 +50,28 @@ html, body {
   border-color: var(--color-accent);
 }
 
+/* Admin dashboard — stat cards + module tiles */
+.stat-card {
+  transition: border-color 180ms ease-out, background 180ms ease-out;
+}
+.stat-card:hover {
+  border-color: rgba(201, 168, 76, 0.45);
+}
+.admin-tile {
+  transition: transform 180ms ease-out, box-shadow 180ms ease-out, border-color 180ms ease-out;
+}
+.admin-tile:not(.is-soon):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+  border-color: var(--color-accent);
+}
+.admin-tile:not(.is-soon):hover .admin-tile-arrow {
+  transform: translateX(3px);
+}
+.admin-tile-arrow {
+  transition: transform 180ms ease-out;
+}
+
 /* Social icon links in footer */
 .social-icon {
   color: rgba(245, 245, 245, 0.4);
