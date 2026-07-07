@@ -67,6 +67,26 @@ export default async function NewBookingPage() {
             </p>
           </div>
 
+          {/* Pilot notice — bookings limited to the Cavite branch during rollout */}
+          <div
+            className="mb-8 rounded-sm px-5 py-4 flex items-start gap-3"
+            style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)' }}
+          >
+            <span aria-hidden className="text-base leading-none mt-0.5">📍</span>
+            <p className="text-[13px]" style={{ color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
+              <span className="font-bold" style={{ color: 'var(--color-accent)' }}>
+                Now booking at Dasmariñas, Cavite only.
+              </span>{' '}
+              We&apos;re piloting online booking at our Cavite branch first. Our Taguig,
+              Quezon City, and Valenzuela branches are coming soon — for those, message the
+              branch directly on{' '}
+              <Link href="/find-a-store" className="underline" style={{ color: 'var(--color-accent)' }}>
+                Facebook
+              </Link>{' '}
+              for now.
+            </p>
+          </div>
+
           <BookingForm
             services={services ?? []}
             products={products ?? []}
