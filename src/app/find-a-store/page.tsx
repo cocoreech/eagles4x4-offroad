@@ -1,15 +1,19 @@
-// /find-a-store — Coming Soon stub.
-// Shows current Dasmariñas branch. More locations announced when HQ adopts.
+// /find-a-store — store locator.
+// Featured main branch (Dasmariñas) with a live map, plus the Metro Manila branches.
 
 import Link from 'next/link'
 import PublicNav from '@/components/PublicNavServer'
+import { BRANCHES, mapsUrl, wazeUrl, mapsEmbedUrl, type Branch } from '@/content/branches'
 
 export const metadata = {
   title: 'Find a Store — Eagles 4×4 Offroad',
-  description: 'Visit Eagles 4×4 Offroad in Dasmariñas, Cavite. More locations coming soon.',
+  description: 'Visit Eagles 4×4 Offroad — main branch in Dasmariñas, Cavite, plus Taguig, Quezon City, and Valenzuela.',
 }
 
 export default function FindAStorePage() {
+  const main = BRANCHES.find(b => b.isMain) ?? BRANCHES[0]
+  const others = BRANCHES.filter(b => b !== main)
+
   return (
     <>
       <PublicNav />
@@ -31,58 +35,63 @@ export default function FindAStorePage() {
               Find a<br />
               <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>Store.</em>
             </h1>
+            <p className="text-sm mt-6 max-w-lg" style={{ color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
+              {BRANCHES.length} branches and growing — our Dasmariñas headquarters plus
+              locations across Metro Manila.
+            </p>
           </div>
 
-          {/* Current branch card */}
+          {/* Featured main branch */}
           <div
             className="rounded-sm overflow-hidden mb-10"
             style={{ border: '1px solid rgba(201,168,76,0.2)', background: 'var(--color-surface)' }}
           >
-            {/* Map placeholder — swap iframe src with real embed later */}
             <div className="aspect-[16/6] w-full overflow-hidden" style={{ background: 'rgba(20,20,20,0.8)' }}>
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.6!2d120.9!3d14.3!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zRGFzbWFyacOxYXM!5e0!3m2!1sen!2sph!4v1"
+                src={mapsEmbedUrl(main.address)}
                 width="100%"
                 height="100%"
                 style={{ border: 0, filter: 'invert(0.9) hue-rotate(180deg) brightness(0.85)' }}
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                title="Eagles 4×4 Offroad — Dasmariñas, Cavite"
+                title={`Eagles 4×4 Offroad — ${main.name}`}
               />
             </div>
 
             <div className="p-8 md:flex md:items-start md:justify-between gap-8">
               <div>
                 <div className="text-[10px] font-bold uppercase mb-2" style={{ color: 'var(--color-accent)', letterSpacing: '0.25em' }}>
-                  Main Branch — Now Open
+                  {main.tag}
                 </div>
                 <h2 className="font-display font-black text-2xl mb-4" style={{ fontFamily: 'var(--font-display)' }}>
-                  Dasmariñas, Cavite
+                  {main.name}
                 </h2>
                 <div className="space-y-2 text-sm" style={{ color: 'var(--color-text-muted)' }}>
                   <div className="flex items-start gap-2">
                     <span>📍</span>
-                    <span>Dasmariñas City, Cavite, Philippines</span>
+                    <span>{main.address}</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span>🕐</span>
-                    <span>Monday – Saturday &nbsp;·&nbsp; 8:00 AM – 6:00 PM</span>
+                    <span>{main.hours}</span>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <span>📞</span>
-                    <span>0917 XXX XXXX</span>
-                  </div>
+                  {main.phone && (
+                    <div className="flex items-start gap-2">
+                      <span>📞</span>
+                      <a href={`tel:${main.phone.replace(/\s/g, '')}`} className="hover:underline">{main.phone}</a>
+                    </div>
+                  )}
                   <div className="flex items-start gap-2">
                     <span>✉️</span>
-                    <span>hello@eagles4x4.ph</span>
+                    <a href="mailto:hello@eagles4x4.ph" className="hover:underline">hello@eagles4x4.ph</a>
                   </div>
                 </div>
               </div>
 
               <div className="flex flex-col gap-3 mt-6 md:mt-0 flex-shrink-0">
                 <a
-                  href="https://maps.google.com/?q=Dasmarinas+Cavite"
+                  href={mapsUrl(main.address)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-6 py-3 text-[10px] font-extrabold uppercase rounded-sm text-center transition-all hover:brightness-110"
@@ -91,7 +100,7 @@ export default function FindAStorePage() {
                   Open in Google Maps
                 </a>
                 <a
-                  href="https://waze.com/ul?q=Dasmarinas+Cavite"
+                  href={wazeUrl(main.address)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-6 py-3 text-[10px] font-semibold uppercase rounded-sm text-center transition-all"
@@ -103,43 +112,100 @@ export default function FindAStorePage() {
             </div>
           </div>
 
-          {/* Coming soon banner */}
+          {/* Other branches */}
+          <div className="mb-8">
+            <span className="text-[10px] font-bold uppercase" style={{ letterSpacing: '0.25em', color: 'var(--color-text-muted)' }}>
+              More Branches
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-16">
+            {others.map(branch => (
+              <BranchCard key={branch.name} branch={branch} />
+            ))}
+          </div>
+
+          {/* Booking CTA */}
           <div
             className="rounded-sm px-8 py-10 text-center"
             style={{ background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.15)' }}
           >
-            <div
-              className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-sm"
-              style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.25)' }}
-            >
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--color-accent)' }} />
-              <span className="text-[9px] font-bold uppercase" style={{ letterSpacing: '0.3em', color: 'var(--color-accent)' }}>
-                More locations coming soon
-              </span>
-            </div>
             <h3
               className="font-display font-black text-2xl md:text-3xl mb-3"
               style={{ fontFamily: 'var(--font-display)' }}
             >
-              Expanding across<br />
-              <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>the Philippines.</em>
+              Ready to <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>build?</em>
             </h3>
             <p className="text-sm max-w-md mx-auto mb-8" style={{ color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
-              Eagles 4×4 Offroad is growing. New branches are being planned for
-              Metro Manila and beyond. Stay tuned — or get in touch if you want
-              to bring Eagles to your area.
+              Book a slot at any Eagles 4×4 Offroad branch. Our in-house team handles
+              every job from first bolt to final alignment.
             </p>
             <Link
               href="/bookings/new"
               className="inline-block px-8 py-4 text-[10px] font-extrabold uppercase rounded-sm transition-all hover:brightness-110"
               style={{ background: 'var(--color-accent)', color: '#000', letterSpacing: '0.12em' }}
             >
-              Book at Dasmariñas
+              Book an Appointment
             </Link>
           </div>
 
         </div>
       </main>
     </>
+  )
+}
+
+function BranchCard({ branch }: Readonly<{ branch: Branch }>) {
+  return (
+    <div
+      className="rounded-sm p-6 flex flex-col"
+      style={{ border: '1px solid var(--color-border)', background: 'var(--color-surface)' }}
+    >
+      <div className="text-[9px] font-bold uppercase mb-2" style={{ color: 'var(--color-accent)', letterSpacing: '0.22em' }}>
+        {branch.region}
+      </div>
+      <h3 className="font-display font-black text-xl mb-4" style={{ fontFamily: 'var(--font-display)' }}>
+        {branch.name}
+      </h3>
+
+      <div className="space-y-2 text-[13px] mb-6 flex-1" style={{ color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
+        <div className="flex items-start gap-2">
+          <span>📍</span>
+          <span>{branch.address}</span>
+        </div>
+        <div className="flex items-start gap-2">
+          <span>🕐</span>
+          <span>{branch.hours}</span>
+        </div>
+        {branch.phone && (
+          <div className="flex items-start gap-2">
+            <span>📞</span>
+            <a href={`tel:${branch.phone.replace(/\s/g, '')}`} className="hover:underline">{branch.phone}</a>
+          </div>
+        )}
+        {branch.instagram && (
+          <div className="flex items-start gap-2">
+            <span>📷</span>
+            <a
+              href={`https://instagram.com/${branch.instagram}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline"
+            >
+              @{branch.instagram}
+            </a>
+          </div>
+        )}
+      </div>
+
+      <a
+        href={mapsUrl(branch.address)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="px-5 py-2.5 text-[10px] font-extrabold uppercase rounded-sm text-center transition-all hover:brightness-110"
+        style={{ background: 'var(--color-accent)', color: '#000', letterSpacing: '0.12em' }}
+      >
+        Get Directions
+      </a>
+    </div>
   )
 }

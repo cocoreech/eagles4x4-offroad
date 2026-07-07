@@ -148,22 +148,7 @@ export default function PublicNav({ user, isAdmin }: Readonly<{ user?: { id: str
 
           <NavLink href="/events" label="Events & Promos" />
 
-          {/* Find a Store — "Coming Soon" badge */}
-          <li className="relative">
-            <Link
-              href="/find-a-store"
-              className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.1em] uppercase transition"
-              style={{ color: 'var(--color-text-muted)' }}
-            >
-              Find a Store
-              <span
-                className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-sm"
-                style={{ background: 'rgba(201,168,76,0.15)', color: 'var(--color-accent)', letterSpacing: '0.1em' }}
-              >
-                Soon
-              </span>
-            </Link>
-          </li>
+          <NavLink href="/find-a-store" label="Find a Store" />
 
           <Dropdown
             label="About"
@@ -267,7 +252,7 @@ export default function PublicNav({ user, isAdmin }: Readonly<{ user?: { id: str
             ))}
 
             <MobileLink href="/events" label="Events & Promos" onClick={() => setMobileOpen(false)} />
-            <MobileLink href="/find-a-store" label="Find a Store" onClick={() => setMobileOpen(false)} badge="Soon" />
+            <MobileLink href="/find-a-store" label="Find a Store" onClick={() => setMobileOpen(false)} />
 
             <li className="pt-4 pb-1">
               <span className="text-[9px] font-bold uppercase tracking-[0.3em]" style={{ color: 'rgba(201,168,76,0.5)' }}>
