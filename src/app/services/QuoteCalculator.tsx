@@ -266,6 +266,15 @@ export default function QuoteCalculator({ services, products, isSignedIn }: Prop
         className="pb-20"
         style={{ borderTop: '1px solid var(--color-border)' }}
       >
+        {/* Section label — matches the "Services" eyebrow in the quote builder */}
+        <div className="px-6 md:px-12 pt-10 pb-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-[10px] font-extrabold tracking-[0.4em] uppercase" style={{ color: 'var(--color-text-muted)' }}>
+              Products
+            </div>
+          </div>
+        </div>
+
         {/* Category tabs */}
         <div
           className="sticky top-16 z-10 px-6 md:px-12 overflow-x-auto"
