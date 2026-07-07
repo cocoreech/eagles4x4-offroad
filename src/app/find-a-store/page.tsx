@@ -7,7 +7,7 @@ import { BRANCHES, mapsUrl, wazeUrl, mapsEmbedUrl, type Branch } from '@/content
 
 export const metadata = {
   title: 'Find a Store — Eagles 4×4 Offroad',
-  description: 'Visit Eagles 4×4 Offroad — main branch in Dasmariñas, Cavite, plus Taguig, Quezon City, and Valenzuela.',
+  description: 'Visit Eagles 4×4 Offroad in Dasmariñas, Cavite, Taguig, Quezon City, and Valenzuela.',
 }
 
 export default function FindAStorePage() {
@@ -36,8 +36,7 @@ export default function FindAStorePage() {
               <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>Store.</em>
             </h1>
             <p className="text-sm mt-6 max-w-lg" style={{ color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
-              {BRANCHES.length} branches and growing — our Dasmariñas headquarters plus
-              locations across Metro Manila.
+              {BRANCHES.length} branches and growing — across Cavite and Metro Manila.
             </p>
           </div>
 

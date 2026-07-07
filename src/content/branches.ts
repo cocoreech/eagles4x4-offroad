@@ -16,8 +16,8 @@ export type Branch = {
 export const BRANCHES: Branch[] = [
   {
     name: 'Dasmariñas, Cavite',
-    region: 'Cavite — Main Branch',
-    tag: 'Main Branch',
+    region: 'Cavite',
+    tag: 'Now Open',
     address: '6147-A Congressional Ave., Dasmariñas, Cavite',
     hours: 'Mon – Sat · 8:00 AM – 6:00 PM',
     facebook: 'https://www.facebook.com/share/17psWHocRi/',
