@@ -10,6 +10,21 @@ import BrandMark from '@/components/BrandMark'
 
 export const dynamic = 'force-dynamic'
 
+type TrafficStats = {
+  pageviews_today: number
+  pageviews_7d: number
+  pageviews_total: number
+  visitors_today: number
+  visitors_7d: number
+  visitors_total: number
+}
+
+// Formats a count for a stat tile; falls back to "0" when tracking has no
+// rows yet (or the RPC is unavailable before the migration is applied).
+function fmtCount(n: number | undefined | null): string {
+  return Number(n ?? 0).toLocaleString('en-PH')
+}
+
 export default async function AdminHomePage() {
   const { user, profile } = await requireAdmin()
   const supabase = await createClient()
@@ -30,6 +45,11 @@ export default async function AdminHomePage() {
   const totalRevenue   = allBookings
     .filter(b => b.status === 'completed')
     .reduce((sum, b) => sum + Number(b.total_amount ?? 0), 0)
+
+  // Traffic stats — privacy-safe visitor counter (SECURITY DEFINER RPC,
+  // admin-guarded). Returns aggregate counts only; null if none recorded yet.
+  const { data: trafficRaw } = await supabase.rpc('get_traffic_stats')
+  const traffic = (trafficRaw ?? null) as TrafficStats | null
 
   return (
     <main className="min-h-screen flex flex-col">
@@ -69,6 +89,22 @@ export default async function AdminHomePage() {
             <Stat label="In Progress" value={String(inProgressCount)} />
             <Stat label="Ready"      value={String(readyCount)} />
             <Stat label="Lifetime Revenue" value={Math.round(totalRevenue).toLocaleString('en-PH')} prefix="₱" />
+          </div>
+
+          {/* Traffic */}
+          <div className="flex items-baseline justify-between mb-4">
+            <h2 className="text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
+              Traffic
+            </h2>
+            <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+              Unique visitors · public pages only
+            </span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
+            <Stat label="Visitors Today"   value={fmtCount(traffic?.visitors_today)} accent />
+            <Stat label="Visitors · 7 Days" value={fmtCount(traffic?.visitors_7d)} />
+            <Stat label="Page Views · 7 Days" value={fmtCount(traffic?.pageviews_7d)} />
+            <Stat label="Visitors · All-Time" value={fmtCount(traffic?.visitors_total)} />
           </div>
 
           {/* Module tiles */}

@@ -7,6 +7,7 @@ import { Inter, Playfair_Display, Rajdhani } from 'next/font/google'
 import { brand as brandConfig } from '@/content/brand'
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister'
 import InstallAppButton from '@/components/InstallAppButton'
+import PageViewTracker from '@/components/PageViewTracker'
 import './globals.css'
 
 const body = Inter({
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         {children}
         <ServiceWorkerRegister />
         <InstallAppButton />
+        <PageViewTracker />
       </body>
     </html>
   )
