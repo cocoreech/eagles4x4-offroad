@@ -40,8 +40,13 @@ export default async function AdminHomePage() {
 
   const allBookings = bookingsAll.data ?? []
   const pendingCount   = allBookings.filter(b => b.status === 'pending').length
+  // Only feed the hidden Operations stats block below (commented out per
+  // request 2026-07-08). Kept computed so that block is a one-line uncomment.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const inProgressCount = allBookings.filter(b => ['in_progress', 'parts_installed', 'quality_check'].includes(b.status)).length
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const readyCount     = allBookings.filter(b => b.status === 'ready').length
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const totalRevenue   = allBookings
     .filter(b => b.status === 'completed')
     .reduce((sum, b) => sum + Number(b.total_amount ?? 0), 0)
@@ -96,7 +101,10 @@ export default async function AdminHomePage() {
             <p className="mt-4 text-xs" style={{ color: 'var(--color-text-muted)' }}>{today}</p>
           </div>
 
-          {/* Operations stats */}
+          {/* Operations stats — HIDDEN per request (2026-07-08). Not deleted;
+              uncomment to bring back. Depends on pendingCount/inProgressCount/
+              readyCount/totalRevenue above, which are still computed. */}
+          {/*
           <SectionLabel>Operations</SectionLabel>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-9">
             <Stat icon="⏳" label="Pending"     value={String(pendingCount)} accent
@@ -105,18 +113,10 @@ export default async function AdminHomePage() {
             <Stat icon="✅" label="Ready"       value={String(readyCount)} href="/admin/bookings" />
             <Stat icon="💰" label="Lifetime Revenue" value={Math.round(totalRevenue).toLocaleString('en-PH')} prefix="₱" />
           </div>
+          */}
 
-          {/* Traffic stats */}
-          <SectionLabel hint="Unique visitors · public pages only">Traffic</SectionLabel>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
-            <Stat icon="👁" label="Visitors Today"     value={fmtCount(traffic?.visitors_today)} accent />
-            <Stat icon="📈" label="Visitors · 7 Days"  value={fmtCount(traffic?.visitors_7d)} />
-            <Stat icon="📄" label="Page Views · 7 Days" value={fmtCount(traffic?.pageviews_7d)} />
-            <Stat icon="🌐" label="Visitors · All-Time" value={fmtCount(traffic?.visitors_total)} />
-          </div>
-
-          {/* Operations modules */}
-          <SectionLabel>Manage · Operations</SectionLabel>
+          {/* Operations modules — moved above Traffic per request */}
+          <SectionLabel>Operations</SectionLabel>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-9">
             <Tile
               href="/admin/bookings" icon="📋" title="Bookings"
@@ -140,8 +140,17 @@ export default async function AdminHomePage() {
             />
           </div>
 
+          {/* Traffic stats */}
+          <SectionLabel hint="Unique visitors · public pages only">Traffic</SectionLabel>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
+            <Stat icon="👁" label="Visitors Today"     value={fmtCount(traffic?.visitors_today)} accent />
+            <Stat icon="📈" label="Visitors · 7 Days"  value={fmtCount(traffic?.visitors_7d)} />
+            <Stat icon="📄" label="Page Views · 7 Days" value={fmtCount(traffic?.pageviews_7d)} />
+            <Stat icon="🌐" label="Visitors · All-Time" value={fmtCount(traffic?.visitors_total)} />
+          </div>
+
           {/* Catalog & content modules */}
-          <SectionLabel>Manage · Catalog &amp; Content</SectionLabel>
+          <SectionLabel>Catalog &amp; Content</SectionLabel>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
             <Tile
               href="/admin/services" icon="🔧" title="Services Catalog"
