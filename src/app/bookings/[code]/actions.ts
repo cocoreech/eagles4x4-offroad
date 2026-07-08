@@ -21,6 +21,8 @@ import { sanitizeText, sanitizeMultiline } from '@/lib/sanitize'
 import { normalizeE164, getCountryByDial } from '@/lib/phone'
 import { isValidMakeModel, ALLOWED_MAKES } from '@/lib/vehicles'
 import { rlServerAction, checkLimit } from '@/utils/ratelimit'
+import { computeDaySlots } from '@/lib/availability/schedule'
+import { createAvailabilityStore } from '@/lib/availability/store'
 
 async function getIp(): Promise<string> {
   const h = await headers()
@@ -167,16 +169,54 @@ export async function amendMyBooking(formData: FormData) {
     return { error: 'Bookings in progress cannot be amended online. Please call the shop.' }
   }
 
-  // Server-side slot validation (same as createBooking)
-  const date = new Date(d.scheduledDate + 'T00:00:00')
-  const today = new Date(); today.setHours(0, 0, 0, 0)
-  if (date < today) return { error: 'Cannot move to a past date.' }
-  if (date.getDay() === 0) return { error: 'Shop is closed on Sundays.' }
-  const hour = parseInt(d.scheduledTime.slice(0, 2), 10)
-  const allowedHours = date.getDay() === 6
-    ? [8, 9, 10, 11, 13, 14, 15, 16]
-    : [8, 9, 10, 11, 13, 14, 15, 16, 17]
-  if (!allowedHours.includes(hour)) return { error: 'Time outside shop hours.' }
+  // Service-role client — RLS on `bookings` restricts a customer's SELECT to
+  // their own rows, so counting OTHER customers' bookings on the target date
+  // (below) requires bypassing that. Reused for the final UPDATE too, since
+  // that also needs service role (customer can't UPDATE bookings via RLS).
+  const { createServiceRoleClient } = await import('@/utils/supabase/server')
+  const admin = createServiceRoleClient()
+
+  // Server-side slot validation — mirrors the admin-configurable shop_hours /
+  // shop_settings / date overrides (same computeDaySlots engine as
+  // /api/availability), so a reschedule can never contradict what the admin
+  // has set. Previously this hardcoded Sunday-closed + a fixed hour list,
+  // which silently ignored any admin change (e.g. opening Sunday in
+  // /admin/availability had no effect on this flow).
+  const today = new Date().toISOString().slice(0, 10)
+  const store = createAvailabilityStore(supabase)
+  const [weekly, settings, override] = await Promise.all([
+    store.loadWeekly(),
+    store.loadSettings(),
+    store.loadOverride(d.scheduledDate),
+  ])
+
+  // Booked counts for the target date, excluding THIS booking's own current
+  // slot so it never counts against itself when unchanged.
+  const { data: sameDateBookings } = await admin
+    .from('bookings')
+    .select('scheduled_time, status')
+    .eq('scheduled_date', d.scheduledDate)
+    .neq('id', booking.id)
+    .in('status', ['pending', 'confirmed', 'in_progress', 'parts_installed', 'quality_check', 'ready'])
+  const bookedCounts: Record<number, number> = {}
+  for (const b of sameDateBookings ?? []) {
+    const h = parseInt(String(b.scheduled_time).slice(0, 2), 10)
+    bookedCounts[h] = (bookedCounts[h] ?? 0) + 1
+  }
+
+  const day = computeDaySlots({ date: d.scheduledDate, today, weekly, settings, override, bookedCounts })
+  if (day.closed) {
+    const messages: Record<string, string> = {
+      past: 'Cannot move to a past date.',
+      too_far_out: 'That date is beyond the booking window.',
+      closed: 'Shop is closed on that day. Please pick another date.',
+      shop_closed: 'Shop is closed on that date. Please pick another.',
+    }
+    return { error: messages[day.reason ?? ''] ?? 'That date is not available.' }
+  }
+  const slot = day.slots.find(s => s.time === d.scheduledTime)
+  if (!slot) return { error: 'Time outside shop hours.' }
+  if (!slot.available) return { error: 'That new slot is full. Please pick another time.' }
 
   // Detect what changed
   const dateChanged = booking.scheduled_date !== d.scheduledDate
@@ -192,22 +232,6 @@ export async function amendMyBooking(formData: FormData) {
   const servicesChanged = JSON.stringify(oldServiceIds) !== JSON.stringify(newServiceIds)
 
   const needsReapproval = dateChanged || timeChanged || servicesChanged
-
-  // If date/time changed, check new slot has capacity
-  if (dateChanged || timeChanged) {
-    const { data: slotBookings } = await supabase
-      .from('bookings')
-      .select('id, scheduled_time')
-      .eq('scheduled_date', d.scheduledDate)
-      .neq('id', booking.id) // exclude THIS booking from the count
-      .in('status', ['pending','confirmed','in_progress','parts_installed','quality_check','ready'])
-    const sameHour = (slotBookings ?? []).filter(b =>
-      parseInt(String(b.scheduled_time).slice(0, 2), 10) === hour
-    )
-    if (sameHour.length >= 3) {
-      return { error: 'That new slot is full. Please pick another time.' }
-    }
-  }
 
   // Refetch services for new prices (in case admin updated prices since original booking)
   const { data: services } = await supabase
@@ -236,10 +260,7 @@ export async function amendMyBooking(formData: FormData) {
     vehicleId = v?.id ?? null
   }
 
-  // Update booking — use service role since customer can't UPDATE bookings via RLS
-  const { createServiceRoleClient } = await import('@/utils/supabase/server')
-  const admin = createServiceRoleClient()
-
+  // Update booking — `admin` (service role) already created above.
   const { error: updateErr } = await admin
     .from('bookings')
     .update({

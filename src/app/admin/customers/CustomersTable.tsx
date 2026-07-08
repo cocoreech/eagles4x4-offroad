@@ -20,6 +20,7 @@ const COLUMNS: { key: CustomerSortKey; label: string }[] = [
 export default function CustomersTable({ rows }: Readonly<{ rows: CustomerRow[] }>) {
   const [sortKey, setSortKey] = useState<CustomerSortKey>('joined')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [search, setSearch] = useState('')
 
   function clickHeader(key: CustomerSortKey) {
     if (key === sortKey) {
@@ -30,14 +31,47 @@ export default function CustomersTable({ rows }: Readonly<{ rows: CustomerRow[] 
     }
   }
 
-  const sorted = sortCustomers(rows, sortKey, sortDir)
+  const q = search.trim().toLowerCase()
+  const filtered = q
+    ? rows.filter(r =>
+        r.preferredName.toLowerCase().includes(q) ||
+        r.fullName.toLowerCase().includes(q) ||
+        r.email.toLowerCase().includes(q) ||
+        r.phone.toLowerCase().includes(q)
+      )
+    : rows
+  const sorted = sortCustomers(filtered, sortKey, sortDir)
   const muted = { color: 'var(--color-text-muted)' }
 
   return (
     <div>
-      <div className="mb-4 flex justify-end print:hidden">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
+        <label className="relative">
+          <span className="sr-only">Search customers</span>
+          <span
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-xs pointer-events-none"
+            style={muted}
+            aria-hidden
+          >
+            🔍
+          </span>
+          <input
+            type="search"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search name, email, phone…"
+            className="w-64 rounded-sm py-2 pl-8 pr-3 text-xs outline-none"
+            style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
+          />
+        </label>
         <CustomerExportBar rows={sorted} />
       </div>
+
+      {q && (
+        <p className="mb-2 text-xs" style={muted}>
+          {sorted.length} result{sorted.length === 1 ? '' : 's'} for &ldquo;{search.trim()}&rdquo;
+        </p>
+      )}
 
       <div className="rounded-md overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
         <table className="w-full text-sm">

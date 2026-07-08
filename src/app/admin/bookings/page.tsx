@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { requireAdmin } from '@/lib/auth'
 import { createClient } from '@/utils/supabase/server'
 import BrandMark from '@/components/BrandMark'
-import RowStatusControl from './RowStatusControl'
+import BookingsTable, { type BookingRow } from './BookingsTable'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,11 +38,19 @@ const STATUS_COLOR: Record<string, string> = {
   cancelled:        'var(--color-destructive)',
 }
 
-export default async function AdminBookingsPage(props: Readonly<{ searchParams: Promise<{ status?: string }> }>) {
+export default async function AdminBookingsPage(
+  props: Readonly<{ searchParams: Promise<{ status?: string; date?: string }> }>
+) {
   const searchParams = await props.searchParams;
   await requireAdmin()
   const supabase = await createClient()
   const statusFilter = searchParams.status
+  // A specific-day filter — shows every booking on that date (past, today,
+  // or future) regardless of the 100-row/created_at window below, since
+  // .eq('scheduled_date', ...) is applied directly to the query.
+  const dateFilter = searchParams.date && /^\d{4}-\d{2}-\d{2}$/.test(searchParams.date)
+    ? searchParams.date
+    : undefined
 
   let query = supabase
     .from('bookings')
@@ -59,6 +67,9 @@ export default async function AdminBookingsPage(props: Readonly<{ searchParams: 
   if (statusFilter && ALL_STATUSES.includes(statusFilter as typeof ALL_STATUSES[number])) {
     query = query.eq('status', statusFilter)
   }
+  if (dateFilter) {
+    query = query.eq('scheduled_date', dateFilter)
+  }
 
   const { data: bookings } = await query
 
@@ -69,6 +80,42 @@ export default async function AdminBookingsPage(props: Readonly<{ searchParams: 
   const countByStatus: Record<string, number> = {}
   for (const b of counts ?? []) {
     countByStatus[b.status] = (countByStatus[b.status] ?? 0) + 1
+  }
+
+  const rows: BookingRow[] = (bookings ?? []).map(b => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const p: any = (b as any).customer
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const v: any = (b as any).vehicles
+    // Guest bookings have no linked profile/vehicle — fall back to the
+    // contact email and the vehicle snapshot columns.
+    const isGuest = !p
+    const vehicleLabel = v
+      ? `${v.year ?? ''} ${v.make} ${v.model}`.trim()
+      : [b.vehicle_year_snapshot, b.vehicle_make_snapshot, b.vehicle_model_snapshot]
+          .filter(Boolean)
+          .join(' ')
+    return {
+      id: b.id,
+      code: b.booking_code,
+      customerName: p?.full_name || p?.email || b.contact_email || '',
+      isGuest,
+      phone: b.contact_phone ?? '',
+      vehicleLabel,
+      date: b.scheduled_date,
+      time: String(b.scheduled_time).slice(0, 5),
+      status: b.status,
+      total: Number(b.total_amount ?? 0),
+    }
+  })
+
+  // Preserve the other active filter when a chip/date-form is submitted, so
+  // switching one doesn't silently drop the other.
+  const statusQuery = statusFilter ? `status=${statusFilter}` : ''
+  const dateQuery = dateFilter ? `date=${dateFilter}` : ''
+  const chipHref = (status?: string) => {
+    const parts = [status ? `status=${status}` : '', dateQuery].filter(Boolean)
+    return `/admin/bookings${parts.length ? '?' + parts.join('&') : ''}`
   }
 
   return (
@@ -98,12 +145,12 @@ export default async function AdminBookingsPage(props: Readonly<{ searchParams: 
           </div>
 
           {/* Status filter chips */}
-          <div className="flex flex-wrap gap-2 mb-6 pb-6 border-b" style={{ borderColor: 'var(--color-border)' }}>
-            <FilterChip href="/admin/bookings" label="All" count={(counts ?? []).length} active={!statusFilter} />
+          <div className="flex flex-wrap gap-2 mb-4 pb-6 border-b" style={{ borderColor: 'var(--color-border)' }}>
+            <FilterChip href={chipHref()} label="All" count={(counts ?? []).length} active={!statusFilter} />
             {ALL_STATUSES.map(s => (
               <FilterChip
                 key={s}
-                href={`/admin/bookings?status=${s}`}
+                href={chipHref(s)}
                 label={STATUS_LABEL[s]}
                 count={countByStatus[s] ?? 0}
                 active={statusFilter === s}
@@ -112,77 +159,50 @@ export default async function AdminBookingsPage(props: Readonly<{ searchParams: 
             ))}
           </div>
 
+          {/* Date filter — jump to a specific day's bookings (past, today, or future) */}
+          <form
+            action="/admin/bookings"
+            className="flex flex-wrap items-end gap-3 mb-6 pb-6 border-b"
+            style={{ borderColor: 'var(--color-border)' }}
+          >
+            {statusFilter && <input type="hidden" name="status" value={statusFilter} />}
+            <label className="block">
+              <span className="block text-[10px] font-bold tracking-[0.15em] uppercase mb-1" style={{ color: 'var(--color-text-muted)' }}>
+                Jump to date
+              </span>
+              <input
+                type="date"
+                name="date"
+                defaultValue={dateFilter ?? ''}
+                className="rounded-sm px-3 py-2 text-xs outline-none"
+                style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)', colorScheme: 'dark' }}
+              />
+            </label>
+            <button
+              type="submit"
+              className="rounded-sm px-4 py-2 text-[10px] font-extrabold uppercase tracking-[0.12em]"
+              style={{ background: 'var(--color-accent)', color: '#000' }}
+            >
+              View day
+            </button>
+            {dateFilter && (
+              <Link
+                href={statusQuery ? `/admin/bookings?${statusQuery}` : '/admin/bookings'}
+                className="text-[10px] font-bold uppercase tracking-widest"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                Clear date ✕
+              </Link>
+            )}
+            {dateFilter && (
+              <span className="text-xs" style={{ color: 'var(--color-accent)' }}>
+                Showing bookings for {dateFilter}
+              </span>
+            )}
+          </form>
+
           {/* Bookings table */}
-          {!bookings || bookings.length === 0 ? (
-            <div className="text-center py-16 text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              No bookings{statusFilter ? ` with status "${STATUS_LABEL[statusFilter]}"` : ''}.
-            </div>
-          ) : (
-            <div className="rounded-md overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-              <table className="w-full text-sm">
-                <thead style={{ background: 'var(--color-surface-2, #1A1A1A)' }}>
-                  <tr>
-                    <th className="text-left p-3 text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>Code</th>
-                    <th className="text-left p-3 text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>Customer</th>
-                    <th className="text-left p-3 text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>Vehicle</th>
-                    <th className="text-left p-3 text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>When</th>
-                    <th className="text-left p-3 text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>Status</th>
-                    <th className="text-right p-3 text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bookings.map(b => {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const p: any = (b as any).customer
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const v: any = (b as any).vehicles
-                    // Guest bookings have no linked profile/vehicle — fall back to
-                    // the contact email and the vehicle snapshot columns.
-                    const isGuest = !p
-                    const vehicleLabel = v
-                      ? `${v.year ?? ''} ${v.make} ${v.model}`.trim()
-                      : [b.vehicle_year_snapshot, b.vehicle_make_snapshot, b.vehicle_model_snapshot]
-                          .filter(Boolean)
-                          .join(' ')
-                    return (
-                      <tr key={b.id} className="border-t transition" style={{ borderColor: 'var(--color-border)' }}>
-                        <td className="p-3">
-                          <Link href={`/admin/bookings/${b.booking_code}`} className="font-bold text-xs tracking-widest uppercase" style={{ color: 'var(--color-accent)' }}>
-                            {b.booking_code}
-                          </Link>
-                        </td>
-                        <td className="p-3">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{p?.full_name || p?.email || b.contact_email || '—'}</span>
-                            {isGuest && (
-                              <span
-                                className="px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase rounded"
-                                style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--color-text-muted)' }}
-                              >
-                                Guest
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{b.contact_phone}</div>
-                        </td>
-                        <td className="p-3">{vehicleLabel || '—'}</td>
-                        <td className="p-3">
-                          <div className="text-xs">{b.scheduled_date}</div>
-                          <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{String(b.scheduled_time).slice(0, 5)}</div>
-                        </td>
-                        <td className="p-3">
-                          <RowStatusControl bookingId={b.id} bookingCode={b.booking_code} currentStatus={b.status} />
-                        </td>
-                        <td className="p-3 text-right font-mono text-xs" style={{ color: 'var(--color-accent)' }}>
-                          ₱{Number(b.total_amount ?? 0).toLocaleString('en-PH')}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <BookingsTable rows={rows} />
         </div>
       </div>
     </main>

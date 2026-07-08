@@ -7,7 +7,8 @@
 //   1. User picks a date (native HTML5 calendar input, min=today, max=+6 months)
 //   2. On date change, fetches /api/availability?date=...
 //   3. Renders the day's slots — gold if available, dimmed if booked,
-//      whole grid disabled if shop closed (Sunday / holiday)
+//      whole grid disabled if shop is closed that day (admin-configurable
+//      via /admin/availability — weekday hours, holidays, overrides)
 //   4. Selected slot exports as a hidden input so the booking form
 //      submits the chosen time without the user typing it.
 
@@ -32,11 +33,12 @@ export default function DateTimePicker({
   dateName?: string
   timeName?: string
 }>) {
-  // Default to the next open day (skip Sunday — always closed)
+  // Default to tomorrow. Which days are actually open is entirely admin-
+  // configurable (shop_hours) — no day is hardcoded closed here; if
+  // tomorrow turns out closed, the availability fetch below surfaces that.
   const [date, setDate] = useState<string>(() => {
     const d = new Date()
     d.setDate(d.getDate() + 1)
-    if (d.getDay() === 0) d.setDate(d.getDate() + 1) // Sunday → Monday
     return d.toISOString().slice(0, 10)
   })
   const [time, setTime] = useState<string>('')
@@ -131,7 +133,7 @@ export default function DateTimePicker({
             }}
           >
             {availability.reason === 'closed'
-              ? 'Closed on Sundays. Please pick another date.'
+              ? 'Shop is closed on that day of the week. Please pick another date.'
               : availability.reason === 'shop_closed'
               ? 'Shop is closed on this date. Please pick another.'
               : availability.reason === 'past'
