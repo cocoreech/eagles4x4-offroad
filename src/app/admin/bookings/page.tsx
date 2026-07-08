@@ -12,11 +12,39 @@ import RowStatusControl from './RowStatusControl'
 
 export const dynamic = 'force-dynamic'
 
-export default async function AdminBookingsPage() {
+const ALL_STATUSES = [
+  'pending', 'confirmed', 'in_progress', 'parts_installed',
+  'quality_check', 'ready', 'completed', 'cancelled',
+] as const
+
+const STATUS_LABEL: Record<string, string> = {
+  pending:          'Pending',
+  confirmed:        'Confirmed',
+  in_progress:      'In Progress',
+  parts_installed:  'Parts Installed',
+  quality_check:    'Quality Check',
+  ready:            'Ready',
+  completed:        'Completed',
+  cancelled:        'Cancelled',
+}
+const STATUS_COLOR: Record<string, string> = {
+  pending:          '#f59e0b',
+  confirmed:        '#3A9BD5',
+  in_progress:      'var(--color-accent)',
+  parts_installed:  'var(--color-accent)',
+  quality_check:    'var(--color-accent)',
+  ready:            'var(--color-success, #22c55e)',
+  completed:        'var(--color-text-muted)',
+  cancelled:        'var(--color-destructive)',
+}
+
+export default async function AdminBookingsPage(props: Readonly<{ searchParams: Promise<{ status?: string }> }>) {
+  const searchParams = await props.searchParams;
   await requireAdmin()
   const supabase = await createClient()
+  const statusFilter = searchParams.status
 
-  const { data: bookings } = await supabase
+  let query = supabase
     .from('bookings')
     .select(`
       id, booking_code, scheduled_date, scheduled_time, status,
@@ -27,6 +55,21 @@ export default async function AdminBookingsPage() {
     `)
     .order('created_at', { ascending: false })
     .limit(100)
+
+  if (statusFilter && ALL_STATUSES.includes(statusFilter as typeof ALL_STATUSES[number])) {
+    query = query.eq('status', statusFilter)
+  }
+
+  const { data: bookings } = await query
+
+  // Count by status for the filter chips
+  const { data: counts } = await supabase
+    .from('bookings')
+    .select('status')
+  const countByStatus: Record<string, number> = {}
+  for (const b of counts ?? []) {
+    countByStatus[b.status] = (countByStatus[b.status] ?? 0) + 1
+  }
 
   return (
     <main className="min-h-screen flex flex-col">
@@ -54,10 +97,25 @@ export default async function AdminBookingsPage() {
             </h1>
           </div>
 
+          {/* Status filter chips */}
+          <div className="flex flex-wrap gap-2 mb-6 pb-6 border-b" style={{ borderColor: 'var(--color-border)' }}>
+            <FilterChip href="/admin/bookings" label="All" count={(counts ?? []).length} active={!statusFilter} />
+            {ALL_STATUSES.map(s => (
+              <FilterChip
+                key={s}
+                href={`/admin/bookings?status=${s}`}
+                label={STATUS_LABEL[s]}
+                count={countByStatus[s] ?? 0}
+                active={statusFilter === s}
+                color={STATUS_COLOR[s]}
+              />
+            ))}
+          </div>
+
           {/* Bookings table */}
           {!bookings || bookings.length === 0 ? (
             <div className="text-center py-16 text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              No bookings yet.
+              No bookings{statusFilter ? ` with status "${STATUS_LABEL[statusFilter]}"` : ''}.
             </div>
           ) : (
             <div className="rounded-md overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
@@ -128,5 +186,25 @@ export default async function AdminBookingsPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+function FilterChip({
+  href, label, count, active, color,
+}: Readonly<{
+  href: string; label: string; count: number; active: boolean; color?: string;
+}>) {
+  return (
+    <Link
+      href={href}
+      className="px-3 py-1.5 text-xs font-semibold tracking-wide rounded-full transition border"
+      style={{
+        background: active ? 'rgba(201,168,76,0.1)' : 'transparent',
+        borderColor: active ? 'var(--color-accent)' : 'var(--color-border)',
+        color: active ? 'var(--color-accent)' : (color ?? 'var(--color-text-muted)'),
+      }}
+    >
+      {label} <span className="opacity-60">· {count}</span>
+    </Link>
   )
 }

@@ -70,14 +70,25 @@ export default function RowStatusControl({
           disabled={pending || isFinal}
           className="px-2 py-1 text-[10px] font-bold tracking-widest uppercase rounded-full disabled:opacity-60 disabled:cursor-not-allowed"
           style={{
-            background: 'rgba(255,255,255,0.04)',
+            // Solid (not translucent) background + colorScheme so the closed
+            // control reads correctly. The dropdown POPUP list is styled
+            // per-<option> below — many browsers ignore the <select>'s own
+            // background/color for the open list and fall back to a white
+            // popup, which made this unreadable.
+            background: 'var(--color-surface)',
             border: '1px solid var(--color-border)',
             color: STATUS_COLOR[currentStatus],
             colorScheme: 'dark',
           }}
         >
           {STATUS_OPTIONS.map(s => (
-            <option key={s} value={s}>{STATUS_LABEL[s]}</option>
+            <option
+              key={s}
+              value={s}
+              style={{ background: 'var(--color-surface)', color: STATUS_COLOR[s] }}
+            >
+              {STATUS_LABEL[s]}
+            </option>
           ))}
         </select>
         {!isFinal && (
