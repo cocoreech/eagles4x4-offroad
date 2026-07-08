@@ -3,13 +3,17 @@
 // ============================================================
 
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth'
 import { createClient } from '@/utils/supabase/server'
 import BrandMark from '@/components/BrandMark'
 import AdminEditBookingForm from './AdminEditBookingForm'
 
 export const dynamic = 'force-dynamic'
+
+// Mirrors src/app/bookings/[code]/actions.ts — editing is only allowed while
+// the booking hasn't started work yet.
+const EDITABLE_STATUSES = ['pending', 'confirmed'] as const
 
 export default async function AdminEditBookingPage(props: Readonly<{ params: Promise<{ code: string }> }>) {
   const params = await props.params
@@ -19,7 +23,7 @@ export default async function AdminEditBookingPage(props: Readonly<{ params: Pro
   const { data: booking } = await supabase
     .from('bookings')
     .select(`
-      id, booking_code, scheduled_date, scheduled_time, notes,
+      id, booking_code, status, scheduled_date, scheduled_time, notes,
       contact_phone, contact_email, contact_name, preferred_name,
       vehicle_make_snapshot, vehicle_model_snapshot, vehicle_year_snapshot, vehicle_transmission_snapshot,
       vehicles ( make, model, year, transmission ),
@@ -29,6 +33,13 @@ export default async function AdminEditBookingPage(props: Readonly<{ params: Pro
     .maybeSingle()
 
   if (!booking) notFound()
+
+  // Direct-URL guard — the detail page hides the Edit link once work has
+  // started, but that's UI only. Enforce it here too (defense in depth;
+  // the server action re-checks this as the authoritative guard).
+  if (!EDITABLE_STATUSES.includes(booking.status as typeof EDITABLE_STATUSES[number])) {
+    redirect(`/admin/bookings/${params.code}`)
+  }
 
   const { data: services } = await supabase
     .from('services')

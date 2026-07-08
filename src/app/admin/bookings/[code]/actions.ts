@@ -29,6 +29,10 @@ const STATUS_PIPELINE = [
   'quality_check', 'ready', 'completed',
 ] as const
 
+// Mirrors src/app/bookings/[code]/actions.ts — editing is only allowed while
+// the booking hasn't started work yet.
+const EDITABLE_STATUSES = ['pending', 'confirmed'] as const
+
 const advanceSchema = z.object({
   bookingId: z.string().uuid(),
   newStatus: z.enum([...STATUS_PIPELINE, 'cancelled']),
@@ -174,10 +178,13 @@ export async function adminUpdateBooking(formData: FormData) {
 
   const { data: booking } = await admin
     .from('bookings')
-    .select('id, booking_code, customer_id, vehicle_id, scheduled_date, scheduled_time, contact_email, contact_name, preferred_name')
+    .select('id, booking_code, status, customer_id, vehicle_id, scheduled_date, scheduled_time, contact_email, contact_name, preferred_name')
     .eq('id', d.bookingId)
     .maybeSingle()
   if (!booking) return { error: 'Booking not found.' }
+  if (!EDITABLE_STATUSES.includes(booking.status as typeof EDITABLE_STATUSES[number])) {
+    return { error: 'This booking can no longer be edited — work has already started.' }
+  }
 
   const { data: services } = await admin
     .from('services')

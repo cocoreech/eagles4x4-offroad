@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth'
 import { createClient } from '@/utils/supabase/server'
-import StatusControls from './StatusControls'
 import BrandMark from '@/components/BrandMark'
 
 export const dynamic = 'force-dynamic'
@@ -16,6 +15,10 @@ const STATUS_LABEL: Record<string, string> = {
   parts_installed: 'Parts Installed', quality_check: 'Quality Check',
   ready: 'Ready', completed: 'Completed', cancelled: 'Cancelled',
 }
+
+// Mirrors src/app/bookings/[code]/actions.ts — editing is only allowed while
+// the booking hasn't started work yet.
+const EDITABLE_STATUSES = ['pending', 'confirmed'] as const
 
 export default async function AdminBookingDetailPage(props: Readonly<{ params: Promise<{ code: string }> }>) {
   const params = await props.params;
@@ -58,6 +61,7 @@ export default async function AdminBookingDetailPage(props: Readonly<{ params: P
   // Guest bookings have no linked profile or vehicle row — normalize the vehicle
   // to either the linked row or the snapshot columns so the UI is source-agnostic.
   const isGuest = !p
+  const isEditable = EDITABLE_STATUSES.includes(booking.status as typeof EDITABLE_STATUSES[number])
   const veh =
     v ??
     (booking.vehicle_make_snapshot || booking.vehicle_model_snapshot
@@ -103,17 +107,29 @@ export default async function AdminBookingDetailPage(props: Readonly<{ params: P
             </span>
           </div>
 
-          {/* Status Controls */}
+          {/* Status Controls — hidden per request (2026-07-08). Not deleted;
+              the component still exists at ./StatusControls.tsx.
           <StatusControls
             bookingId={booking.id}
             bookingCode={booking.booking_code}
             currentStatus={booking.status}
           />
+          */}
 
           <div className="mt-4">
-            <Link href={`/admin/bookings/${booking.booking_code}/edit`} className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--color-accent)' }}>
-              Edit booking →
-            </Link>
+            {isEditable ? (
+              <Link href={`/admin/bookings/${booking.booking_code}/edit`} className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--color-accent)' }}>
+                Edit booking →
+              </Link>
+            ) : (
+              <span
+                className="text-xs font-bold tracking-widest uppercase cursor-not-allowed"
+                style={{ color: 'var(--color-text-muted)' }}
+                title="Editing locks once work has started"
+              >
+                Editing locked — {STATUS_LABEL[booking.status]}
+              </span>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
