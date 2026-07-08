@@ -111,6 +111,7 @@ export async function searchCustomers(formData: FormData): Promise<{ results: Cu
 // ─────────────────────────────────────────────
 
 const schema = z.object({
+  branch:               z.enum(['cavite', 'taguig', 'quezon-city', 'valenzuela'], { message: 'Pick a branch.' }),
   customerId:          z.string().uuid().optional(),
   serviceIds:           z.array(z.string().uuid()).min(1, 'Select at least one service.'),
   vehicleMake:          z.string().refine(v => ALLOWED_MAKES.includes(v), 'Pick a make from the list.'),
@@ -149,12 +150,25 @@ const schema = z.object({
 })
 
 export async function adminCreateBooking(formData: FormData) {
-  const { user: admin } = await requireAdmin()
+  const { user: admin, profile } = await requireAdmin()
   if (!(await adminRateGuard(admin.id))) return { error: 'Too many admin actions. Please slow down.' }
+
+  // Branch-scoped admins can only create bookings for their own branch —
+  // ignore whatever the client sent and use the assigned branch directly,
+  // rather than merely validating it, so a tampered form can't slip a
+  // different branch through. super_admin may pick any branch (checked
+  // against the submitted value below).
+  if (profile.role !== 'super_admin') {
+    if (!profile.branch) {
+      return { error: 'Your account has no branch assigned. Please sign out and sign in again.' }
+    }
+    formData.set('branch', profile.branch)
+  }
 
   const serviceIds = formData.getAll('serviceIds').map(String)
   const rawCustomerId = formData.get('customerId')
   const parsed = schema.safeParse({
+    branch:              formData.get('branch'),
     customerId:          rawCustomerId ? String(rawCustomerId) : undefined,
     serviceIds,
     vehicleMake:          formData.get('vehicleMake'),
@@ -241,6 +255,7 @@ export async function adminCreateBooking(formData: FormData) {
     .from('bookings')
     .insert({
       customer_id:     d.customerId ?? null,
+      branch:          d.branch,
       vehicle_id:      vehicleId,
       scheduled_date:  d.scheduledDate,
       scheduled_time:  d.scheduledTime,

@@ -11,7 +11,7 @@ import AdminBookingForm from './AdminBookingForm'
 export const dynamic = 'force-dynamic'
 
 export default async function AdminNewBookingPage() {
-  await requireAdmin()
+  const { profile } = await requireAdmin()
   const supabase = await createClient()
 
   const { data: services } = await supabase
@@ -46,7 +46,11 @@ export default async function AdminNewBookingPage() {
             </p>
           </div>
 
-          <AdminBookingForm services={services ?? []} />
+          <AdminBookingForm
+            services={services ?? []}
+            adminRole={profile.role}
+            adminBranch={profile.branch ?? null}
+          />
         </div>
       </div>
     </main>

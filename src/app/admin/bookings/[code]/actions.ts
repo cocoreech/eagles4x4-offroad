@@ -150,7 +150,7 @@ const adminEditSchema = z.object({
 // Admin edits any booking (override: no hours/capacity/closed checks). On a
 // date/time change, notifies the customer to confirm or reschedule.
 export async function adminUpdateBooking(formData: FormData) {
-  const { user } = await requireAdmin()
+  const { user, profile } = await requireAdmin()
   if (!(await adminRateGuard(user.id))) return { error: 'Too many admin actions. Please slow down.' }
 
   const serviceIds = formData.getAll('serviceIds').map(String)
@@ -178,10 +178,19 @@ export async function adminUpdateBooking(formData: FormData) {
 
   const { data: booking } = await admin
     .from('bookings')
-    .select('id, booking_code, status, customer_id, vehicle_id, scheduled_date, scheduled_time, contact_email, contact_name, preferred_name')
+    .select('id, booking_code, status, branch, customer_id, vehicle_id, scheduled_date, scheduled_time, contact_email, contact_name, preferred_name')
     .eq('id', d.bookingId)
     .maybeSingle()
   if (!booking) return { error: 'Booking not found.' }
+  // This query uses the service-role client (needed below for the cross-
+  // table update), which bypasses RLS entirely — so the branch check that
+  // the SELECT/UPDATE policies normally enforce has to be done explicitly
+  // here too. Without it, a branch-scoped admin who somehow knows another
+  // branch's booking code could edit it directly, even though they'd never
+  // see it in their own list/detail views.
+  if (profile.role !== 'super_admin' && booking.branch !== profile.branch) {
+    return { error: 'Booking not found.' }
+  }
   if (!EDITABLE_STATUSES.includes(booking.status as typeof EDITABLE_STATUSES[number])) {
     return { error: 'This booking can no longer be edited — work has already started.' }
   }

@@ -9,6 +9,7 @@ import { requireAdmin } from '@/lib/auth'
 import { createClient } from '@/utils/supabase/server'
 import BrandMark from '@/components/BrandMark'
 import BookingsTable, { type BookingRow } from './BookingsTable'
+import { BRANCHES } from '@/content/branches'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,8 +43,11 @@ export default async function AdminBookingsPage(
   props: Readonly<{ searchParams: Promise<{ status?: string; date?: string }> }>
 ) {
   const searchParams = await props.searchParams;
-  await requireAdmin()
+  const { profile } = await requireAdmin()
   const supabase = await createClient()
+  const branchLabel = profile?.role === 'super_admin'
+    ? 'All Branches'
+    : BRANCHES.find(b => b.slug === profile?.branch)?.name ?? 'No branch assigned'
   const statusFilter = searchParams.status
   // A specific-day filter — shows every booking on that date (past, today,
   // or future) regardless of the 100-row/created_at window below, since
@@ -143,6 +147,12 @@ export default async function AdminBookingsPage(
               >
                 All <em style={{ color: 'var(--color-accent)' }}>Bookings.</em>
               </h1>
+              <span
+                className="inline-block mt-3 px-2.5 py-1 rounded-full text-[9px]"
+                style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}
+              >
+                📍 {branchLabel}
+              </span>
             </div>
             <Link
               href="/admin/bookings/new"

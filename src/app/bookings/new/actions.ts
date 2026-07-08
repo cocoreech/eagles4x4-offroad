@@ -48,6 +48,11 @@ import { brand } from '@/content/brand'
 // Phone is country-code + number → normalized to E.164 (+639XXXXXXXXX).
 // Free-text fields still pass through sanitizeText/sanitizeMultiline.
 const schema = z.object({
+  // Only 'cavite' is actually bookable during the pilot — the form disables
+  // the other 3 branches, but we re-check server-side too since a client
+  // could POST anything. When more branches go live, drop the .refine().
+  branch: z.enum(['cavite', 'taguig', 'quezon-city', 'valenzuela'], { message: 'Please choose a branch.' })
+           .refine(v => v === 'cavite', 'That branch isn’t open for online booking yet — please choose Dasmariñas, Cavite.'),
   serviceIds: z.array(z.string().uuid()).min(1, 'Select at least one service.'),
   vehicleMake:         z.string().refine(v => ALLOWED_MAKES.includes(v), 'Pick a make from the list.'),
   vehicleModel:        z.string().min(1, 'Pick a model.'),
@@ -113,6 +118,7 @@ export async function createBooking(formData: FormData) {
   // 1. Parse form into a plain object (FormData multi-value handling)
   const serviceIds = formData.getAll('serviceIds').map(String)
   const parsed = schema.safeParse({
+    branch:              formData.get('branch'),
     serviceIds,
     vehicleMake:         formData.get('vehicleMake'),
     vehicleModel:        formData.get('vehicleModel'),
@@ -268,6 +274,7 @@ export async function createBooking(formData: FormData) {
     .from('bookings')
     .insert({
       customer_id:     user?.id ?? null,
+      branch:          d.branch,
       vehicle_id:      vehicleId,
       scheduled_date:  d.scheduledDate,
       scheduled_time:  d.scheduledTime,

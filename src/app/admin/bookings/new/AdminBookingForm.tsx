@@ -10,6 +10,7 @@
 import { useState, useTransition } from 'react'
 import { searchCustomers, adminCreateBooking, type CustomerMatch } from './actions'
 import { splitE164 } from '@/lib/phone'
+import { BRANCHES } from '@/content/branches'
 import DateTimePicker from '@/components/DateTimePicker'
 import VehiclePicker from '@/components/VehiclePicker'
 import PhoneInput from '@/components/PhoneInput'
@@ -23,7 +24,15 @@ type Service = {
   icon: string | null
 }
 
-export default function AdminBookingForm({ services }: Readonly<{ services: Service[] }>) {
+export default function AdminBookingForm({
+  services, adminRole, adminBranch,
+}: Readonly<{
+  services: Service[]
+  adminRole: string
+  adminBranch: string | null
+}>) {
+  const isSuperAdmin = adminRole === 'super_admin'
+  const [branch, setBranch] = useState(adminBranch ?? 'cavite')
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<CustomerMatch[] | null>(null)
   const [searchError, setSearchError] = useState<string | null>(null)
@@ -104,8 +113,42 @@ export default function AdminBookingForm({ services }: Readonly<{ services: Serv
 
   const phoneParts = selectedCustomer?.phone ? splitE164(selectedCustomer.phone) : null
 
+  if (!isSuperAdmin && !adminBranch) {
+    return (
+      <div className="rounded-md p-6" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-destructive)' }}>
+        <p className="text-sm font-bold mb-1" style={{ color: 'var(--color-destructive)' }}>No branch assigned</p>
+        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+          Your account isn&apos;t assigned to a branch yet. Please sign out and sign back in — you&apos;ll be asked to select your branch.
+        </p>
+      </div>
+    )
+  }
+
   return (
     <form action={handleSubmit} className="space-y-8">
+      {/* ── Branch ── */}
+      <section>
+        <h2 className="font-display font-bold text-xl mb-4">
+          <em style={{ color: 'var(--color-accent)' }}>Branch</em>
+        </h2>
+        {isSuperAdmin ? (
+          <select
+            value={branch}
+            onChange={e => setBranch(e.target.value)}
+            className="w-full px-4 py-3 rounded-sm outline-none text-sm transition"
+            style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)', colorScheme: 'dark' }}
+          >
+            {BRANCHES.map(b => <option key={b.slug} value={b.slug}>{b.name}</option>)}
+          </select>
+        ) : (
+          <div className="px-4 py-3 rounded-sm text-sm" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}>
+            📍 {BRANCHES.find(b => b.slug === adminBranch)?.name ?? adminBranch}
+            <span className="ml-2 text-xs" style={{ color: 'var(--color-text-muted)' }}>(your assigned branch)</span>
+          </div>
+        )}
+        <input type="hidden" name="branch" value={branch} />
+      </section>
+
       {/* ── Find or add customer ── */}
       <section>
         <h2 className="font-display font-bold text-xl mb-4">

@@ -10,6 +10,7 @@ import { createBooking } from './actions'
 import DateTimePicker from '@/components/DateTimePicker'
 import VehiclePicker from '@/components/VehiclePicker'
 import PhoneInput from '@/components/PhoneInput'
+import { BRANCHES, type BranchSlug } from '@/content/branches'
 
 type Service = {
   id: string
@@ -48,6 +49,7 @@ export default function BookingForm({
 }>) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [prefilledNotes, setPrefilledNotes] = useState<string>('')
+  const [branch, setBranch] = useState<BranchSlug>('cavite')
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
 
@@ -118,6 +120,49 @@ export default function BookingForm({
 
   return (
     <form action={handleSubmit} className="space-y-8">
+      {/* ── Branch ── */}
+      <section>
+        <h2 className="font-display font-bold text-xl mb-4">
+          Choose a <em style={{ color: 'var(--color-accent)' }}>Branch</em>
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {BRANCHES.map(b => {
+            const isSel = branch === b.slug
+            const disabled = !b.bookable
+            return (
+              <button
+                key={b.slug}
+                type="button"
+                disabled={disabled}
+                onClick={() => setBranch(b.slug)}
+                className="text-left p-4 rounded-md transition border-2 disabled:cursor-not-allowed"
+                style={{
+                  background: isSel ? 'rgba(201,168,76,0.06)' : 'var(--color-surface)',
+                  borderColor: isSel ? 'var(--color-accent)' : 'var(--color-border)',
+                  opacity: disabled ? 0.5 : 1,
+                }}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-semibold text-sm">{b.name}</span>
+                  {disabled ? (
+                    <span
+                      className="text-[9px] font-bold uppercase px-2 py-0.5 rounded flex-shrink-0"
+                      style={{ background: 'var(--color-border)', color: 'var(--color-text-muted)' }}
+                    >
+                      Coming Soon
+                    </span>
+                  ) : (
+                    isSel && <span className="text-sm flex-shrink-0" style={{ color: 'var(--color-accent)' }}>✓</span>
+                  )}
+                </div>
+                <div className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>{b.region}</div>
+              </button>
+            )
+          })}
+        </div>
+        <input type="hidden" name="branch" value={branch} />
+      </section>
+
       {/* ── Service selection ── */}
       <section>
         <h2 className="font-display font-bold text-xl mb-4">

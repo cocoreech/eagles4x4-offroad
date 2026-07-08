@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { requireAdmin } from '@/lib/auth'
 import { createClient } from '@/utils/supabase/server'
 import BrandMark from '@/components/BrandMark'
+import { BRANCHES } from '@/content/branches'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,6 +58,9 @@ export default async function AdminHomePage() {
   const traffic = (trafficRaw ?? null) as TrafficStats | null
 
   const roleLabel = (profile?.role ?? '').replace('_', ' ')
+  const branchLabel = profile?.role === 'super_admin'
+    ? 'All Branches'
+    : BRANCHES.find(b => b.slug === profile?.branch)?.name ?? 'No branch assigned'
   const today = new Date().toLocaleDateString('en-PH', {
     weekday: 'long', month: 'long', day: 'numeric', timeZone: 'Asia/Manila',
   })
@@ -74,6 +78,12 @@ export default async function AdminHomePage() {
               {roleLabel}
             </span>
           )}
+          <span
+            className="px-2.5 py-1 rounded-full text-[9px]"
+            style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}
+          >
+            📍 {branchLabel}
+          </span>
           <Link href="/" className="hover:opacity-70 transition" style={{ color: 'var(--color-text-muted)' }}>← Home</Link>
           <form action="/logout" method="post" className="inline">
             <button type="submit" className="text-[11px] font-semibold tracking-widest uppercase hover:opacity-70 transition" style={{ color: 'var(--color-text-muted)' }}>Sign out</button>

@@ -102,7 +102,7 @@ export async function requireAdmin(redirectTo: string = '/') {
   const supabase = await createClient()
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, branch')
     .eq('id', user.id)
     .maybeSingle()
 

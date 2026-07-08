@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { adminLogin } from './actions'
 import PasswordInput from '@/components/PasswordInput'
+import { BRANCHES } from '@/content/branches'
 
 export default function AdminLoginForm() {
   const [error, setError] = useState<string | null>(null)
@@ -52,6 +53,34 @@ export default function AdminLoginForm() {
         autoComplete="current-password"
         minLength={8}
       />
+
+      <label className="block">
+        <span
+          className="block text-[10px] font-bold tracking-[0.15em] uppercase mb-2"
+          style={{ color: 'var(--color-text-muted)' }}
+        >
+          Branch
+        </span>
+        <select
+          name="branch"
+          defaultValue=""
+          className="w-full px-4 py-3 rounded-sm outline-none transition text-sm"
+          style={{
+            background: 'var(--color-bg)',
+            border: '1px solid var(--color-border)',
+            color: 'var(--color-text-primary)',
+            colorScheme: 'dark',
+          }}
+        >
+          <option value="">— Select your branch —</option>
+          {BRANCHES.map(b => (
+            <option key={b.slug} value={b.slug}>{b.name}</option>
+          ))}
+        </select>
+        <span className="block text-[10px] mt-1.5" style={{ color: 'var(--color-text-muted)' }}>
+          Assigned once on your first sign-in. Super admins can leave this blank.
+        </span>
+      </label>
 
       {error && <p className="text-xs" style={{ color: 'var(--color-destructive)' }}>{error}</p>}
 
