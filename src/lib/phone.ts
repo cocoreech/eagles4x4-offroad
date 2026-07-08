@@ -129,3 +129,22 @@ export function normalizeE164(dial: string, localNumber: string): string | null 
 export function isValidInternational(dial: string, localNumber: string): boolean {
   return normalizeE164(dial, localNumber) !== null
 }
+
+/**
+ * Reverse of normalizeE164 — splits a stored "+639171234567" back into
+ * { dial: "+63", local: "9171234567" }. Used to pre-fill PhoneInput's two
+ * controls from a single saved E.164 string (e.g. an existing customer's
+ * phone, when an admin looks them up). Returns null if no known country
+ * code matches (falls back to the input field's own default).
+ */
+export function splitE164(e164: string): { dial: string; local: string } | null {
+  const s = e164.trim()
+  if (!s.startsWith('+')) return null
+  for (const c of COUNTRY_CODES) {
+    if (s.startsWith(c.dial)) {
+      const local = s.slice(c.dial.length)
+      if (local.length === c.expectedLength) return { dial: c.dial, local }
+    }
+  }
+  return null
+}

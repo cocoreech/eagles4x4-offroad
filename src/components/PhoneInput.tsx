@@ -12,12 +12,16 @@ import { COUNTRY_CODES, DEFAULT_COUNTRY, getCountryByDial } from '@/lib/phone'
 export default function PhoneInput({
   name = 'contactPhone',
   label = 'Mobile',
+  defaultDial,
+  defaultNumber,
 }: Readonly<{
   name?: string
   label?: string
+  defaultDial?: string    // e.g. "+63" — pre-fill from a known E.164 number
+  defaultNumber?: string  // local digits only (no country code)
 }>) {
-  const [dial, setDial] = useState<string>(DEFAULT_COUNTRY.dial)
-  const [number, setNumber] = useState<string>('')
+  const [dial, setDial] = useState<string>(defaultDial ?? DEFAULT_COUNTRY.dial)
+  const [number, setNumber] = useState<string>(defaultNumber ?? '')
 
   const country = getCountryByDial(dial) ?? DEFAULT_COUNTRY
 

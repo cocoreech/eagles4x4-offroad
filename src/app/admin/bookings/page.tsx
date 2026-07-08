@@ -129,19 +129,28 @@ export default async function AdminBookingsPage(
 
       <div className="flex-1 px-6 py-10">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <div className="inline-flex items-center gap-2 mb-3">
-              <div className="w-7 h-px" style={{ background: 'var(--color-accent)' }} />
-              <span className="text-[10px] font-extrabold tracking-[0.4em] uppercase" style={{ color: 'var(--color-accent)' }}>
-                Bookings
-              </span>
+          <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <div className="inline-flex items-center gap-2 mb-3">
+                <div className="w-7 h-px" style={{ background: 'var(--color-accent)' }} />
+                <span className="text-[10px] font-extrabold tracking-[0.4em] uppercase" style={{ color: 'var(--color-accent)' }}>
+                  Bookings
+                </span>
+              </div>
+              <h1
+                className="font-display font-black leading-none"
+                style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 44px)' }}
+              >
+                All <em style={{ color: 'var(--color-accent)' }}>Bookings.</em>
+              </h1>
             </div>
-            <h1
-              className="font-display font-black leading-none"
-              style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 4vw, 44px)' }}
+            <Link
+              href="/admin/bookings/new"
+              className="px-5 py-3 text-[11px] font-extrabold tracking-widest uppercase rounded-sm"
+              style={{ background: 'var(--color-accent)', color: '#000' }}
             >
-              All <em style={{ color: 'var(--color-accent)' }}>Bookings.</em>
-            </h1>
+              + New Booking
+            </Link>
           </div>
 
           {/* Status filter chips */}

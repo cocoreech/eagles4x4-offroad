@@ -10,11 +10,21 @@
 import { useState } from 'react'
 import { VEHICLE_MAKES_MODELS, ALLOWED_MAKES, vehicleYearRange } from '@/lib/vehicles'
 
-export default function VehiclePicker() {
-  const [make, setMake] = useState('')
-  const [model, setModel] = useState('')
-  const [year, setYear] = useState('')
-  const [transmission, setTransmission] = useState('')
+export default function VehiclePicker({
+  defaultMake,
+  defaultModel,
+  defaultYear,
+  defaultTransmission,
+}: Readonly<{
+  defaultMake?: string
+  defaultModel?: string
+  defaultYear?: string
+  defaultTransmission?: string
+}> = {}) {
+  const [make, setMake] = useState(defaultMake ?? '')
+  const [model, setModel] = useState(defaultModel ?? '')
+  const [year, setYear] = useState(defaultYear ?? '')
+  const [transmission, setTransmission] = useState(defaultTransmission ?? '')
 
   const availableModels = make ? (VEHICLE_MAKES_MODELS[make] ?? []) : []
   const years = vehicleYearRange()
