@@ -266,12 +266,18 @@ export default function QuoteCalculator({ services, products, isSignedIn }: Prop
         className="pb-20"
         style={{ borderTop: '1px solid var(--color-border)' }}
       >
-        {/* Section label — matches the "Services" eyebrow in the quote builder */}
-        <div className="px-6 md:px-12 pt-10 pb-4">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-[10px] font-extrabold tracking-[0.4em] uppercase" style={{ color: 'var(--color-text-muted)' }}>
-              Products
+        {/* Section label — accent tick matches the site's other section headers */}
+        <div className="px-6 md:px-12 pt-12 pb-5">
+          <div className="max-w-7xl mx-auto flex items-end justify-between flex-wrap gap-2">
+            <div className="inline-flex items-center gap-2">
+              <div className="w-7 h-px" style={{ background: 'var(--color-accent)' }} />
+              <span className="text-[10px] font-extrabold tracking-[0.4em] uppercase" style={{ color: 'var(--color-accent)' }}>
+                Products
+              </span>
             </div>
+            <span className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+              {products.length} parts &amp; accessories
+            </span>
           </div>
         </div>
 

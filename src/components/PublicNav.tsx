@@ -163,20 +163,24 @@ export default function PublicNav({ user, isAdmin }: Readonly<{ user?: { id: str
         <div className="flex items-center gap-3">
           {user ? (
             <>
-              <Link
-                href="/bookings"
-                className="hidden sm:inline-block text-[11px] font-semibold tracking-[0.1em] uppercase"
-                style={{ color: 'var(--color-text-muted)' }}
-              >
-                My Bookings
-              </Link>
-              <Link
-                href="/inbox"
-                className="hidden sm:inline-block text-[11px] font-semibold tracking-[0.1em] uppercase"
-                style={{ color: 'var(--color-text-muted)' }}
-              >
-                Inbox
-              </Link>
+              {!isAdmin && (
+                <>
+                  <Link
+                    href="/bookings"
+                    className="hidden sm:inline-block text-[11px] font-semibold tracking-[0.1em] uppercase"
+                    style={{ color: 'var(--color-text-muted)' }}
+                  >
+                    My Bookings
+                  </Link>
+                  <Link
+                    href="/inbox"
+                    className="hidden sm:inline-block text-[11px] font-semibold tracking-[0.1em] uppercase"
+                    style={{ color: 'var(--color-text-muted)' }}
+                  >
+                    Inbox
+                  </Link>
+                </>
+              )}
               {isAdmin && (
                 <Link
                   href="/admin"
@@ -266,12 +270,16 @@ export default function PublicNav({ user, isAdmin }: Readonly<{ user?: { id: str
             <li className="pt-8 flex flex-col gap-3">
               {user ? (
                 <>
-                  <Link href="/bookings" onClick={() => setMobileOpen(false)} className="block px-6 py-4 text-center text-[11px] font-bold uppercase tracking-[0.12em] rounded-sm" style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
-                    My Bookings
-                  </Link>
-                  <Link href="/inbox" onClick={() => setMobileOpen(false)} className="block px-6 py-4 text-center text-[11px] font-bold uppercase tracking-[0.12em] rounded-sm" style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
-                    Inbox
-                  </Link>
+                  {!isAdmin && (
+                    <>
+                      <Link href="/bookings" onClick={() => setMobileOpen(false)} className="block px-6 py-4 text-center text-[11px] font-bold uppercase tracking-[0.12em] rounded-sm" style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
+                        My Bookings
+                      </Link>
+                      <Link href="/inbox" onClick={() => setMobileOpen(false)} className="block px-6 py-4 text-center text-[11px] font-bold uppercase tracking-[0.12em] rounded-sm" style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
+                        Inbox
+                      </Link>
+                    </>
+                  )}
                   {isAdmin && (
                     <Link href="/admin" onClick={() => setMobileOpen(false)} className="block px-6 py-4 text-center text-[11px] font-bold uppercase tracking-[0.12em] rounded-sm" style={{ border: '1px solid var(--color-border)', color: 'var(--color-accent)' }}>
                       Admin
