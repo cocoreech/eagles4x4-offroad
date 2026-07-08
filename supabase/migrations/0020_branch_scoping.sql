@@ -152,35 +152,20 @@ create policy "booking_items_delete_admin"
   );
 
 -- ── profiles.branch: assign once, lock thereafter ──────────────
--- Deliberately a trigger rather than an RLS policy change: the existing
--- profiles_update_admin policy (any admin can update any profile) already
--- backs a real feature (adminCreateBooking persists a matched customer's
--- preferred_name), so it can't be narrowed to super_admin-only without
--- breaking that. A trigger enforces the specific rule ("branch can only be
--- set once by a first login; changing an ALREADY-assigned branch requires
--- super_admin") regardless of which RLS policy authorized the write.
-create or replace function public.enforce_branch_reassignment()
-returns trigger
-language plpgsql
-security definer set search_path = ''
-as $$
-begin
-  if old.branch is not null
-     and new.branch is distinct from old.branch
-     and not public.is_super_admin()
-  then
-    raise exception 'Only a super admin can change an already-assigned branch.';
-  end if;
-  return new;
-end;
-$$;
-
-drop trigger if exists trg_enforce_branch_reassignment on public.profiles;
-create trigger trg_enforce_branch_reassignment
-  before update on public.profiles
-  for each row
-  execute function public.enforce_branch_reassignment();
-
--- Trigger functions run in the trigger's context, never via direct RPC —
--- revoke the default PUBLIC execute grant entirely.
-revoke execute on function public.enforce_branch_reassignment() from public, anon, authenticated;
+-- REMOVED (2026-07-08): originally a BEFORE UPDATE trigger on profiles that
+-- called is_super_admin() (itself a query against profiles) to block
+-- reassigning an already-set branch. This hit Postgres's own RLS recursion
+-- guard — "infinite recursion detected in policy for relation profiles" —
+-- because the trigger re-queries its own table mid-statement while that
+-- statement is still resolving profiles' RLS policies, regardless of the
+-- function being SECURITY DEFINER. It broke every first-time branch
+-- assignment (the admin login flow's `UPDATE profiles SET branch = ...`),
+-- i.e. it broke exactly the feature it was meant to protect.
+--
+-- The "assign once, verify thereafter" rule is now enforced ONLY at the
+-- app layer (src/app/admin/login/actions.ts: adminLogin only UPDATEs when
+-- profile.branch IS NULL, and rejects login outright on a mismatch). A
+-- determined admin with direct REST/API access could theoretically still
+-- PATCH their own branch — a real but low-severity gap (self-service admin
+-- account tampering, not a customer-data leak) accepted in exchange for a
+-- working login flow. Revisit if that trust boundary ever matters more.
