@@ -44,7 +44,9 @@ A Touchpoint carries a message drafted from a template, which **admins can edit 
 **Key decision:** Reminders and Follow-ups are NOT separate systems — both are Touchpoints, differing only by type/timing/template.
 
 ### AI Concierge
-The autonomous assistant that replies inside a customer's **Inbox** thread when no merchant is online. Grounded strictly in the live services/products catalog, app FAQ, current promos, and that customer's own bookings — it never invents facts or prices, and hands off to a human (`needs_human: true`) for anything outside that grounding (custom builds, diagnostics, exact quotes, complaints, booking changes/cancellations). Distinct from a Touchpoint's "AI may suggest" drafting — the Concierge replies to the customer directly and unsupervised, in real time.
+The autonomous assistant that replies inside a customer's **Inbox** thread when no merchant is online. Grounded strictly in the live services/products catalog, app FAQ, current promos, and that customer's own bookings — it never invents facts or prices, and hands off to a human (`needs_human: true`) for anything outside that grounding (custom builds, diagnostics, exact quotes, complaints, booking changes/cancellations, or confirming whether a promo applies to a specific booking). Distinct from a Touchpoint's "AI may suggest" drafting — the Concierge replies to the customer directly and unsupervised, in real time.
+
+**Key decision:** replies send autonomously, with no human review before the customer sees them — wrong answers are caught after the fact via admin spot-checking, not prevented before send. See [ADR-0003](docs/adr/0003-ai-concierge-autonomous-with-after-the-fact-review.md).
 
 ---
 
