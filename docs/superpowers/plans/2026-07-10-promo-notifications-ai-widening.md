@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Fix the broken promo-posting bug, notify customers via a general-purpose in-app bell when a promo is published or their booking hits a milestone, and ground the AI concierge on live promos so it can answer customer questions about them.
+**Goal:** Fix the broken promo-posting bug, notify customers via a general-purpose in-app bell when a promo is published or their booking hits a milestone, ground the AI concierge on live promos so it can answer customer questions about them (describing only — never confirming or applying a promo, per [ADR-0003](../adr/0003-ai-concierge-autonomous-with-after-the-fact-review.md)), and give admin a way to spot-check bot replies after the fact via an unreviewed-reply badge.
 
 **Architecture:** Two tiny Postgres migrations (constraint fix + revive the unused `notifications` table), two pure/tested TypeScript modules deciding *when* to notify, one thin Supabase "store" wrapper doing the actual writes (mirrors the existing `createInboxStore` pattern — untested, matches convention), producers wired directly into the existing admin server actions (no DB triggers), a small client-side bell dropdown in the nav, and a new grounding source feeding the AI concierge's system prompt.
 
@@ -14,7 +14,7 @@
 - This codebase's established UI pattern is `style={{ color: 'var(--color-accent)', ... }}` inline objects referencing CSS custom properties (see any file under `src/components/`) — **use this pattern for new UI in this plan**, not raw Tailwind-only styling; it's what every existing component in this codebase does.
 - Service-role client (`createServiceRoleClient()` from `@/utils/supabase/server`) is server-only, never passed to or imported by a client (`'use client'`) component.
 - Zod validates all form input in server actions (existing pattern — already true of every action touched in this plan).
-- Migration files: sequential numbering (next is `0021`), applied via the Supabase MCP `apply_migration` tool against the live project `pkkgzsknvkpoowvukrqs`, verified with `list_tables` / `execute_sql`, then committed. Never applied by any other means.
+- Migration files: sequential numbering (next is `0021`; this plan uses `0021`–`0023`), applied via the Supabase MCP `apply_migration` tool against the live project `pkkgzsknvkpoowvukrqs`, verified with `list_tables` / `execute_sql`, then committed. Never applied by any other means.
 - Tests: Vitest (`npx vitest run <path>`). Pure logic modules get a co-located `.test.ts`. Thin Supabase "store" DB-wrapper modules (the existing `src/lib/inbox/store.ts` has no test file) are **not** unit-tested — this plan follows that same convention for `src/lib/notifications/store.ts`.
 - No new dependencies. `lucide-react` is already an installed-but-unused dependency; this plan still hand-rolls inline SVG icons to match the existing nav's icon style (see the chevron SVG in `src/components/PublicNav.tsx`), consistent with current usage (zero existing lucide-react usage in the codebase).
 
@@ -41,6 +41,11 @@
 | `src/lib/inbox/grounding.ts` | +`GroundingPromo`, +`promos` field, +PROMOS prompt section |
 | `src/lib/inbox/grounding.test.ts` | Unit tests for the above |
 | `src/app/inbox/actions.ts` | Query live promos, feed into `ConciergeContext` |
+| `supabase/migrations/0023_admin_bot_review_badge.sql` | `conversations.last_message_sender` + `admin_reviewed_at` columns |
+| `src/types/inbox.ts` | `Conversation` gains `last_message_sender`, `admin_reviewed_at` |
+| `src/lib/inbox/review.ts` | Pure: is this conversation's latest bot reply unreviewed by admin? |
+| `src/lib/inbox/review.test.ts` | Unit tests |
+| `src/app/admin/inbox/page.tsx` | Mark reviewed on open; render the "🤖 unreviewed" badge |
 
 ---
 
@@ -1361,8 +1366,287 @@ git commit -m "feat(concierge): query live non-expired promos into the AI's grou
 
 ---
 
+## Task 14: Admin "unreviewed bot reply" badge
+
+**Files:**
+- Create: `supabase/migrations/0023_admin_bot_review_badge.sql`
+- Modify: `src/types/inbox.ts`
+- Create: `src/lib/inbox/review.ts`
+- Test: `src/lib/inbox/review.test.ts`
+- Modify: `src/lib/inbox/store.ts`
+- Modify: `src/app/admin/inbox/page.tsx`
+
+**Interfaces:**
+- Consumes: `MessageSender` type from `@/types/inbox`.
+- Produces: `isUnreviewedBotReply(conv: { last_message_sender: MessageSender | null; last_message_at: string | null; admin_reviewed_at: string | null }): boolean`; new `createInboxStore` method `markReviewedByAdmin(conversationId: string): Promise<void>`.
+
+**Context:** [ADR-0003](../adr/0003-ai-concierge-autonomous-with-after-the-fact-review.md) settled the AI Concierge's trust model — it replies fully autonomously (no pre-send human gate), so a confidently-wrong reply is only caught after the fact. The detection mechanism is this badge: `/admin/inbox`'s conversation list already shows a "new" badge for `status === 'awaiting_merchant'`; this adds a second, independent badge for "the latest message here is from the bot and no admin has opened this conversation since." Correction, when a bad reply is caught, uses the *existing* merchant-takeover flow (admin opens the thread and replies) — no new code needed for that part.
+
+- [ ] **Step 1: Write the migration**
+
+Create `supabase/migrations/0023_admin_bot_review_badge.sql`:
+
+```sql
+-- 0023 — Admin "unreviewed bot reply" badge (ADR-0003)
+--
+-- The AI Concierge replies fully autonomously with no pre-send human
+-- gate. This adds the detection signal for catching a confidently-wrong
+-- reply after the fact: track the sender of each conversation's latest
+-- message, and when an admin last opened it. /admin/inbox computes
+-- "unreviewed" by comparing the two.
+
+alter table public.conversations add column last_message_sender public.message_sender;
+alter table public.conversations add column admin_reviewed_at timestamptz;
+```
+
+- [ ] **Step 2: Apply the migration to the live project**
+
+Apply via the Supabase MCP `apply_migration` (project `pkkgzsknvkpoowvukrqs`, name `0023_admin_bot_review_badge`, the SQL above).
+Expected: success, no error.
+
+- [ ] **Step 3: Verify the schema landed**
+
+Run via Supabase MCP `execute_sql`:
+```sql
+select column_name, data_type from information_schema.columns
+where table_schema = 'public' and table_name = 'conversations'
+  and column_name in ('last_message_sender', 'admin_reviewed_at');
+```
+Expected: two rows.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add supabase/migrations/0023_admin_bot_review_badge.sql
+git commit -m "feat(inbox): schema for the admin unreviewed-bot-reply badge"
+```
+
+- [ ] **Step 5: Update the `Conversation` type**
+
+In `src/types/inbox.ts`, change:
+
+```ts
+export interface Conversation {
+  id: string
+  customer_id: string
+  status: ConversationStatus
+  last_message_at: string | null
+  doorbell_sent_at: string | null
+  created_at: string
+}
+```
+to:
+```ts
+export interface Conversation {
+  id: string
+  customer_id: string
+  status: ConversationStatus
+  last_message_at: string | null
+  last_message_sender: MessageSender | null
+  admin_reviewed_at: string | null
+  doorbell_sent_at: string | null
+  created_at: string
+}
+```
+
+- [ ] **Step 6: Write the failing test for the pure detection function**
+
+Create `src/lib/inbox/review.test.ts`:
+
+```ts
+import { describe, it, expect } from 'vitest'
+import { isUnreviewedBotReply } from './review'
+
+describe('isUnreviewedBotReply', () => {
+  it('is false when the latest message is not from the bot', () => {
+    expect(isUnreviewedBotReply({ last_message_sender: 'customer', last_message_at: '2026-07-10T10:00:00Z', admin_reviewed_at: null })).toBe(false)
+    expect(isUnreviewedBotReply({ last_message_sender: 'merchant', last_message_at: '2026-07-10T10:00:00Z', admin_reviewed_at: null })).toBe(false)
+    expect(isUnreviewedBotReply({ last_message_sender: null, last_message_at: null, admin_reviewed_at: null })).toBe(false)
+  })
+
+  it('is true when the bot replied and admin has never reviewed', () => {
+    expect(isUnreviewedBotReply({ last_message_sender: 'bot', last_message_at: '2026-07-10T10:00:00Z', admin_reviewed_at: null })).toBe(true)
+  })
+
+  it('is true when the bot replied again after the last admin review', () => {
+    expect(isUnreviewedBotReply({
+      last_message_sender: 'bot',
+      last_message_at: '2026-07-10T10:05:00Z',
+      admin_reviewed_at: '2026-07-10T10:00:00Z',
+    })).toBe(true)
+  })
+
+  it('is false when admin reviewed at or after the bot\'s latest message', () => {
+    expect(isUnreviewedBotReply({
+      last_message_sender: 'bot',
+      last_message_at: '2026-07-10T10:00:00Z',
+      admin_reviewed_at: '2026-07-10T10:05:00Z',
+    })).toBe(false)
+  })
+})
+```
+
+- [ ] **Step 7: Run test to verify it fails**
+
+Run: `npx vitest run src/lib/inbox/review.test.ts`
+Expected: FAIL — `Cannot find module './review'`.
+
+- [ ] **Step 8: Write the implementation**
+
+Create `src/lib/inbox/review.ts`:
+
+```ts
+import type { MessageSender } from '@/types/inbox'
+
+/** True when the conversation's latest message is from the bot and no admin has opened it since — the ADR-0003 after-the-fact review signal. */
+export function isUnreviewedBotReply(conv: {
+  last_message_sender: MessageSender | null
+  last_message_at: string | null
+  admin_reviewed_at: string | null
+}): boolean {
+  if (conv.last_message_sender !== 'bot') return false
+  if (!conv.last_message_at) return false
+  if (!conv.admin_reviewed_at) return true
+  return new Date(conv.admin_reviewed_at).getTime() < new Date(conv.last_message_at).getTime()
+}
+```
+
+- [ ] **Step 9: Run test to verify it passes**
+
+Run: `npx vitest run src/lib/inbox/review.test.ts`
+Expected: PASS (4 tests).
+
+- [ ] **Step 10: Commit**
+
+```bash
+git add src/types/inbox.ts src/lib/inbox/review.ts src/lib/inbox/review.test.ts
+git commit -m "feat(inbox): pure isUnreviewedBotReply detection + Conversation type update"
+```
+
+- [ ] **Step 11: Track `last_message_sender` on every message insert**
+
+In `src/lib/inbox/store.ts`, inside `insertMessage`, the `touch` update currently is:
+
+```ts
+      const touch = await client
+        .from('conversations')
+        .update({
+          last_message_at: new Date().toISOString(),
+          // A customer message flags the merchant to act; a merchant/bot reply
+          // clears that flag so the "new" badge doesn't stick forever.
+          status: input.sender === 'customer' ? 'awaiting_merchant' : 'open',
+        })
+        .eq('id', input.conversationId)
+```
+
+Add `last_message_sender: input.sender,` to the update object:
+
+```ts
+      const touch = await client
+        .from('conversations')
+        .update({
+          last_message_at: new Date().toISOString(),
+          last_message_sender: input.sender,
+          // A customer message flags the merchant to act; a merchant/bot reply
+          // clears that flag so the "new" badge doesn't stick forever.
+          status: input.sender === 'customer' ? 'awaiting_merchant' : 'open',
+        })
+        .eq('id', input.conversationId)
+```
+
+- [ ] **Step 12: Add `markReviewedByAdmin`**
+
+In `src/lib/inbox/store.ts`, add this method to the object returned by `createInboxStore` (place it near `markRead`/`markDoorbellSent` — if Task 6 already added `hasUnreadForCustomer`, add this after that):
+
+```ts
+    async markReviewedByAdmin(conversationId: string): Promise<void> {
+      const { error } = await client
+        .from('conversations')
+        .update({ admin_reviewed_at: new Date().toISOString() })
+        .eq('id', conversationId)
+      if (error) throw new Error(`markReviewedByAdmin: ${error.message}`)
+    },
+```
+
+- [ ] **Step 13: Typecheck**
+
+Run: `npx tsc --noEmit`
+Expected: no new errors.
+
+- [ ] **Step 14: Commit**
+
+```bash
+git add src/lib/inbox/store.ts
+git commit -m "feat(inbox): track last_message_sender, mark conversations reviewed by admin"
+```
+
+- [ ] **Step 15: Wire into the admin inbox page**
+
+In `src/app/admin/inbox/page.tsx`, add the import:
+
+```ts
+import { isUnreviewedBotReply } from '@/lib/inbox/review'
+```
+
+Change:
+```ts
+  if (selected) await store.markRead(selected, 'merchant')
+```
+to:
+```ts
+  if (selected) {
+    await store.markRead(selected, 'merchant')
+    await store.markReviewedByAdmin(selected)
+  }
+```
+
+Then add the badge next to the existing "new" badge. Change:
+
+```tsx
+                <span className="font-medium">{conv.customer_name ?? 'Customer'}</span>
+                {conv.status === 'awaiting_merchant' && (
+                  <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs text-black">
+                    new
+                  </span>
+                )}
+```
+to:
+```tsx
+                <span className="font-medium">{conv.customer_name ?? 'Customer'}</span>
+                {conv.status === 'awaiting_merchant' && (
+                  <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs text-black">
+                    new
+                  </span>
+                )}
+                {isUnreviewedBotReply(conv) && (
+                  <span className="ml-2 rounded-full border border-accent px-2 py-0.5 text-xs text-accent">
+                    🤖 review
+                  </span>
+                )}
+```
+
+(The two badges are independent and can both show at once — e.g. the bot answered *and* set `needs_human`, so the thread is simultaneously "new" and "worth a skim.")
+
+- [ ] **Step 16: Typecheck**
+
+Run: `npx tsc --noEmit`
+Expected: no new errors.
+
+- [ ] **Step 17: Manual verification**
+
+Trigger an AI Concierge reply (send an inbox message as a customer with no merchant online — see Task 13's verification). As admin, open `/admin/inbox` without opening that conversation yet — confirm the "🤖 review" badge shows next to it. Open the conversation — confirm the badge disappears (on this and subsequent visits) until the bot replies again.
+
+- [ ] **Step 18: Commit**
+
+```bash
+git add src/app/admin/inbox/page.tsx
+git commit -m "feat(admin): show unreviewed-bot-reply badge, mark reviewed on open"
+```
+
+---
+
 ## Self-Review Notes
 
-- **Spec coverage:** §3 (bug fix) → Task 1. §5/§9 (schema + security) → Task 2. §6 (producers) → Tasks 3, 4, 7, 8. §4 (no DB triggers, app-layer) → Tasks 7, 8 confirmed. §7 (bell UI, deep links, bulk mark-read on open) → Tasks 9, 10, 11. §4 (envelope, no new schema) → Task 6, 11. §8 (AI grounding) → Tasks 12, 13.
+- **Spec coverage:** §3 (bug fix) → Task 1. §5/§9 (schema + security) → Task 2. §6 (producers) → Tasks 3, 4, 7, 8. §4 (no DB triggers, app-layer) → Tasks 7, 8 confirmed. §7 (bell UI, deep links, bulk mark-read on open) → Tasks 9, 10, 11. §4 (envelope, no new schema) → Task 6, 11. §8 (AI grounding, avail-a-promo → needs_human) → Tasks 12, 13. ADR-0003 (autonomous send + after-the-fact review) → Task 14.
 - **Placeholder scan:** none found — every step has real code, no TBD/TODO.
-- **Type consistency:** `NotificationItem` (Task 10) and `NotificationRow` (Task 5) share the same field names/types by design (`id, title, body, link, is_read, created_at`) so Task 11 can pass one as the other with zero mapping. `GroundingPromo` (Task 12) fields (`title, description, starts_at, ends_at`) match exactly what Task 13's query selects and maps.
+- **Type consistency:** `NotificationItem` (Task 10) and `NotificationRow` (Task 5) share the same field names/types by design (`id, title, body, link, is_read, created_at`) so Task 11 can pass one as the other with zero mapping. `GroundingPromo` (Task 12) fields (`title, description, starts_at, ends_at`) match exactly what Task 13's query selects and maps. Task 14's `isUnreviewedBotReply` reads fields (`last_message_sender`, `last_message_at`, `admin_reviewed_at`) that match the `Conversation` type it updates in the same task and the columns Task 14's own migration adds — no other task touches these.
