@@ -58,6 +58,10 @@ Booking hits milestone status ┘         (application layer,             (serve
 -- Add 'in_app' as a real notification channel/type
 alter type public.notification_type add value 'in_app';
 
+-- Where tapping the notification should take the customer
+-- (e.g. '/events/spring-lift-promo', '/bookings/EG-2026-0148')
+alter table public.notifications add column link text;
+
 -- Allow a customer to mark their own notifications read
 create policy "notifications_update_own"
   on public.notifications for update
@@ -65,11 +69,11 @@ create policy "notifications_update_own"
   with check (user_id = (select auth.uid()));
 ```
 
-`public.notifications` already has everything else needed (`id, user_id, type, title, body, is_read, sent_at, created_at`) — no new columns.
+`public.notifications` already has everything else needed (`id, user_id, type, title, body, is_read, sent_at, created_at`) — plus the new `link` column above so the bell UI has somewhere to send the customer when they tap a notification (§7).
 
 Rows written by the two producers:
 
-| Producer | user_id | type | title / body | Deep link |
+| Producer | user_id | type | title / body | link |
 |---|---|---|---|---|
 | Promo published | every `role='customer'` profile | `in_app` | Promo title / short excerpt | `/events/[slug]` |
 | Booking milestone | booking's `customer_id` | `in_app` | e.g. "Your booking is ready" | `/bookings/[code]` |
