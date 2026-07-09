@@ -111,6 +111,7 @@ where event_type = 'promo'
 - New `GroundingPromo` interface and `promos: GroundingPromo[]` field on `ConciergeContext`.
 - New `PROMOS:` section in `buildConciergeSystemPrompt`, formatted like the existing `SERVICES:`/`PRODUCTS:` sections.
 - The `RULES:` block is extended so "only answer using SERVICES, PRODUCTS, app facts, **and current promos**, and this customer's bookings above" — the existing "quote prices exactly as written" and "don't invent facts" guardrails apply unchanged, since promo details (including any package/bundle pricing) are just the event's own description text, injected verbatim.
+- Promos are informational only: the concierge can describe a promo but never confirms eligibility or applies one. Availing a promo is a branch/staff action (customer messages the branch to request it, staff note it manually — a Booking only ever reserves a time slot, per `CONTEXT.md`), so "I want to avail this" always routes to `needs_human`, same as a booking change. See [ADR-0003](../adr/0003-ai-concierge-autonomous-with-after-the-fact-review.md) for the trust model this reinforces.
 - Query is filtered to `event_type = 'promo'` specifically so widening later to all published event types is a one-line change to the `where` clause, not a rework.
 
 ## 9. Security

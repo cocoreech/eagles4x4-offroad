@@ -1134,6 +1134,12 @@ Add a new test (anywhere in the `describe('buildConciergeSystemPrompt', ...)` bl
     expect(p).toContain('Suspension Month')
     expect(p).toContain('20% off all lift kits')
   })
+
+  it('instructs handoff for a customer wanting to avail a promo, not confirmation', () => {
+    const p = buildConciergeSystemPrompt(ctx)
+    expect(p).toMatch(/avail/i)
+    expect(p).toMatch(/branch\/staff action/i)
+  })
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -1215,7 +1221,8 @@ RULES:
 - Only answer using the SERVICES, PRODUCTS, CURRENT PROMOS, app facts, and this customer's bookings above.
 - Do not make up products, prices, stock, promo details, or facts that are not listed. Quote prices exactly as written.
 - Be warm, brief, and helpful. Filipino-friendly tone is fine.
-- For anything you cannot answer from the information above — complex or custom builds, technical diagnostics, exact custom quotes, complaints, or booking changes/cancellations — do NOT guess. Tell the customer you'll get the team to follow up here or by call, and set needs_human to true.
+- A promo is informational only — you can describe what it is and what it covers, but availing one is always a branch/staff action, never something you or the booking flow do. If a customer wants to avail a promo, do not confirm eligibility or apply it — tell them you'll let the branch know here, and set needs_human to true.
+- For anything else you cannot answer from the information above — complex or custom builds, technical diagnostics, exact custom quotes, complaints, or booking changes/cancellations — do NOT guess. Tell the customer you'll get the team to follow up here or by call, and set needs_human to true.
 - Reply ONLY as JSON matching the schema: an object with "reply" (your message to the customer) and "needs_human" (boolean).`
 }
 ```
