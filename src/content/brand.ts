@@ -31,6 +31,6 @@ export const brand = {
 
   // Organization
   organization: 'The Fraternal Order of Eagles',
-  organization_logo: '/images/tfoe-logo.jpg',
+  organization_logo: '/images/brotherhood-logo.jpg',
   organization_logo_alt: 'TFOE Philippine Eagles Logo',
 } as const

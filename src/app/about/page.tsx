@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import PublicNavServer from '@/components/PublicNavServer'
+import { TfoeLogoImage } from '@/components/TfoeLogoImage'
+import { brand } from '@/content/brand'
 
 export const metadata = {
   title: 'About Eagles 4×4 Offroad — Corporate Profile',
@@ -212,6 +214,25 @@ export default function AboutPage() {
                 More than a shop.<br />
                 <em style={{ color: 'var(--color-accent)', fontStyle: 'italic' }}>A community.</em>
               </h2>
+
+              <div
+                className="flex items-center gap-5 p-5 mb-6 rounded-sm"
+                style={{ background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)' }}
+              >
+                <TfoeLogoImage />
+                <div>
+                  <p className="text-[9px] font-bold uppercase mb-1.5" style={{ color: 'var(--color-accent)', letterSpacing: '0.3em' }}>
+                    Proud Member
+                  </p>
+                  <p className="font-display font-bold text-base leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
+                    {brand.organization}
+                  </p>
+                  <p className="text-xs italic mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                    &ldquo;Deo Et Patria&rdquo;
+                  </p>
+                </div>
+              </div>
+
               <div className="space-y-4 text-sm" style={{ color: 'var(--color-text-muted)', lineHeight: 1.75 }}>
                 <p>
                   Eagles 4×4 Offroad is a proud member of <strong style={{ color: 'var(--color-text-primary)' }}>The Fraternal Order of Eagles</strong> —
