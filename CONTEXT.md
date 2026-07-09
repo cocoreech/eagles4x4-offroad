@@ -13,7 +13,7 @@ A service request from a customer for work on their vehicle. Includes:
 - Quote (estimated cost)
 - Payment (via PayMongo)
 
-**Key decision:** Booking does NOT require signup. Guest checkout flow.
+**Key decision:** Booking does NOT require signup. Guest checkout flow. A Booking reserves a **time slot only** — it does not carry promo/discount application. To avail a promo, a customer messages the branch through the **Inbox** to say they want it; staff note it against their booking manually. This is a branch/staff action, not a booking-flow step — which is why the **AI Concierge** never confirms promo eligibility itself (see AI Concierge, below), only relays the request via `needs_human`.
 
 ### Account / User
 An authenticated user account (`role`: `customer` / `staff` / `admin` / `super_admin`). Bookings never require one — guest checkout is fully supported and unchanged. An account's value: **My Bookings** (live status tracking at `/bookings`, `/bookings/[code]`), the **Inbox** (chat with the AI Concierge and/or a human merchant, and where Touchpoints land), and in-app **Notifications**.
@@ -44,7 +44,7 @@ A Touchpoint carries a message drafted from a template, which **admins can edit 
 **Key decision:** Reminders and Follow-ups are NOT separate systems — both are Touchpoints, differing only by type/timing/template.
 
 ### AI Concierge
-The autonomous assistant that replies inside a customer's **Inbox** thread when no merchant is online. Grounded strictly in the live services/products catalog, app FAQ, current promos, and that customer's own bookings — it never invents facts or prices, and hands off to a human (`needs_human: true`) for anything outside that grounding (custom builds, diagnostics, exact quotes, complaints, booking changes/cancellations, or confirming whether a promo applies to a specific booking). Distinct from a Touchpoint's "AI may suggest" drafting — the Concierge replies to the customer directly and unsupervised, in real time.
+The autonomous assistant that replies inside a customer's **Inbox** thread when no merchant is online. Grounded strictly in the live services/products catalog, app FAQ, current promos, and that customer's own bookings — it never invents facts or prices, and hands off to a human (`needs_human: true`) for anything outside that grounding (custom builds, diagnostics, exact quotes, complaints, booking changes/cancellations, or a customer wanting to **avail** a promo — availing is always a branch/staff action, never something the Concierge or the booking flow does itself). Distinct from a Touchpoint's "AI may suggest" drafting — the Concierge replies to the customer directly and unsupervised, in real time.
 
 **Key decision:** replies send autonomously, with no human review before the customer sees them — wrong answers are caught after the fact via admin spot-checking, not prevented before send. See [ADR-0003](docs/adr/0003-ai-concierge-autonomous-with-after-the-fact-review.md).
 
