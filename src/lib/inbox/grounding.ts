@@ -19,10 +19,17 @@ export interface GroundingBooking {
   vehicle_label: string
   service_name: string
 }
+export interface GroundingPromo {
+  title: string
+  description: string | null
+  starts_at: string
+  ends_at: string | null
+}
 export interface ConciergeContext {
   customerName: string
   services: GroundingService[]
   products: GroundingProduct[]
+  promos: GroundingPromo[]
   bookings: GroundingBooking[]
 }
 
@@ -34,6 +41,11 @@ function productLine(p: GroundingProduct): string {
   const brand = p.brand ? `${p.brand} ` : ''
   const stock = p.in_stock ? 'in stock' : 'out of stock'
   return `- ${brand}${p.name} (${p.category}) — PHP ${p.price} (${stock})`
+}
+function promoLine(p: GroundingPromo): string {
+  const window = p.ends_at ? ` (through ${p.ends_at.slice(0, 10)})` : ''
+  const desc = p.description ? ` — ${p.description}` : ''
+  return `- ${p.title}${window}${desc}`
 }
 function bookingLine(b: GroundingBooking): string {
   return `- ${b.booking_code}: ${b.service_name} on ${b.vehicle_label} — status: ${b.status}`
@@ -47,6 +59,9 @@ export function buildConciergeSystemPrompt(ctx: ConciergeContext): string {
   const products = ctx.products.length
     ? ctx.products.map(productLine).join('\n')
     : '(no products listed)'
+  const promos = ctx.promos.length
+    ? ctx.promos.map(promoLine).join('\n')
+    : '(no active promos)'
   const bookings = ctx.bookings.length
     ? ctx.bookings.map(bookingLine).join('\n')
     : '(this customer has no bookings on record)'
@@ -63,13 +78,17 @@ ${services}
 PRODUCTS:
 ${products}
 
+CURRENT PROMOS:
+${promos}
+
 THIS CUSTOMER'S BOOKINGS:
 ${bookings}
 
 RULES:
-- Only answer using the SERVICES, PRODUCTS, app facts, and this customer's bookings above.
-- Do not make up products, prices, stock, or facts that are not listed. Quote prices exactly as written.
+- Only answer using the SERVICES, PRODUCTS, CURRENT PROMOS, app facts, and this customer's bookings above.
+- Do not make up products, prices, stock, promo details, or facts that are not listed. Quote prices exactly as written.
 - Be warm, brief, and helpful. Filipino-friendly tone is fine.
-- For anything you cannot answer from the information above — complex or custom builds, technical diagnostics, exact custom quotes, complaints, or booking changes/cancellations — do NOT guess. Tell the customer you'll get the team to follow up here or by call, and set needs_human to true.
+- A promo is informational only — you can describe what it is and what it covers, but availing one is always a branch/staff action, never something you or the booking flow do. If a customer wants to avail a promo, do not confirm eligibility or apply it — tell them you'll let the branch know here, and set needs_human to true.
+- For anything else you cannot answer from the information above — complex or custom builds, technical diagnostics, exact custom quotes, complaints, or booking changes/cancellations — do NOT guess. Tell the customer you'll get the team to follow up here or by call, and set needs_human to true.
 - Reply ONLY as JSON matching the schema: an object with "reply" (your message to the customer) and "needs_human" (boolean).`
 }

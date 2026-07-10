@@ -10,6 +10,9 @@ const ctx: ConciergeContext = {
     { name: 'Profender Shocks', brand: 'Profender', category: 'suspension', price: 18000, in_stock: true },
     { name: 'Old Stock Bar', brand: null, category: 'protection', price: 5000, in_stock: false },
   ],
+  promos: [
+    { title: 'Suspension Month', description: '20% off all lift kits.', starts_at: '2026-07-01T00:00:00Z', ends_at: '2026-07-31T00:00:00Z' },
+  ],
   bookings: [
     { booking_code: 'EAG-1001', status: 'completed', vehicle_label: '2018 Toyota Hilux', service_name: 'Suspension Lift' },
   ],
@@ -41,9 +44,21 @@ describe('buildConciergeSystemPrompt', () => {
   })
 
   it('handles empty context without throwing', () => {
-    const p = buildConciergeSystemPrompt({ customerName: 'there', services: [], products: [], bookings: [] })
+    const p = buildConciergeSystemPrompt({ customerName: 'there', services: [], products: [], promos: [], bookings: [] })
     expect(typeof p).toBe('string')
     expect(p.length).toBeGreaterThan(0)
+  })
+
+  it('includes current promos', () => {
+    const p = buildConciergeSystemPrompt(ctx)
+    expect(p).toContain('Suspension Month')
+    expect(p).toContain('20% off all lift kits')
+  })
+
+  it('instructs handoff for a customer wanting to avail a promo, not confirmation', () => {
+    const p = buildConciergeSystemPrompt(ctx)
+    expect(p).toMatch(/avail/i)
+    expect(p).toMatch(/branch\/staff action/i)
   })
 
   it('tells the bot how to address the customer', () => {
