@@ -8,6 +8,8 @@ export interface Conversation {
   customer_id: string
   status: ConversationStatus
   last_message_at: string | null
+  last_message_sender: MessageSender | null
+  admin_reviewed_at: string | null
   doorbell_sent_at: string | null
   created_at: string
 }
