@@ -9,9 +9,11 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { z } from 'zod'
 import { requireAdmin } from '@/lib/auth'
-import { createClient } from '@/utils/supabase/server'
+import { createClient, createServiceRoleClient } from '@/utils/supabase/server'
 import { sanitizeText, sanitizeMultiline } from '@/lib/sanitize'
 import { rlAdminGeneral, checkLimit } from '@/utils/ratelimit'
+import { shouldNotifyPromoPublish, promoNotificationBody } from '@/lib/notifications/promoPublish'
+import { createNotificationStore } from '@/lib/notifications/store'
 
 async function getIp(): Promise<string> {
   const h = await headers()
@@ -23,6 +25,23 @@ async function getIp(): Promise<string> {
 async function adminRateGuard(userId: string) {
   const result = await checkLimit(rlAdminGeneral, `events-action:${userId}:${await getIp()}`)
   return result.allowed
+}
+
+// Best-effort — a notification failure never blocks saving the event.
+async function notifyCustomersOfPromo(event: { slug: string; title: string; description: string | null }) {
+  try {
+    const admin = createServiceRoleClient()
+    const { data: customers } = await admin.from('profiles').select('id').eq('role', 'customer')
+    const ids = (customers ?? []).map(c => c.id)
+    await createNotificationStore(admin).notifyCustomers(
+      ids,
+      event.title,
+      promoNotificationBody(event.description),
+      `/events/${event.slug}`,
+    )
+  } catch (err) {
+    console.error('[notifyCustomersOfPromo]', err)
+  }
 }
 
 const EVENT_TYPES = ['trail_ride', 'product_launch', 'promo', 'meetup', 'workshop'] as const
@@ -86,6 +105,10 @@ export async function createEvent(formData: FormData) {
     return { error: error.code === '23505' ? 'An event with this slug already exists.' : 'Could not save event.' }
   }
 
+  if (shouldNotifyPromoPublish({ eventType: d.event_type || null, isPublished: d.is_published, wasPublished: false })) {
+    await notifyCustomersOfPromo({ slug: d.slug, title: d.title, description: d.description || null })
+  }
+
   revalidatePath('/admin/events')
   revalidatePath('/events')
   redirect('/admin/events?created=1')
@@ -104,7 +127,7 @@ export async function updateEvent(formData: FormData) {
   const d = parsed.data
 
   const supabase = await createClient()
-  const { data: existing } = await supabase.from('events').select('slug').eq('id', id).maybeSingle()
+  const { data: existing } = await supabase.from('events').select('slug, is_published, event_type').eq('id', id).maybeSingle()
   const { error } = await supabase.from('events').update({
     slug:            d.slug,
     title:           d.title,
@@ -121,6 +144,10 @@ export async function updateEvent(formData: FormData) {
   if (error) {
     console.error('[updateEvent]', error)
     return { error: 'Could not save changes.' }
+  }
+
+  if (existing && shouldNotifyPromoPublish({ eventType: d.event_type || null, isPublished: d.is_published, wasPublished: existing.is_published })) {
+    await notifyCustomersOfPromo({ slug: d.slug, title: d.title, description: d.description || null })
   }
 
   revalidatePath('/admin/events')
@@ -140,8 +167,20 @@ export async function publishEvent(formData: FormData) {
   if (!z.string().uuid().safeParse(id).success) return { error: 'Invalid event id.' }
 
   const supabase = await createClient()
+  const { data: existing } = await supabase
+    .from('events')
+    .select('slug, title, description, event_type, is_published')
+    .eq('id', id)
+    .maybeSingle()
+  if (!existing) return { error: 'Event not found.' }
+
   const { error } = await supabase.from('events').update({ is_published: true }).eq('id', id)
   if (error) return { error: 'Could not publish.' }
+
+  if (shouldNotifyPromoPublish({ eventType: existing.event_type, isPublished: true, wasPublished: existing.is_published })) {
+    await notifyCustomersOfPromo({ slug: existing.slug, title: existing.title, description: existing.description })
+  }
+
   revalidatePath('/admin/events')
   revalidatePath('/events')
   return { success: true }
