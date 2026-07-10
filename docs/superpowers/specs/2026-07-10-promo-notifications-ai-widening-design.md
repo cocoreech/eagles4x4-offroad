@@ -105,6 +105,7 @@ select slug, title, description, starts_at, ends_at
 from events
 where event_type = 'promo'
   and is_published = true
+  and starts_at <= now()
   and (ends_at is null or ends_at >= now())
 ```
 

@@ -1253,7 +1253,7 @@ git commit -m "feat(concierge): ground the AI on current promos"
 
 **Interfaces:**
 - Consumes: `GroundingPromo` type from `@/lib/inbox/grounding` (Task 12).
-- Produces: `maybeRunConcierge` now queries `events` for live, non-expired promos and includes them in `ConciergeContext.promos`.
+- Produces: `maybeRunConcierge` now queries `events` for published promos that have already started and haven't ended (`starts_at <= now <= ends_at`, or no `ends_at`) and includes them in `ConciergeContext.promos` — a future-dated promo published early is correctly excluded, not presented as "current."
 
 - [ ] **Step 1: Add the type import**
 
@@ -1296,6 +1296,7 @@ Replace it with:
         .select('title, description, starts_at, ends_at')
         .eq('event_type', 'promo')
         .eq('is_published', true)
+        .lte('starts_at', new Date().toISOString())
         .or(`ends_at.is.null,ends_at.gte.${new Date().toISOString()}`),
       admin.from('profiles').select('preferred_name, full_name').eq('id', customerId).maybeSingle(),
       store.listMessages(conversationId),
