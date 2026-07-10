@@ -6,7 +6,7 @@ import { requireConfirmed } from '@/lib/auth'
 import { createClient, createServiceRoleClient } from '@/utils/supabase/server'
 import { createInboxStore } from '@/lib/inbox/store'
 import { messageBodySchema } from '@/lib/inbox/message'
-import { buildConciergeSystemPrompt, type ConciergeContext, type GroundingBooking } from '@/lib/inbox/grounding'
+import { buildConciergeSystemPrompt, type ConciergeContext, type GroundingBooking, type GroundingPromo } from '@/lib/inbox/grounding'
 import { generateConciergeReply, type ConciergeTurn } from '@/lib/inbox/concierge'
 import { resolveGreetingName } from '@/lib/name'
 import { rlServerAction, checkLimit, checkAiBudget, recordAiUsage } from '@/utils/ratelimit'
@@ -84,15 +84,21 @@ async function maybeRunConcierge(conversationId: string, customerId: string): Pr
     if (!budget.allowed) return // stays awaiting_merchant; a human will pick it up
 
     // Build grounding context.
-    const [servicesRes, productsRes, bookingsRes, profileRes, messages] = await Promise.all([
+    const [servicesRes, productsRes, bookingsRes, promosRes, profileRes, messages] = await Promise.all([
       admin.from('services').select('name, category, starting_price, duration_hours').eq('is_active', true),
       admin.from('products').select('name, brand, category, price, stock').eq('is_active', true),
       admin.from('bookings').select(CONTEXT_BOOKING_SELECT).eq('customer_id', customerId).returns<RawContextBooking[]>(),
+      admin.from('events')
+        .select('title, description, starts_at, ends_at')
+        .eq('event_type', 'promo')
+        .eq('is_published', true)
+        .lte('starts_at', new Date().toISOString())
+        .or(`ends_at.is.null,ends_at.gte.${new Date().toISOString()}`),
       admin.from('profiles').select('preferred_name, full_name').eq('id', customerId).maybeSingle(),
       store.listMessages(conversationId),
     ])
-    if (servicesRes.error || productsRes.error || bookingsRes.error) {
-      console.error('[concierge] grounding load', servicesRes.error ?? productsRes.error ?? bookingsRes.error)
+    if (servicesRes.error || productsRes.error || bookingsRes.error || promosRes.error) {
+      console.error('[concierge] grounding load', servicesRes.error ?? productsRes.error ?? bookingsRes.error ?? promosRes.error)
       return
     }
 
@@ -101,6 +107,9 @@ async function maybeRunConcierge(conversationId: string, customerId: string): Pr
       status: b.status,
       vehicle_label: bookingVehicleLabel(b),
       service_name: bookingServiceName(b),
+    }))
+    const promos: GroundingPromo[] = (promosRes.data ?? []).map(p => ({
+      title: p.title, description: p.description, starts_at: p.starts_at, ends_at: p.ends_at,
     }))
     const ctx: ConciergeContext = {
       customerName: resolveGreetingName({
@@ -113,6 +122,7 @@ async function maybeRunConcierge(conversationId: string, customerId: string): Pr
       products: (productsRes.data ?? []).map(p => ({
         name: p.name, brand: p.brand, category: p.category, price: Number(p.price), in_stock: Number(p.stock) > 0,
       })),
+      promos,
       bookings,
     }
 
