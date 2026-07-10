@@ -9,7 +9,7 @@ import { messageBodySchema } from '@/lib/inbox/message'
 import { buildConciergeSystemPrompt, type ConciergeContext, type GroundingBooking, type GroundingPromo } from '@/lib/inbox/grounding'
 import { generateConciergeReply, type ConciergeTurn } from '@/lib/inbox/concierge'
 import { resolveGreetingName } from '@/lib/name'
-import { rlServerAction, checkLimit, checkAiBudget, recordAiUsage } from '@/utils/ratelimit'
+import { rlServerAction, checkLimit, checkAiBudget, recordAiUsage, AI_SYSTEM_SCOPE_KEY } from '@/utils/ratelimit'
 
 async function getIp(): Promise<string> {
   const h = await headers()
@@ -83,6 +83,15 @@ async function maybeRunConcierge(conversationId: string, customerId: string): Pr
     const budget = await checkAiBudget('customer', customerId)
     if (!budget.allowed) return // stays awaiting_merchant; a human will pick it up
 
+    // Platform-wide circuit breaker — a backstop in case the per-customer
+    // check above ever has a bug, so a single misbehaving account (or a bug)
+    // can't run up unbounded AI spend across the whole app.
+    const systemBudget = await checkAiBudget('system', AI_SYSTEM_SCOPE_KEY)
+    if (!systemBudget.allowed) {
+      console.error('[concierge] system-wide AI budget exhausted')
+      return
+    }
+
     // Build grounding context.
     const [servicesRes, productsRes, bookingsRes, promosRes, profileRes, messages] = await Promise.all([
       admin.from('services').select('name, category, starting_price, duration_hours').eq('is_active', true),
@@ -146,6 +155,7 @@ async function maybeRunConcierge(conversationId: string, customerId: string): Pr
     if (result.needsHuman) await store.setStatus(conversationId, 'awaiting_merchant')
 
     await recordAiUsage('customer', customerId, result.costUsd)
+    await recordAiUsage('system', AI_SYSTEM_SCOPE_KEY, result.costUsd)
   } catch (err) {
     console.error('[maybeRunConcierge]', err)
   }

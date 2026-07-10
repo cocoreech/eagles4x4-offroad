@@ -197,6 +197,10 @@ const DAY_SECONDS = 24 * 60 * 60
 
 type AiScope = 'customer' | 'admin' | 'system'
 
+// 'system' scope has no per-user dimension — every caller uses this same
+// fixed identifier so all AI spend accumulates into one platform-wide counter.
+export const AI_SYSTEM_SCOPE_KEY = 'platform'
+
 // Per-scope daily limits. 'system' is the platform-wide ceiling: no per-
 // generation count limit, only the dollar cap applies.
 const AI_GENERATION_LIMITS: Record<AiScope, number> = {

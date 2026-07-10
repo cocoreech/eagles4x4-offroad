@@ -23,6 +23,11 @@ An authenticated user account (`role`: `customer` / `staff` / `admin` / `super_a
 **Superseded:** the original launch decision below ("NO customer login") was reversed once accounts, the Inbox, and the AI Concierge shipped. Customer accounts now exist and are the home for booking tracking and two-way communication with the shop. This entry is kept for history — do not read it as current:
 > ~~NO customer login at launch. Only admin/owner login exists. Customer-facing login (whatever value it eventually carries) is post-launch. Login plays no role in the booking flow, ever.~~
 
+### Lead
+Contact info (name + email/phone) captured from an anonymous homepage visitor when the **AI Concierge** escalates their guest conversation to a human (`needs_human: true`) — an anonymous session has no other reachable channel, so capturing contact info is required to complete that handoff, and doubles as lead generation. A Lead is NOT an **Account** — it has no login capability and is not a `profiles` row; it exists only as contact info tied to that conversation.
+
+**Key decision:** matched to an Account by email if that person later signs up (no other link — see AI Concierge, "no auto-claim" for the conversation itself). On match, the Lead is marked **converted** (not deleted, not left untouched) — kept for conversion-rate history, but filtered out of the active staff follow-up queue.
+
 ### Build (community)
 A vehicle project shared by a user in the gallery. Two types:
 
@@ -47,6 +52,10 @@ A Touchpoint carries a message drafted from a template, which **admins can edit 
 The autonomous assistant that replies inside a customer's **Inbox** thread when no merchant is online. Grounded strictly in the live services/products catalog, app FAQ, current promos, and that customer's own bookings — it never invents facts or prices, and hands off to a human (`needs_human: true`) for anything outside that grounding (custom builds, diagnostics, exact quotes, complaints, booking changes/cancellations, or a customer wanting to **avail** a promo — availing is always a branch/staff action, never something the Concierge or the booking flow does itself). Distinct from a Touchpoint's "AI may suggest" drafting — the Concierge replies to the customer directly and unsupervised, in real time.
 
 **Key decision:** replies send autonomously, with no human review before the customer sees them — wrong answers are caught after the fact via admin spot-checking, not prevented before send. See [ADR-0003](docs/adr/0003-ai-concierge-autonomous-with-after-the-fact-review.md).
+
+**Key decision (planned):** the Concierge is being extended to anonymous homepage visitors (no account) via a chat widget — same grounding and escalation rules as the Inbox version, not a separate/simpler bot. A guest's conversation persists anonymously (browser session-scoped), not tied to any account; if the guest later creates an account, nothing links the two automatically (no auto-claim). This is distinct from a guest **Booking**, which remains fully decoupled from accounts as before.
+
+For a guest, `needs_human: true` requires capturing a name + email/phone in the widget before completing the handoff — an anonymous session has no reachable channel otherwise, so this doubles as lead capture. Staff then follow up the same way guest Touchpoints already work (email, or one-tap click-to-chat). The widget also shows a fixed (non-AI-driven) account-creation nudge after the guest's 2nd message — a deterministic UI prompt, not something the model decides to say. Because anonymous access has no account to attach a usage budget to, guest replies get their own, stricter daily budget protected against both single-session abuse and cookie-clearing retries (not just IP alone — the codebase already treats IP-only limiting as unreliable in the Philippines due to CGNAT).
 
 ---
 
@@ -78,6 +87,7 @@ The autonomous assistant that replies inside a customer's **Inbox** thread when 
 
 ## Open Questions / TBD
 
+- Should a guest be prompted to create an account after completing a Booking (not required, just offered)? Parked — separate from the homepage Concierge widget decision.
 - How do we link guest bookings to accounts when user creates one later? (email match? magic link?)
 - What's the moderation workflow for community builds? (admin dashboard? approval queue?)
 - When/how does the charity showcase go live? (separate page or homepage hero section?)
