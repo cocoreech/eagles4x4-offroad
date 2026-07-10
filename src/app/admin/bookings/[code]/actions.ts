@@ -23,6 +23,8 @@ import { emailSender } from '@/lib/touchpoints/channels'
 import { createTouchpointStore } from '@/lib/touchpoints/store'
 import { rescheduleChanged, buildRescheduleMessage } from '@/lib/bookings/rescheduleNotice'
 import { rlAdminGeneral, checkLimit } from '@/utils/ratelimit'
+import { isBookingMilestone, bookingMilestoneMessage } from '@/lib/notifications/milestones'
+import { createNotificationStore } from '@/lib/notifications/store'
 
 const STATUS_PIPELINE = [
   'pending', 'confirmed', 'in_progress', 'parts_installed',
@@ -48,6 +50,22 @@ async function getIp(): Promise<string> {
 async function adminRateGuard(actor: string) {
   const result = await checkLimit(rlAdminGeneral, `admin-action:${actor}:${await getIp()}`)
   return result.allowed
+}
+
+// Best-effort — a notification failure never blocks the status change.
+// No-ops for statuses that aren't milestones, and for guest bookings
+// (no customer_id, so nowhere to write an in-app notification).
+async function notifyBookingMilestone(bookingId: string, bookingCode: string, status: string) {
+  if (!isBookingMilestone(status)) return
+  try {
+    const admin = createServiceRoleClient()
+    const { data: booking } = await admin.from('bookings').select('customer_id').eq('id', bookingId).maybeSingle()
+    if (!booking?.customer_id) return
+    const { title, body } = bookingMilestoneMessage(status, bookingCode)
+    await createNotificationStore(admin).notifyCustomer(booking.customer_id, title, body, `/bookings/${bookingCode}`)
+  } catch (err) {
+    console.error('[notifyBookingMilestone]', err)
+  }
 }
 
 /**
@@ -83,6 +101,8 @@ export async function advanceStatus(formData: FormData) {
     return { error: 'Could not update status.' }
   }
 
+  await notifyBookingMilestone(parsed.data.bookingId, String(formData.get('bookingCode') ?? ''), parsed.data.newStatus)
+
   revalidatePath(`/admin/bookings`)
   revalidatePath(`/admin/bookings/${formData.get('bookingCode')}`)
   return { success: true }
@@ -112,6 +132,8 @@ export async function cancelBookingAdmin(formData: FormData) {
     console.error('[cancelBookingAdmin]', error)
     return { error: 'Could not cancel booking.' }
   }
+
+  await notifyBookingMilestone(bookingId, String(formData.get('bookingCode') ?? ''), 'cancelled')
 
   revalidatePath(`/admin/bookings`)
   return { success: true }
