@@ -53,6 +53,7 @@ export function createInboxStore(client: SupabaseClient) {
         .from('conversations')
         .update({
           last_message_at: new Date().toISOString(),
+          last_message_sender: input.sender,
           // A customer message flags the merchant to act; a merchant/bot reply
           // clears that flag so the "new" badge doesn't stick forever.
           status: input.sender === 'customer' ? 'awaiting_merchant' : 'open',
@@ -95,6 +96,14 @@ export function createInboxStore(client: SupabaseClient) {
         .maybeSingle()
       if (error) throw new Error(`hasUnreadForCustomer messages: ${error.message}`)
       return data !== null
+    },
+
+    async markReviewedByAdmin(conversationId: string): Promise<void> {
+      const { error } = await client
+        .from('conversations')
+        .update({ admin_reviewed_at: new Date().toISOString() })
+        .eq('id', conversationId)
+      if (error) throw new Error(`markReviewedByAdmin: ${error.message}`)
     },
 
     async markDoorbellSent(conversationId: string): Promise<void> {
