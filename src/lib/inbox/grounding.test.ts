@@ -66,4 +66,11 @@ describe('buildConciergeSystemPrompt', () => {
     expect(p).toMatch(/avail/i)
     expect(p).toMatch(/branch\/staff action/i)
   })
+
+  it('includes branch hours and address, and tells the bot to answer them directly', () => {
+    const p = buildConciergeSystemPrompt(ctx)
+    expect(p).toContain('Dasmariñas, Cavite')
+    expect(p).toMatch(/8:00 AM/)
+    expect(p).toMatch(/BRANCHES/)
+  })
 })

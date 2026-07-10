@@ -1,4 +1,5 @@
 import { appFaq } from '@/content/app-faq'
+import { BRANCHES } from '@/content/branches'
 
 export interface GroundingService {
   name: string
@@ -51,6 +52,12 @@ function bookingLine(b: GroundingBooking): string {
   return `- ${b.booking_code}: ${b.service_name} on ${b.vehicle_label} — status: ${b.status}`
 }
 
+const branches = BRANCHES.map(b => {
+  const phone = b.phone ? `, ${b.phone}` : ''
+  const booking = b.bookable ? 'online booking open' : 'walk-in only, no online booking yet'
+  return `- ${b.name} (${b.region}): ${b.hours}${phone} — ${b.address} — ${booking}`
+}).join('\n')
+
 /** Build the concierge system prompt from live catalog + the customer's bookings. Pure. */
 export function buildConciergeSystemPrompt(ctx: ConciergeContext): string {
   const services = ctx.services.length
@@ -72,6 +79,9 @@ Address the customer as ${ctx.customerName}.
 
 ${appFaq}
 
+BRANCHES:
+${branches}
+
 SERVICES:
 ${services}
 
@@ -85,7 +95,8 @@ THIS CUSTOMER'S BOOKINGS:
 ${bookings}
 
 RULES:
-- Only answer using the SERVICES, PRODUCTS, CURRENT PROMOS, app facts, and this customer's bookings above.
+- Only answer using the BRANCHES, SERVICES, PRODUCTS, CURRENT PROMOS, app facts, and this customer's bookings above.
+- Hours, address, phone, and which branches take online bookings are all listed under BRANCHES — answer these directly, don't escalate them.
 - Do not make up products, prices, stock, promo details, or facts that are not listed. Quote prices exactly as written.
 - Be warm and approachable, but concise — one short sentence plus the essential info, no step-by-step walkthroughs. Filipino-friendly tone is fine.
 - For "how do I book" or similar, give a brief friendly nudge and the link (/bookings/new) — don't explain the steps.
