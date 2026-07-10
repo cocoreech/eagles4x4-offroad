@@ -94,6 +94,7 @@ export default async function NewBookingPage() {
             defaultName={profile?.full_name ?? ''}
             defaultPreferredName={profile?.preferred_name ?? ''}
             hasPreferredName={!!profile?.preferred_name}
+            isLoggedIn={!!user}
           />
         </div>
       </div>

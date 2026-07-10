@@ -32,11 +32,12 @@ const peso = (n: number) => '₱' + Number(n ?? 0).toLocaleString('en-PH')
 export default async function BookingSuccessPage(
   props: Readonly<{
     params: Promise<{ code: string }>
-    searchParams: Promise<{ payment?: string }>
+    searchParams: Promise<{ payment?: string; acct?: string }>
   }>
 ) {
   const { code } = await props.params
-  const { payment } = await props.searchParams
+  const { payment, acct } = await props.searchParams
+  const accountEmailSent = acct === '1'
 
   // Service-role read: guest bookings (customer_id NULL) are invisible to the
   // RLS-scoped client, so we fetch authoritatively here and only render the
@@ -182,7 +183,17 @@ export default async function BookingSuccessPage(
             className="mt-8 rounded-md p-6"
             style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
           >
-            {isGuest ? (
+            {isGuest && accountEmailSent ? (
+              <>
+                <h2 className="font-display font-bold text-lg mb-2">
+                  Check your <em style={{ color: 'var(--color-accent)' }}>email</em>
+                </h2>
+                <p className="text-sm" style={{ color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
+                  We sent a one-tap link to {booking.contact_email ?? 'your email'} — click it anytime
+                  to open your account. No password needed, and you won&apos;t need to log in again.
+                </p>
+              </>
+            ) : isGuest ? (
               <>
                 <h2 className="font-display font-bold text-lg mb-2">
                   Track this build with an <em style={{ color: 'var(--color-accent)' }}>account</em>

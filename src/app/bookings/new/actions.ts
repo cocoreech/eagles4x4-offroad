@@ -81,6 +81,7 @@ const schema = z.object({
                         ),
   notes:               z.string().transform(s => sanitizeMultiline(s, 1000))
                         .optional(),
+  createAccount:       z.preprocess(v => v === 'true' || v === true || v === 'on', z.boolean()),
 }).superRefine((d, ctx) => {
   // Cross-field: model must belong to the chosen make
   if (!isValidMakeModel(d.vehicleMake, d.vehicleModel)) {
@@ -133,6 +134,7 @@ export async function createBooking(formData: FormData) {
     contactPhoneLocal:   formData.get('contactPhoneLocal'),
     contactEmail:        formData.get('contactEmail') || '',
     notes:               formData.get('notes') || '',
+    createAccount:       formData.get('createAccount') || 'false',
   })
 
   if (!parsed.success) {
@@ -333,6 +335,30 @@ export async function createBooking(formData: FormData) {
     }
   }
 
+  // 7a. Best-effort account creation for guests who opted in (pre-checked box).
+  //     Sends a one-tap magic link — no password. shouldCreateUser makes the
+  //     auth.users row exist immediately even before they click it. The link
+  //     lands on /auth/callback, which already exchanges the token AND calls
+  //     linkGuestBookings() to attach this (and any other) guest booking under
+  //     this email to the new account — no extra wiring needed here.
+  let accountEmailSent = false
+  if (!user && d.createAccount) {
+    try {
+      const accountSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+      const { error: otpErr } = await supabase.auth.signInWithOtp({
+        email: d.contactEmail,
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: `${accountSiteUrl}/auth/callback?next=/bookings/${booking.booking_code}`,
+        },
+      })
+      if (otpErr) console.error('[createBooking] account signup', otpErr)
+      else accountEmailSent = true
+    } catch (err) {
+      console.error('[createBooking] account signup', err)
+    }
+  }
+
   // 7b. Best-effort confirmation email — booking + items already persisted, so a
   //     failure here (incl. missing RESEND_API_KEY) is logged and ignored.
   try {
@@ -364,10 +390,11 @@ export async function createBooking(formData: FormData) {
   const depositCentavos = parseInt(process.env.NEXT_PUBLIC_BOOKING_DEPOSIT_CENTAVOS ?? '50000', 10)
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
   const pkConfigured = !!process.env.PAYMONGO_SECRET_KEY && !process.env.PAYMONGO_SECRET_KEY.startsWith('<paste')
+  const acctParam = accountEmailSent ? '&acct=1' : ''
 
   if (!pkConfigured) {
     console.warn('[createBooking] PayMongo not configured — skipping deposit')
-    redirect(`/bookings/${booking.booking_code}/success`)
+    redirect(`/bookings/${booking.booking_code}/success${accountEmailSent ? '?acct=1' : ''}`)
   }
 
   try {
@@ -376,8 +403,8 @@ export async function createBooking(formData: FormData) {
       bookingCode:  booking.booking_code,
       amountCentavos: depositCentavos,
       description:  `₱500 deposit to confirm booking ${booking.booking_code}`,
-      successUrl:   `${siteUrl}/bookings/${booking.booking_code}/success?payment=success`,
-      cancelUrl:    `${siteUrl}/bookings/${booking.booking_code}/success?payment=cancelled`,
+      successUrl:   `${siteUrl}/bookings/${booking.booking_code}/success?payment=success${acctParam}`,
+      cancelUrl:    `${siteUrl}/bookings/${booking.booking_code}/success?payment=cancelled${acctParam}`,
       customerEmail: user?.email ?? d.contactEmail,
       customerPhone: normalizeE164(d.contactPhoneDial, d.contactPhoneLocal) ?? undefined,
     })
@@ -406,6 +433,6 @@ export async function createBooking(formData: FormData) {
   } catch (err) {
     console.error('[createBooking] checkout creation failed', err)
     // Booking row exists but no checkout — show the confirmation anyway.
-    redirect(`/bookings/${booking.booking_code}/success?payment=error`)
+    redirect(`/bookings/${booking.booking_code}/success?payment=error${acctParam}`)
   }
 }
