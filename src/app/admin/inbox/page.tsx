@@ -22,6 +22,10 @@ export default async function AdminInboxPage({
   if (selected) {
     await store.markRead(selected, 'merchant')
     await store.markReviewedByAdmin(selected)
+    const reviewedIdx = conversations.findIndex(c => c.id === selected)
+    if (reviewedIdx !== -1) {
+      conversations[reviewedIdx] = { ...conversations[reviewedIdx], admin_reviewed_at: new Date().toISOString() }
+    }
   }
 
   const { data: presence } = await supabase
