@@ -76,6 +76,27 @@ export function createInboxStore(client: SupabaseClient) {
       if (error) throw new Error(`markRead: ${error.message}`)
     },
 
+    async hasUnreadForCustomer(customerId: string): Promise<boolean> {
+      const { data: convo, error: convoErr } = await client
+        .from('conversations')
+        .select('id')
+        .eq('customer_id', customerId)
+        .maybeSingle()
+      if (convoErr) throw new Error(`hasUnreadForCustomer conversation: ${convoErr.message}`)
+      if (!convo) return false
+
+      const { data, error } = await client
+        .from('conversation_messages')
+        .select('id')
+        .eq('conversation_id', convo.id)
+        .is('read_at', null)
+        .in('sender', ['merchant', 'bot'])
+        .limit(1)
+        .maybeSingle()
+      if (error) throw new Error(`hasUnreadForCustomer messages: ${error.message}`)
+      return data !== null
+    },
+
     async markDoorbellSent(conversationId: string): Promise<void> {
       const { error } = await client
         .from('conversations')
