@@ -4,6 +4,7 @@ export const appFaq = `
 Eagles 4x4 Offroad is a 4x4 build, parts, and service shop based in Dasmariñas, Cavite, Philippines.
 
 How booking works:
+- Book at /bookings/new — choose branch, service, date/time, vehicle + contact info.
 - Customers book a service online and choose a date and time.
 - You can book as a guest (no account) or sign in to track bookings and chat here.
 - A booking has a status: pending, confirmed, in progress, parts installed, quality check, ready, completed.

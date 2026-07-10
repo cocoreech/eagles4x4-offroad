@@ -6,6 +6,7 @@ import { createClient } from '@/utils/supabase/client'
 import type { ConversationMessage } from '@/types/inbox'
 import { inboxCopy } from '@/content/inbox'
 import { sendCustomerMessage } from '@/app/inbox/actions'
+import { linkify } from '@/lib/linkify'
 
 interface Props {
   conversationId: string
@@ -86,7 +87,7 @@ export function InboxThread({ conversationId, initial, isAdmin = false, onSend }
                   mine ? 'bg-accent text-black' : 'bg-surface text-text-primary',
                 ].join(' ')}
               >
-                {m.body}
+                {linkify(m.body)}
               </span>
             </li>
           )
