@@ -20,6 +20,8 @@ An authenticated user account (`role`: `customer` / `staff` / `admin` / `super_a
 
 **Key decision:** Login exists only where there is real value behind it — that value has grown since launch (see below) but the principle is unchanged: login is additive, never a gate in the booking flow.
 
+**Key decision:** Accounts are passwordless — sign-in is a one-tap emailed link/code (Supabase OTP), never a password field, for both existing sign-in and first-time creation. On the booking form, a guest sees a pre-checked (opt-out, not required) "create an account" box; checking it fires the account-creation email immediately at booking time so the signup is counted right away, without blocking or slowing down guest checkout. A guest booking is linked to an account by matching `contact_email` the moment that email verifies (`linkGuestBookings()`, called from both `/login` and `/auth/callback`) — this also covers a guest who creates an account completely separately, unprompted, days later.
+
 **Superseded:** the original launch decision below ("NO customer login") was reversed once accounts, the Inbox, and the AI Concierge shipped. Customer accounts now exist and are the home for booking tracking and two-way communication with the shop. This entry is kept for history — do not read it as current:
 > ~~NO customer login at launch. Only admin/owner login exists. Customer-facing login (whatever value it eventually carries) is post-launch. Login plays no role in the booking flow, ever.~~
 
@@ -87,7 +89,5 @@ For a guest, `needs_human: true` requires capturing a name + email/phone in the 
 
 ## Open Questions / TBD
 
-- Should a guest be prompted to create an account after completing a Booking (not required, just offered)? Parked — separate from the homepage Concierge widget decision.
-- How do we link guest bookings to accounts when user creates one later? (email match? magic link?)
 - What's the moderation workflow for community builds? (admin dashboard? approval queue?)
 - When/how does the charity showcase go live? (separate page or homepage hero section?)
