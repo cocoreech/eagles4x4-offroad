@@ -6,6 +6,7 @@
 import Link from 'next/link'
 import { useState, useRef, useEffect } from 'react'
 import BrandMark from './BrandMark'
+import NotificationBell, { type NotificationItem } from './NotificationBell'
 
 // ── Dropdown data ─────────────────────────────────────────────────────────────
 
@@ -116,9 +117,35 @@ function NavLink({ href, label }: Readonly<{ href: string; label: string }>) {
   )
 }
 
+function EnvelopeLink({ hasUnread }: Readonly<{ hasUnread: boolean }>) {
+  return (
+    <Link href="/inbox" className="relative p-2" aria-label={hasUnread ? 'Inbox — new message' : 'Inbox'}>
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <rect x="2" y="4" width="16" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.4" style={{ color: 'var(--color-text-muted)' }} />
+        <path d="M2.5 5L10 11L17.5 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-text-muted)' }} />
+      </svg>
+      {hasUnread && (
+        <span className="absolute top-1 right-1 w-2 h-2 rounded-full" style={{ background: 'var(--color-accent)' }} />
+      )}
+    </Link>
+  )
+}
+
 // ── Main nav ─────────────────────────────────────────────────────────────────
 
-export default function PublicNav({ user, isAdmin }: Readonly<{ user?: { id: string } | null; isAdmin?: boolean }>) {
+export default function PublicNav({
+  user,
+  isAdmin,
+  notificationItems = [],
+  unreadNotificationCount = 0,
+  hasUnreadMessages = false,
+}: Readonly<{
+  user?: { id: string } | null
+  isAdmin?: boolean
+  notificationItems?: NotificationItem[]
+  unreadNotificationCount?: number
+  hasUnreadMessages?: boolean
+}>) {
   const sp = useDropdown()
   const about = useDropdown()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -165,6 +192,8 @@ export default function PublicNav({ user, isAdmin }: Readonly<{ user?: { id: str
             <>
               {!isAdmin && (
                 <>
+                  <EnvelopeLink hasUnread={hasUnreadMessages} />
+                  <NotificationBell items={notificationItems} unreadCount={unreadNotificationCount} />
                   <Link
                     href="/bookings"
                     className="hidden sm:inline-block text-[11px] font-semibold tracking-[0.1em] uppercase"
