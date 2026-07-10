@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { requireAdmin } from '@/lib/auth'
 import { createClient } from '@/utils/supabase/server'
 import { createInboxStore } from '@/lib/inbox/store'
+import { isUnreviewedBotReply } from '@/lib/inbox/review'
 import { inboxCopy } from '@/content/inbox'
 import { AdminThread } from './AdminThread'
 
@@ -18,7 +19,10 @@ export default async function AdminInboxPage({
 
   const selected = c ?? conversations[0]?.id ?? null
   const messages = selected ? await store.listMessages(selected) : []
-  if (selected) await store.markRead(selected, 'merchant')
+  if (selected) {
+    await store.markRead(selected, 'merchant')
+    await store.markReviewedByAdmin(selected)
+  }
 
   const { data: presence } = await supabase
     .from('merchant_presence')
@@ -49,6 +53,11 @@ export default async function AdminInboxPage({
                 {conv.status === 'awaiting_merchant' && (
                   <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs text-black">
                     new
+                  </span>
+                )}
+                {isUnreviewedBotReply(conv) && (
+                  <span className="ml-2 rounded-full border border-accent px-2 py-0.5 text-xs text-accent">
+                    🤖 review
                   </span>
                 )}
               </Link>
