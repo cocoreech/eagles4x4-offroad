@@ -12,8 +12,8 @@ import { requireAdmin } from '@/lib/auth'
 import { createClient, createServiceRoleClient } from '@/utils/supabase/server'
 import { sanitizeText, sanitizeMultiline } from '@/lib/sanitize'
 import { rlAdminGeneral, checkLimit } from '@/utils/ratelimit'
-import { shouldNotifyPromoPublish, promoNotificationBody } from '@/lib/notifications/promoPublish'
-import { createNotificationStore } from '@/lib/notifications/store'
+import { shouldNotifyCatalogPublish } from '@/lib/notifications/catalogPublish'
+import { notifyCatalogPublish } from '@/lib/notifications/publishCatalogItem'
 
 async function getIp(): Promise<string> {
   const h = await headers()
@@ -28,20 +28,14 @@ async function adminRateGuard(userId: string) {
 }
 
 // Best-effort — a notification failure never blocks saving the event.
-async function notifyCustomersOfPromo(event: { slug: string; title: string; description: string | null }) {
-  try {
-    const admin = createServiceRoleClient()
-    const { data: customers } = await admin.from('profiles').select('id').eq('role', 'customer')
-    const ids = (customers ?? []).map(c => c.id)
-    await createNotificationStore(admin).notifyCustomers(
-      ids,
-      event.title,
-      promoNotificationBody(event.description),
-      `/events/${event.slug}`,
-    )
-  } catch (err) {
-    console.error('[notifyCustomersOfPromo]', err)
-  }
+async function notifyCustomersOfEvent(event: { slug: string; title: string; description: string | null; event_type: string | null }) {
+  const admin = createServiceRoleClient()
+  await notifyCatalogPublish(admin, {
+    kind: event.event_type === 'promo' ? 'Promo' : 'Event',
+    title: event.title,
+    description: event.description,
+    path: `/events/${event.slug}`,
+  })
 }
 
 const EVENT_TYPES = ['trail_ride', 'product_launch', 'promo', 'meetup', 'workshop'] as const
@@ -105,8 +99,8 @@ export async function createEvent(formData: FormData) {
     return { error: error.code === '23505' ? 'An event with this slug already exists.' : 'Could not save event.' }
   }
 
-  if (shouldNotifyPromoPublish({ eventType: d.event_type || null, isPublished: d.is_published, wasPublished: false })) {
-    await notifyCustomersOfPromo({ slug: d.slug, title: d.title, description: d.description || null })
+  if (shouldNotifyCatalogPublish(d.is_published, false)) {
+    await notifyCustomersOfEvent({ slug: d.slug, title: d.title, description: d.description || null, event_type: d.event_type || null })
   }
 
   revalidatePath('/admin/events')
@@ -146,8 +140,8 @@ export async function updateEvent(formData: FormData) {
     return { error: 'Could not save changes.' }
   }
 
-  if (existing && shouldNotifyPromoPublish({ eventType: d.event_type || null, isPublished: d.is_published, wasPublished: existing.is_published })) {
-    await notifyCustomersOfPromo({ slug: d.slug, title: d.title, description: d.description || null })
+  if (existing && shouldNotifyCatalogPublish(d.is_published, existing.is_published)) {
+    await notifyCustomersOfEvent({ slug: d.slug, title: d.title, description: d.description || null, event_type: d.event_type || null })
   }
 
   revalidatePath('/admin/events')
@@ -177,8 +171,8 @@ export async function publishEvent(formData: FormData) {
   const { error } = await supabase.from('events').update({ is_published: true }).eq('id', id)
   if (error) return { error: 'Could not publish.' }
 
-  if (shouldNotifyPromoPublish({ eventType: existing.event_type, isPublished: true, wasPublished: existing.is_published })) {
-    await notifyCustomersOfPromo({ slug: existing.slug, title: existing.title, description: existing.description })
+  if (shouldNotifyCatalogPublish(true, existing.is_published)) {
+    await notifyCustomersOfEvent({ slug: existing.slug, title: existing.title, description: existing.description, event_type: existing.event_type })
   }
 
   revalidatePath('/admin/events')

@@ -18,9 +18,11 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { z } from 'zod'
 import { requireAdmin } from '@/lib/auth'
-import { createClient } from '@/utils/supabase/server'
+import { createClient, createServiceRoleClient } from '@/utils/supabase/server'
 import { sanitizeText, sanitizeMultiline } from '@/lib/sanitize'
 import { rlAdminGeneral, checkLimit } from '@/utils/ratelimit'
+import { shouldNotifyCatalogPublish } from '@/lib/notifications/catalogPublish'
+import { notifyCatalogPublish } from '@/lib/notifications/publishCatalogItem'
 
 async function getIp(): Promise<string> {
   const h = await headers()
@@ -31,6 +33,17 @@ async function getIp(): Promise<string> {
 async function adminRateGuard(userId: string) {
   const result = await checkLimit(rlAdminGeneral, `products-action:${userId}:${await getIp()}`)
   return result.allowed
+}
+
+// Best-effort — a notification failure never blocks saving the product.
+async function notifyCustomersOfProduct(product: { name: string; description: string | null }) {
+  const admin = createServiceRoleClient()
+  await notifyCatalogPublish(admin, {
+    kind: 'Product',
+    title: product.name,
+    description: product.description,
+    path: '/services',
+  })
 }
 
 const PRODUCT_CATEGORIES = ['suspension','wheels-tires','recovery','lighting','protection'] as const
@@ -95,6 +108,10 @@ export async function createProduct(formData: FormData) {
     return { error: error.code === '23505' ? 'A product with this slug already exists.' : 'Could not save product.' }
   }
 
+  if (shouldNotifyCatalogPublish(d.isActive, false)) {
+    await notifyCustomersOfProduct({ name: d.name, description: d.description || null })
+  }
+
   revalidatePath('/admin/products')
   redirect('/admin/products?created=1')
 }
@@ -114,6 +131,7 @@ export async function updateProduct(formData: FormData) {
   const d = parsed.data
 
   const supabase = await createClient()
+  const { data: existing } = await supabase.from('products').select('is_active').eq('id', id).maybeSingle()
   const { error } = await supabase.from('products').update({
     slug:        d.slug,
     name:        d.name,
@@ -129,6 +147,10 @@ export async function updateProduct(formData: FormData) {
   if (error) {
     console.error('[updateProduct]', error)
     return { error: 'Could not save changes.' }
+  }
+
+  if (existing && shouldNotifyCatalogPublish(d.isActive, existing.is_active)) {
+    await notifyCustomersOfProduct({ name: d.name, description: d.description || null })
   }
 
   revalidatePath('/admin/products')
@@ -157,8 +179,12 @@ export async function activateProduct(formData: FormData) {
   const id = String(formData.get('id') ?? '')
   if (!z.string().uuid().safeParse(id).success) return { error: 'Invalid product id.' }
   const supabase = await createClient()
+  const { data: existing } = await supabase.from('products').select('name, description, is_active').eq('id', id).maybeSingle()
   const { error } = await supabase.from('products').update({ is_active: true }).eq('id', id)
   if (error) return { error: 'Could not activate.' }
+  if (existing && shouldNotifyCatalogPublish(true, existing.is_active)) {
+    await notifyCustomersOfProduct({ name: existing.name, description: existing.description })
+  }
   revalidatePath('/admin/products')
   return { success: true }
 }

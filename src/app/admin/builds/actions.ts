@@ -15,9 +15,10 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { z } from 'zod'
 import { requireAdmin } from '@/lib/auth'
-import { createClient } from '@/utils/supabase/server'
+import { createClient, createServiceRoleClient } from '@/utils/supabase/server'
 import { sanitizeText, sanitizeMultiline } from '@/lib/sanitize'
 import { rlAdminGeneral, checkLimit } from '@/utils/ratelimit'
+import { notifyCatalogPublish } from '@/lib/notifications/publishCatalogItem'
 
 async function getIp(): Promise<string> {
   const h = await headers()
@@ -127,6 +128,14 @@ export async function createBuild(formData: FormData) {
     console.error('[createBuild]', error)
     return { error: error.code === '23505' ? 'A build with this slug already exists.' : 'Could not save build.' }
   }
+
+  const admin = createServiceRoleClient()
+  await notifyCatalogPublish(admin, {
+    kind: 'Build',
+    title: d.title,
+    description: d.description || null,
+    path: `/builds/${d.slug}`,
+  })
 
   revalidatePath('/admin/builds')
   revalidatePath('/')

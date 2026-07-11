@@ -11,10 +11,12 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { z } from 'zod'
 import { requireAdmin } from '@/lib/auth'
-import { createClient } from '@/utils/supabase/server'
+import { createClient, createServiceRoleClient } from '@/utils/supabase/server'
 import { sanitizeText, sanitizeMultiline } from '@/lib/sanitize'
 import { rlAdminGeneral, checkLimit } from '@/utils/ratelimit'
 import { deleteMode } from '@/lib/services/deleteDecision'
+import { shouldNotifyCatalogPublish } from '@/lib/notifications/catalogPublish'
+import { notifyCatalogPublish } from '@/lib/notifications/publishCatalogItem'
 
 async function getIp(): Promise<string> {
   const h = await headers()
@@ -25,6 +27,17 @@ async function getIp(): Promise<string> {
 async function adminRateGuard(userId: string) {
   const result = await checkLimit(rlAdminGeneral, `services-action:${userId}:${await getIp()}`)
   return result.allowed
+}
+
+// Best-effort — a notification failure never blocks saving the service.
+async function notifyCustomersOfService(service: { name: string; description: string | null }) {
+  const admin = createServiceRoleClient()
+  await notifyCatalogPublish(admin, {
+    kind: 'Service',
+    title: service.name,
+    description: service.description,
+    path: '/services',
+  })
 }
 
 const SERVICE_CATEGORIES = ['suspension','protection','recovery','lighting','full-builds','accessories'] as const
@@ -90,6 +103,10 @@ export async function createService(formData: FormData) {
     return { error: error.code === '23505' ? 'A service with this slug already exists.' : 'Could not save service.' }
   }
 
+  if (shouldNotifyCatalogPublish(d.isActive, false)) {
+    await notifyCustomersOfService({ name: d.name, description: d.description || null })
+  }
+
   revalidatePath('/admin/services')
   redirect('/admin/services?created=1')
 }
@@ -109,6 +126,7 @@ export async function updateService(formData: FormData) {
   const d = parsed.data
 
   const supabase = await createClient()
+  const { data: existing } = await supabase.from('services').select('is_active').eq('id', id).maybeSingle()
   const { error } = await supabase.from('services').update({
     slug:           d.slug,
     name:           d.name,
@@ -125,6 +143,10 @@ export async function updateService(formData: FormData) {
   if (error) {
     console.error('[updateService]', error)
     return { error: 'Could not save changes.' }
+  }
+
+  if (existing && shouldNotifyCatalogPublish(d.isActive, existing.is_active)) {
+    await notifyCustomersOfService({ name: d.name, description: d.description || null })
   }
 
   revalidatePath('/admin/services')
@@ -193,8 +215,12 @@ export async function activateService(formData: FormData) {
   if (!z.string().uuid().safeParse(id).success) return { error: 'Invalid service id.' }
 
   const supabase = await createClient()
+  const { data: existing } = await supabase.from('services').select('name, description, is_active').eq('id', id).maybeSingle()
   const { error } = await supabase.from('services').update({ is_active: true }).eq('id', id)
   if (error) return { error: 'Could not activate.' }
+  if (existing && shouldNotifyCatalogPublish(true, existing.is_active)) {
+    await notifyCustomersOfService({ name: existing.name, description: existing.description })
+  }
   revalidatePath('/admin/services')
   return { success: true }
 }
