@@ -54,7 +54,6 @@ export default function BookingForm({
   const [branch, setBranch] = useState<BranchSlug>('cavite')
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
-  const [createAccount, setCreateAccount] = useState(true)
 
   // Hydrate from the /services Quote Calculator if the customer came from there.
   // We map slugs → IDs server-data-side, so a stale cart with deleted items
@@ -253,21 +252,6 @@ export default function BookingForm({
             required
           />
         </div>
-        {!isLoggedIn && (
-          <label className="mt-4 flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              name="createAccount"
-              checked={createAccount}
-              onChange={(e) => setCreateAccount(e.target.checked)}
-              className="mt-0.5"
-            />
-            <span className="text-xs" style={{ color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
-              Create an account so you can track this booking — we&apos;ll email you a one-tap
-              link, no password needed. Uncheck to book as a guest instead.
-            </span>
-          </label>
-        )}
         <div className="mt-4">
           <label className="block">
             <span

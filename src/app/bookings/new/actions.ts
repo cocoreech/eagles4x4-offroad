@@ -81,7 +81,6 @@ const schema = z.object({
                         ),
   notes:               z.string().transform(s => sanitizeMultiline(s, 1000))
                         .optional(),
-  createAccount:       z.preprocess(v => v === 'true' || v === true || v === 'on', z.boolean()),
 }).superRefine((d, ctx) => {
   // Cross-field: model must belong to the chosen make
   if (!isValidMakeModel(d.vehicleMake, d.vehicleModel)) {
@@ -134,7 +133,6 @@ export async function createBooking(formData: FormData) {
     contactPhoneLocal:   formData.get('contactPhoneLocal'),
     contactEmail:        formData.get('contactEmail') || '',
     notes:               formData.get('notes') || '',
-    createAccount:       formData.get('createAccount') || 'false',
   })
 
   if (!parsed.success) {
@@ -335,14 +333,14 @@ export async function createBooking(formData: FormData) {
     }
   }
 
-  // 7a. Best-effort account creation for guests who opted in (pre-checked box).
-  //     Sends a one-tap magic link — no password. shouldCreateUser makes the
-  //     auth.users row exist immediately even before they click it. The link
-  //     lands on /auth/callback, which already exchanges the token AND calls
+  // 7a. Auto-create an account for every guest booking. Sends a one-tap magic
+  //     link — no password. shouldCreateUser makes the auth.users row exist
+  //     immediately even before they click the link. The link lands on
+  //     /auth/callback, which already exchanges the token AND calls
   //     linkGuestBookings() to attach this (and any other) guest booking under
   //     this email to the new account — no extra wiring needed here.
   let accountEmailSent = false
-  if (!user && d.createAccount) {
+  if (!user) {
     try {
       const accountSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
       const { error: otpErr } = await supabase.auth.signInWithOtp({
