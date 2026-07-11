@@ -34,7 +34,13 @@ export async function POST(req: NextRequest) {
 
     const { data: bookings, error: bookingErr } = await admin
       .from('bookings')
-      .select('id, booking_code, customer_id, contact_email, contact_name, preferred_name, scheduled_date, scheduled_time')
+      .select(`
+        id, booking_code, customer_id, contact_email, contact_name, preferred_name,
+        scheduled_date, scheduled_time, status,
+        vehicle_make_snapshot, vehicle_model_snapshot, vehicle_year_snapshot,
+        vehicles ( make, model, year ),
+        booking_items ( name_snapshot, item_type )
+      `)
       .eq('scheduled_date', tomorrowIso)
       .eq('status', 'pending') // Only remind for pending bookings
 
@@ -68,18 +74,30 @@ export async function POST(req: NextRequest) {
           contactName: booking.contact_name,
         })
 
-        // Email reminder (guest or customer)
+        // Resolve vehicle label (prefer current vehicles table, fall back to snapshot)
+        const vehicle = booking.vehicles as any
+        const make = vehicle?.make ?? booking.vehicle_make_snapshot
+        const model = vehicle?.model ?? booking.vehicle_model_snapshot
+        const year = vehicle?.year ?? booking.vehicle_year_snapshot
+        const vehicleLabel = [year, make, model].filter(Boolean).join(' ').trim() || 'your vehicle'
+
+        // Resolve service name
+        const bookingItems = booking.booking_items as any[] ?? []
+        const service = bookingItems.find(i => i.item_type === 'service')?.name_snapshot ?? 'service'
+
+        // Email reminder (guest or customer) — Concierge-like tone
         if (booking.contact_email) {
-          const subject = `Reminder: Your Eagles 4x4 appointment is tomorrow at ${booking.scheduled_time}`
+          const subject = `Tomorrow at ${booking.scheduled_time}: Your Eagles 4x4 appointment`
           const body = [
             `Hi ${customerName},`,
             ``,
-            `Your appointment is scheduled for tomorrow, ${booking.scheduled_date} at ${booking.scheduled_time}.`,
+            `Just a friendly heads-up — your appointment is tomorrow (${booking.scheduled_date}) at ${booking.scheduled_time}.`,
+            `We're excited to work on your ${vehicleLabel} and get that ${service} sorted for you.`,
             ``,
             `Booking code: ${booking.booking_code}`,
             ``,
-            `See you soon!`,
-            brand.name,
+            `See you then!`,
+            `${brand.name}`,
           ].join('\n')
 
           const res = await sender.send({
