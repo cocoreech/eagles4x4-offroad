@@ -39,7 +39,8 @@ export async function POST(req: NextRequest) {
         scheduled_date, scheduled_time, status,
         vehicle_make_snapshot, vehicle_model_snapshot, vehicle_year_snapshot,
         vehicles ( make, model, year ),
-        booking_items ( name_snapshot, item_type )
+        booking_items ( name_snapshot, item_type ),
+        mechanic:assigned_to ( preferred_name, full_name )
       `)
       .eq('scheduled_date', tomorrowIso)
       .eq('status', 'pending') // Only remind for pending bookings
@@ -85,19 +86,24 @@ export async function POST(req: NextRequest) {
         const bookingItems = booking.booking_items as any[] ?? []
         const service = bookingItems.find(i => i.item_type === 'service')?.name_snapshot ?? 'service'
 
-        // Email reminder (guest or customer) — Concierge-like tone
+        // Resolve mechanic name
+        const mechanic = booking.mechanic as any
+        const mechanicName = mechanic?.preferred_name ?? mechanic?.full_name ?? 'the team'
+
+        // Email reminder (guest or customer) — Concierge-like tone, signed by mechanic
         if (booking.contact_email) {
           const subject = `Tomorrow at ${booking.scheduled_time}: Your Eagles 4x4 appointment`
           const body = [
             `Hi ${customerName},`,
             ``,
             `Just a friendly heads-up — your appointment is tomorrow (${booking.scheduled_date}) at ${booking.scheduled_time}.`,
-            `We're excited to work on your ${vehicleLabel} and get that ${service} sorted for you.`,
+            `${mechanicName} and I are excited to work on your ${vehicleLabel} and get that ${service} sorted for you.`,
             ``,
             `Booking code: ${booking.booking_code}`,
             ``,
             `See you then!`,
-            `${brand.name}`,
+            `${mechanicName}`,
+            `Eagles 4x4`,
           ].join('\n')
 
           const res = await sender.send({

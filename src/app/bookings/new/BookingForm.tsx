@@ -32,9 +32,16 @@ type Product = {
 
 const QUOTE_KEY = 'eagles4x4.quote'
 
+type Mechanic = {
+  id: string
+  preferred_name: string | null
+  full_name: string | null
+}
+
 export default function BookingForm({
   services,
   products,
+  mechanics,
   defaultEmail,
   defaultName,
   defaultPreferredName,
@@ -43,6 +50,7 @@ export default function BookingForm({
 }: Readonly<{
   services: Service[]
   products: Product[]
+  mechanics: Mechanic[]
   defaultEmail: string
   defaultName: string
   defaultPreferredName: string
@@ -52,6 +60,7 @@ export default function BookingForm({
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [prefilledNotes, setPrefilledNotes] = useState<string>('')
   const [branch, setBranch] = useState<BranchSlug>('cavite')
+  const [assignedTo, setAssignedTo] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
 
@@ -253,6 +262,36 @@ export default function BookingForm({
           />
         </div>
         <div className="mt-4">
+          <label className="block">
+            <span
+              className="block text-[10px] font-bold tracking-[0.15em] uppercase mb-2"
+              style={{ color: 'var(--color-text-muted)' }}
+            >
+              Assign Mechanic *
+            </span>
+            <select
+              name="assignedTo"
+              value={assignedTo}
+              onChange={(e) => setAssignedTo(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-sm outline-none text-sm transition"
+              style={{
+                background: 'var(--color-bg)',
+                border: '1px solid var(--color-border)',
+                color: 'var(--color-text-primary)',
+              }}
+              onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--color-accent)')}
+              onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--color-border)')}
+            >
+              <option value="">Select a mechanic...</option>
+              {mechanics.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.preferred_name || m.full_name || m.id}
+                </option>
+              ))}
+            </select>
+          </label>
+
           <label className="block">
             <span
               className="block text-[10px] font-bold tracking-[0.15em] uppercase mb-2"

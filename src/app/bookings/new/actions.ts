@@ -81,6 +81,7 @@ const schema = z.object({
                         ),
   notes:               z.string().transform(s => sanitizeMultiline(s, 1000))
                         .optional(),
+  assignedTo:          z.string().uuid('Please assign a mechanic to this booking.'),
 }).superRefine((d, ctx) => {
   // Cross-field: model must belong to the chosen make
   if (!isValidMakeModel(d.vehicleMake, d.vehicleModel)) {
@@ -133,6 +134,7 @@ export async function createBooking(formData: FormData) {
     contactPhoneLocal:   formData.get('contactPhoneLocal'),
     contactEmail:        formData.get('contactEmail') || '',
     notes:               formData.get('notes') || '',
+    assignedTo:          formData.get('assignedTo') || '',
   })
 
   if (!parsed.success) {
@@ -288,6 +290,7 @@ export async function createBooking(formData: FormData) {
       contact_email:   d.contactEmail || user?.email || null,
       contact_name:    d.contactName,
       preferred_name:  d.preferredName,
+      assigned_to:     d.assignedTo,
       // Vehicle snapshot — populated only for guests (vehicle_id is NULL).
       vehicle_make_snapshot:         user ? null : d.vehicleMake,
       vehicle_model_snapshot:        user ? null : d.vehicleModel,
