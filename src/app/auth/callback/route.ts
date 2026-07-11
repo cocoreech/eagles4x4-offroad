@@ -10,13 +10,17 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { linkGuestBookings } from '@/lib/auth'
+import { claimGuestConversation } from '@/lib/inbox/guestClaim'
 
-// Attach any guest bookings made with this account's email. Best-effort —
-// a failure must not block the sign-in redirect.
-async function linkBookingsForCurrentUser() {
+// On sign-in, adopt anything this browser/email created as a guest. Best-effort
+// — a failure must not block the redirect. Bookings match on email; the chat
+// history matches on the guest session cookie (same-browser only, see ADR-0004).
+async function claimGuestDataForCurrentUser() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (user) await linkGuestBookings(user.id, user.email)
+  if (!user) return
+  await linkGuestBookings(user.id, user.email)
+  await claimGuestConversation(user.id)
 }
 
 export async function GET(req: NextRequest) {
@@ -34,7 +38,7 @@ export async function GET(req: NextRequest) {
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      await linkBookingsForCurrentUser()
+      await claimGuestDataForCurrentUser()
       return NextResponse.redirect(new URL(next, url.origin))
     }
     console.error('[auth/callback] exchangeCodeForSession error', error)
@@ -47,7 +51,7 @@ export async function GET(req: NextRequest) {
       token_hash: tokenHash,
     })
     if (!error) {
-      await linkBookingsForCurrentUser()
+      await claimGuestDataForCurrentUser()
       return NextResponse.redirect(new URL(next, url.origin))
     }
     console.error('[auth/callback] verifyOtp error', error)

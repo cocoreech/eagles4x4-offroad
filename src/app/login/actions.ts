@@ -9,6 +9,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import { linkGuestBookings } from '@/lib/auth'
+import { claimGuestConversation } from '@/lib/inbox/guestClaim'
 import { rlAuthOtp, checkAuthLimit, checkUniqueEmailsPerIp } from '@/utils/ratelimit'
 import { headers } from 'next/headers'
 import { z } from 'zod'
@@ -134,10 +135,11 @@ export async function verifyOtp(formData: FormData) {
     return { error: 'Code is invalid or expired.' }
   }
 
-  // Attach any guest bookings made with this email to the now-signed-in account.
-  // Best-effort — never blocks sign-in.
+  // Attach any guest bookings made with this email, and carry over this
+  // browser's guest chat history. Best-effort — never blocks sign-in.
   if (user) {
     await linkGuestBookings(user.id, user.email ?? email)
+    await claimGuestConversation(user.id)
   }
 
   // Successful sign-in → go where ?next= points (validated), else home.

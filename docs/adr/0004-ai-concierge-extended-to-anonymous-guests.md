@@ -12,3 +12,15 @@ The Concierge currently only exists inside an account holder's Inbox thread (`re
 - **Auto-create an account when a guest completes a Booking** — parked as a separate, unrelated decision; not part of this widget.
 
 **Consequence:** the account-creation nudge shown in the guest widget is a fixed UI prompt (after the 2nd message), not something the model decides to say — kept out of the AI's discretion for the same reliability reason the reply tone itself is deterministic, not model-improvised.
+
+---
+
+## Update (2026-07-11): same-browser claim on signup
+
+The "no auto-claim" position above is **partially reversed.** We now migrate a guest's chat history into their new account's Inbox on signup — but keyed on the **guest session cookie (same browser only), not email.** The email-keyed auto-claim originally considered stays rejected.
+
+Why the reversal: the widget actively nudges guests to create an account (that's the lead play), so guests returning to sign up is now the *intended* path, not a hypothetical — which removes the "before there's evidence guests return" objection. Dropping the just-typed conversation on signup is a visibly bad experience precisely for the users we're steering hardest.
+
+Why cookie, not email: email-matching would attach a shared or public computer's guest chat to whoever signs up next on that machine — a real privacy leak. The session cookie proves it's the same browser that actually held the conversation. This is deliberately *different* from how guest **Bookings** link (by email): a booking carries the person's own verified contact info; an anonymous chat does not, so the browser is the only trustworthy link. If the guest signs up from a different device or clears cookies first, the chat simply stays anonymous and the new Inbox starts empty — an acceptable miss, not a leak.
+
+The claim runs best-effort in the same sign-in path as `linkGuestBookings` (`/auth/callback` and OTP verify), copies `guest_messages` into `conversation_messages` (guest→customer, bot→bot, timestamps preserved), marks any captured Lead converted, deletes the guest record, and clears the spent cookie.

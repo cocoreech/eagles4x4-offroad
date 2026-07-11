@@ -87,6 +87,10 @@ export const rlContactAnon = isDev
   ? makeLimiter('contact:anon', 100, '1 m')
   : makeLimiter('contact:anon', 3,   '10 m')
 
+export const rlGuestChat = isDev
+  ? makeLimiter('guest-chat:anon', 100, '1 m')
+  : makeLimiter('guest-chat:anon', 5,   '1 h')
+
 // AUTHENTICATED endpoints — by user ID
 export const rlServerAction = isDev
   ? makeLimiter('action:user', 1000, '1 m')
@@ -191,11 +195,15 @@ const AI_CUSTOMER_DAILY_GENERATIONS = 3       // 3 AI replies/day per customer
 const AI_CUSTOMER_DAILY_USD_CAP     = 0.05    // ~₱3 per customer per day
 const AI_ADMIN_DAILY_GENERATIONS    = 20      // 20 drafts/day per admin
 const AI_ADMIN_DAILY_USD_CAP        = 0.5     // ~₱30 per admin per day
+// Guests are unauthenticated and easier to abuse than a signed-in customer —
+// tighter than the customer scope. Keyed on session+IP together, see ADR-0004.
+const AI_GUEST_DAILY_GENERATIONS    = 2       // 2 AI replies/day per guest session+IP
+const AI_GUEST_DAILY_USD_CAP        = 0.02    // ~₱1 per guest session+IP per day
 const AI_SYSTEM_DAILY_USD_CAP       = 3       // ~₱180 platform-wide ceiling
 
 const DAY_SECONDS = 24 * 60 * 60
 
-type AiScope = 'customer' | 'admin' | 'system'
+type AiScope = 'customer' | 'admin' | 'guest' | 'system'
 
 // 'system' scope has no per-user dimension — every caller uses this same
 // fixed identifier so all AI spend accumulates into one platform-wide counter.
@@ -206,11 +214,13 @@ export const AI_SYSTEM_SCOPE_KEY = 'platform'
 const AI_GENERATION_LIMITS: Record<AiScope, number> = {
   customer: AI_CUSTOMER_DAILY_GENERATIONS,
   admin: AI_ADMIN_DAILY_GENERATIONS,
+  guest: AI_GUEST_DAILY_GENERATIONS,
   system: Infinity,
 }
 const AI_USD_CAPS: Record<AiScope, number> = {
   customer: AI_CUSTOMER_DAILY_USD_CAP,
   admin: AI_ADMIN_DAILY_USD_CAP,
+  guest: AI_GUEST_DAILY_USD_CAP,
   system: AI_SYSTEM_DAILY_USD_CAP,
 }
 

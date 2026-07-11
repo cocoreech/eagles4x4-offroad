@@ -8,6 +8,7 @@ import { brand as brandConfig } from '@/content/brand'
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister'
 import InstallAppButton from '@/components/InstallAppButton'
 import PageViewTracker from '@/components/PageViewTracker'
+import GuestConciergeGate from '@/components/GuestConciergeGate'
 import './globals.css'
 
 const body = Inter({
@@ -56,6 +57,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <ServiceWorkerRegister />
         <InstallAppButton />
         <PageViewTracker />
+        <GuestConciergeGate />
       </body>
     </html>
   )
