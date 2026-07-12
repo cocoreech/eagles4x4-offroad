@@ -41,6 +41,8 @@ export function buildBookingConfirmationEmail(input: BookingConfirmationInput): 
     ``,
     `If a deposit is still pending, your slot is confirmed once the deposit clears — no need to send it again if you already did.`,
     ``,
+    `📋 Next step: Our team will verify your slot is available and send you a personal confirmation from your mechanic by 9 AM on the day of your appointment. If for any reason the slot fills up, we'll contact you to reschedule — but we'll make sure you're taken care of.`,
+    ``,
     `Questions? Reach us at ${input.shopContact}.`,
   ].join('\n')
 
