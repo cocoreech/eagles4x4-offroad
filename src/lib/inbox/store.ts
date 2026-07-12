@@ -44,6 +44,8 @@ export function createInboxStore(client: SupabaseClient) {
           sender: input.sender,
           body: input.body,
           booking_id: input.bookingId ?? null,
+          // Customer messages need a reply; merchant/bot replies don't.
+          needs_reply: input.sender === 'customer',
         })
         .select('*')
         .single()
@@ -145,6 +147,47 @@ export function createInboxStore(client: SupabaseClient) {
           customer_name: row.customer?.full_name ?? null,
         }),
       )
+    },
+
+    async listConversationsNeedingReply(): Promise<
+      (Conversation & { customer_name: string | null; lastCustomerMessage: string | null })[]
+    > {
+      // Find conversations that have an unresponded customer message
+      // (most recent message from customer with no merchant reply after it)
+      const { data: conversations, error: convoError } = await client
+        .from('conversations')
+        .select('*, customer:profiles!customer_id ( full_name )')
+        .order('last_message_at', { ascending: false, nullsFirst: false })
+      if (convoError) throw new Error(`listConversationsNeedingReply: ${convoError.message}`)
+
+      const result: (Conversation & { customer_name: string | null; lastCustomerMessage: string | null })[] =
+        []
+
+      // For each conversation, check if there's an unresponded customer message
+      for (const row of conversations ?? []) {
+        const convo = row as Conversation & { customer: { full_name: string | null } | null }
+
+        // Get the most recent message
+        const { data: lastMsg, error: lastMsgError } = await client
+          .from('conversation_messages')
+          .select('sender, body')
+          .eq('conversation_id', convo.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        if (lastMsgError) throw new Error(`listConversationsNeedingReply last msg: ${lastMsgError.message}`)
+
+        // If last message is from customer, it needs a reply
+        if (lastMsg?.sender === 'customer') {
+          result.push({
+            ...convo,
+            customer_name: convo.customer?.full_name ?? null,
+            lastCustomerMessage: lastMsg.body,
+          })
+        }
+      }
+
+      return result
     },
   }
 }

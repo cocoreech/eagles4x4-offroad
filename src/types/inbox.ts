@@ -11,6 +11,7 @@ export interface Conversation {
   last_message_sender: MessageSender | null
   admin_reviewed_at: string | null
   doorbell_sent_at: string | null
+  branch: string | null
   created_at: string
 }
 
@@ -21,6 +22,8 @@ export interface ConversationMessage {
   body: string
   booking_id: string | null
   read_at: string | null
+  needs_reply: boolean
+  bot_auto_replied_at: string | null
   created_at: string
 }
 
