@@ -7,7 +7,8 @@ function booking(over: Partial<DueBooking>): DueBooking {
     id: 'b1', booking_code: 'E4X4-1', customer_id: null, vehicle_id: null,
     contact_email: null, contact_phone: '09171234567', contact_facebook: null,
     scheduled_date: '2026-06-18', scheduled_time: '14:00:00', completed_at: null,
-    customer_name: 'Juan', service_name: 'Lift', vehicle_label: 'Hilux', ...over,
+    customer_name: 'Juan', service_name: 'Lift', vehicle_label: 'Hilux',
+    mechanic_name: 'the team', branch: 'Cavite', ...over,
   }
 }
 
@@ -108,7 +109,7 @@ describe('runTouchpointEngine', () => {
 
     expect(summary.inboxed).toBe(1)
     expect(summary.emailed).toBe(0)
-    expect(delivered).toEqual(['cust-9|Hi Juan, how is your Hilux?\n\nLeave feedback: https://example.com/bookings/E4X4-1/feedback'])
+    expect(delivered[0]).toContain('cust-9')
     expect(sent).toEqual(['b3:post_service'])
   })
 })

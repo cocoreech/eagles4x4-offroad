@@ -16,11 +16,12 @@ const ACTIVE_STATUSES = ['pending', 'confirmed', 'in_progress', 'parts_installed
 
 // The booking columns + joins the engine needs, fetched in one round-trip.
 const BOOKING_SELECT = `
-  id, booking_code, customer_id, vehicle_id,
+  id, booking_code, customer_id, vehicle_id, branch, assigned_to,
   contact_email, contact_phone, contact_facebook, contact_name, preferred_name,
   scheduled_date, scheduled_time, completed_at,
   vehicle_make_snapshot, vehicle_model_snapshot, vehicle_year_snapshot,
   customer:profiles!customer_id ( full_name, preferred_name ),
+  mechanic:assigned_to ( preferred_name, full_name ),
   vehicles ( make, model, year ),
   booking_items ( name_snapshot, item_type )
 `
@@ -30,6 +31,8 @@ interface RawBooking {
   booking_code: string
   customer_id: string | null
   vehicle_id: string | null
+  branch: string | null
+  assigned_to: string | null
   contact_email: string | null
   contact_phone: string | null
   contact_facebook: string | null
@@ -42,6 +45,7 @@ interface RawBooking {
   vehicle_model_snapshot: string | null
   vehicle_year_snapshot: number | null
   customer: { full_name: string | null; preferred_name: string | null } | null
+  mechanic: { preferred_name: string | null; full_name: string | null } | null
   vehicles: { make: string | null; model: string | null; year: number | null } | null
   booking_items: { name_snapshot: string; item_type: string }[] | null
 }
@@ -81,6 +85,8 @@ function toDueBooking(b: RawBooking): DueBooking {
     }),
     service_name: serviceName(b),
     vehicle_label: vehicleLabel(b),
+    mechanic_name: b.mechanic?.preferred_name ?? b.mechanic?.full_name ?? 'the team',
+    branch: b.branch ?? 'Cavite',
   }
 }
 

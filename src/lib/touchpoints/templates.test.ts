@@ -6,12 +6,14 @@ describe('renderTemplate', () => {
   it('substitutes known tokens, trims whitespace inside braces', () => {
     const out = renderTemplate('Hi {{customer_name}}, code {{ booking_code }}', {
       customer_name: 'Juan', booking_code: 'E4X4-1', date: '', time: '', service: '', vehicle: '', shop_name: '',
+      mechanic_name: '', branch_name: '',
     })
     expect(out).toBe('Hi Juan, code E4X4-1')
   })
   it('replaces unknown tokens with empty string', () => {
     const out = renderTemplate('A {{nope}} B', {
       customer_name: '', booking_code: '', date: '', time: '', service: '', vehicle: '', shop_name: '',
+      mechanic_name: '', branch_name: '',
     })
     expect(out).toBe('A  B')
   })
@@ -24,6 +26,7 @@ describe('buildTokens', () => {
       contact_email: null, contact_phone: null, contact_facebook: null,
       scheduled_date: '2026-06-18', scheduled_time: '14:00:00', completed_at: null,
       customer_name: 'Maria', service_name: 'Suspension lift', vehicle_label: 'Toyota Hilux',
+      mechanic_name: 'Carlos', branch: 'Quezon City',
     }
     const t = buildTokens(b, 'Eagles 4x4')
     expect(t.customer_name).toBe('Maria')
@@ -33,5 +36,7 @@ describe('buildTokens', () => {
     expect(t.service).toBe('Suspension lift')
     expect(t.vehicle).toBe('Toyota Hilux')
     expect(t.shop_name).toBe('Eagles 4x4')
+    expect(t.mechanic_name).toBe('Carlos')
+    expect(t.branch_name).toBe('Quezon City')
   })
 })

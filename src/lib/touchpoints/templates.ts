@@ -33,5 +33,7 @@ export function buildTokens(b: DueBooking, shopName: string): TouchpointTokens {
     service: b.service_name,
     vehicle: b.vehicle_label,
     shop_name: shopName,
+    mechanic_name: b.mechanic_name,
+    branch_name: b.branch,
   }
 }

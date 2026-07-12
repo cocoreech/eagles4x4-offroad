@@ -17,6 +17,8 @@ export interface TouchpointTokens {
   service: string
   vehicle: string
   shop_name: string
+  mechanic_name: string
+  branch_name: string
 }
 
 /** A booking row, as the engine needs it. */
@@ -34,4 +36,6 @@ export interface DueBooking {
   customer_name: string
   service_name: string
   vehicle_label: string
+  mechanic_name: string
+  branch: string
 }
