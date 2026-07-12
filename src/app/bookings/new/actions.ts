@@ -9,11 +9,18 @@
 //  - Identity is read from auth.getUser() server-side, never from the form.
 //  - Authenticated: customer_id = verified user.id; written via the user's
 //    RLS-scoped client (bookings_insert policy double-checks = auth.uid()).
-//  - Guest (no user): customer_id = NULL. RLS (0002) already permits
-//    anonymous inserts, but the SELECT policy is owner/admin-only, so guest
-//    inserts go through the service-role client (so INSERT ... RETURNING works)
-//    and the vehicle is snapshotted onto the booking rather than the
-//    vehicles table (guests have no profile to own a vehicle row — see 0010).
+//  - Guest checkout with a NEW email: silently auto-verified into a real
+//    account mid-request (see step 3c) — customer_id ends up set, same as
+//    an authenticated booking, no email click needed.
+//  - Guest checkout with an email that already has an account: customer_id
+//    stays NULL. We deliberately do NOT auto-login here — verifying whoever
+//    types an email into this form would let a stranger log into someone
+//    else's real account just by knowing their address. RLS (0002) already
+//    permits anonymous inserts, but the SELECT policy is owner/admin-only,
+//    so this path goes through the service-role client (so
+//    INSERT ... RETURNING works) and the vehicle is snapshotted onto the
+//    booking rather than the vehicles table (no profile to own it — see 0010).
+//    Linked up automatically once they sign in normally (linkGuestBookings).
 //
 // Rate limiting (multi-layer — see ratelimit.ts):
 //  - Authenticated: per user.id+IP (rlServerAction).
@@ -21,12 +28,14 @@
 //    unique-emails-per-IP cap (blocks bots cycling fake emails from one IP;
 //    tuned for PH CGNAT-shared IPs).
 //
-// Flow: validate → rate-limit → slot check → vehicle → booking → items → pay.
+// Flow: validate → rate-limit → slot check → auto-verify (new emails) →
+//       vehicle → booking → items → pay.
 
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { z } from 'zod'
 import { createClient, createServiceRoleClient } from '@/utils/supabase/server'
+import { linkGuestBookings } from '@/lib/auth'
 import {
   rlServerAction,
   rlBookingsAnon,
@@ -144,8 +153,9 @@ export async function createBooking(formData: FormData) {
 
   // 2. Read the signed-in user from the JWT (never trust the form for identity).
   //    `user` is null for guests — that's the supported guest-checkout path.
+  //    Reassigned below if guest checkout silently auto-verifies a new account.
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  let { data: { user } } = await supabase.auth.getUser()
 
   // 3. Rate-limit. Authenticated users are limited per identity; guests have
   //    no identity, so we throttle by IP + email and cap unique emails per IP.
@@ -206,6 +216,68 @@ export async function createBooking(formData: FormData) {
   const chosenSlot = day.slots.find(s => s.time === d.scheduledTime.slice(0, 5))
   if (!chosenSlot) return { error: 'Selected time is outside shop hours.' }
   if (!chosenSlot.available) return { error: 'That slot just filled up. Please pick another time.' }
+
+  // 3c. Guest checkout: silently create AND verify a real account, no email
+  //     click needed — the customer is logged in by the time this action
+  //     returns. Only safe for genuinely NEW emails: if we verified whoever
+  //     types an email into this form, typing a stranger's email would log
+  //     the browser into THEIR real account (account takeover). So we check
+  //     for an existing profile first and skip auto-login entirely if one is
+  //     found — that booking stays a plain guest booking, exactly like
+  //     before, and gets linked up whenever the real owner signs in normally.
+  //     Any failure here falls back to the old click-to-verify magic link so
+  //     the booking is never blocked by this.
+  let autoAccountCreated = false
+  let accountEmailSent = false
+  if (!user) {
+    const { data: existingProfile } = await admin
+      .from('profiles')
+      .select('id')
+      .eq('email', d.contactEmail)
+      .maybeSingle()
+
+    if (!existingProfile) {
+      try {
+        const accountSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+        const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+          type: 'magiclink',
+          email: d.contactEmail,
+          options: { redirectTo: `${accountSiteUrl}/bookings` },
+        })
+        const emailOtp = linkData?.properties?.email_otp
+        if (linkErr || !emailOtp) throw linkErr ?? new Error('generateLink returned no OTP')
+
+        const { data: verifyData, error: verifyErr } = await supabase.auth.verifyOtp({
+          email: d.contactEmail,
+          token: emailOtp,
+          type: 'email',
+        })
+        if (verifyErr || !verifyData.user) throw verifyErr ?? new Error('verifyOtp returned no user')
+
+        user = verifyData.user
+        autoAccountCreated = true
+        // Sweep up any earlier guest bookings under this email (e.g. made
+        // before this feature shipped, or via a prior failed auto-verify).
+        await linkGuestBookings(user.id, user.email)
+      } catch (err) {
+        console.error('[createBooking] auto-verify failed, falling back to click-to-verify', err)
+        try {
+          const accountSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+          const { error: otpErr } = await supabase.auth.signInWithOtp({
+            email: d.contactEmail,
+            options: {
+              shouldCreateUser: true,
+              emailRedirectTo: `${accountSiteUrl}/auth/callback?next=/bookings`,
+            },
+          })
+          if (!otpErr) accountEmailSent = true
+          else console.error('[createBooking] fallback account signup', otpErr)
+        } catch (fallbackErr) {
+          console.error('[createBooking] fallback account signup', fallbackErr)
+        }
+      }
+    }
+  }
 
   // 4. Resolve the vehicle.
   //    - Authenticated: find an existing vehicle for this user or create one.
@@ -336,31 +408,7 @@ export async function createBooking(formData: FormData) {
     }
   }
 
-  // 7a. Auto-create an account for every guest booking. Sends a one-tap magic
-  //     link — no password. shouldCreateUser makes the auth.users row exist
-  //     immediately even before they click the link. The link lands on
-  //     /auth/callback, which already exchanges the token AND calls
-  //     linkGuestBookings() to attach this (and any other) guest booking under
-  //     this email to the new account — no extra wiring needed here.
-  let accountEmailSent = false
-  if (!user) {
-    try {
-      const accountSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
-      const { error: otpErr } = await supabase.auth.signInWithOtp({
-        email: d.contactEmail,
-        options: {
-          shouldCreateUser: true,
-          emailRedirectTo: `${accountSiteUrl}/auth/callback?next=/bookings/${booking.booking_code}`,
-        },
-      })
-      if (otpErr) console.error('[createBooking] account signup', otpErr)
-      else accountEmailSent = true
-    } catch (err) {
-      console.error('[createBooking] account signup', err)
-    }
-  }
-
-  // 7b. Best-effort confirmation email — booking + items already persisted, so a
+  // 7a. Best-effort confirmation email — booking + items already persisted, so a
   //     failure here (incl. missing RESEND_API_KEY) is logged and ignored.
   try {
     const emailSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
@@ -391,11 +439,11 @@ export async function createBooking(formData: FormData) {
   const depositCentavos = parseInt(process.env.NEXT_PUBLIC_BOOKING_DEPOSIT_CENTAVOS ?? '50000', 10)
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
   const pkConfigured = !!process.env.PAYMONGO_SECRET_KEY && !process.env.PAYMONGO_SECRET_KEY.startsWith('<paste')
-  const acctParam = accountEmailSent ? '&acct=1' : ''
+  const acctParam = autoAccountCreated ? '&acct=new' : accountEmailSent ? '&acct=pending' : ''
 
   if (!pkConfigured) {
     console.warn('[createBooking] PayMongo not configured — skipping deposit')
-    redirect(`/bookings/${booking.booking_code}/success${accountEmailSent ? '?acct=1' : ''}`)
+    redirect(`/bookings/${booking.booking_code}/success${acctParam ? `?${acctParam.slice(1)}` : ''}`)
   }
 
   try {

@@ -37,7 +37,8 @@ export default async function BookingSuccessPage(
 ) {
   const { code } = await props.params
   const { payment, acct } = await props.searchParams
-  const accountEmailSent = acct === '1'
+  const autoAccountCreated = acct === 'new'
+  const accountEmailSent = acct === 'pending'
 
   // Service-role read: guest bookings (customer_id NULL) are invisible to the
   // RLS-scoped client, so we fetch authoritatively here and only render the
@@ -183,7 +184,24 @@ export default async function BookingSuccessPage(
             className="mt-8 rounded-md p-6"
             style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
           >
-            {isGuest && accountEmailSent ? (
+            {autoAccountCreated ? (
+              <>
+                <h2 className="font-display font-bold text-lg mb-2">
+                  You&apos;re all set — <em style={{ color: 'var(--color-accent)' }}>account created</em>
+                </h2>
+                <p className="text-sm mb-5" style={{ color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
+                  We created your {brand.name} account automatically using {booking.contact_email ?? 'your email'} —
+                  no password, nothing to click. You&apos;re already signed in on this device.
+                </p>
+                <Link
+                  href={accountHref}
+                  className="inline-block px-7 py-3.5 text-[11px] font-extrabold uppercase rounded-sm transition-all hover:brightness-110"
+                  style={{ background: 'var(--color-accent)', color: '#000', letterSpacing: '0.12em' }}
+                >
+                  View Full Booking →
+                </Link>
+              </>
+            ) : isGuest && accountEmailSent ? (
               <>
                 <h2 className="font-display font-bold text-lg mb-2">
                   Check your <em style={{ color: 'var(--color-accent)' }}>email</em>
