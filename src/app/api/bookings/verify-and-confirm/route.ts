@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { timingSafeEqual } from 'node:crypto'
 import { createServiceRoleClient } from '@/utils/supabase/server'
+import { createNotificationStore } from '@/lib/notifications/store'
 import { emailSender } from '@/lib/touchpoints/channels'
 import { brand } from '@/content/brand'
 import { resolveGreetingName } from '@/lib/name'
@@ -8,33 +10,39 @@ type Mechanic = { id: string; preferred_name: string | null; full_name: string |
 type Vehicle = { make: string | null; model: string | null; year: number | null }
 type BookingItem = { name_snapshot: string; item_type: string }
 
+export const dynamic = 'force-dynamic'
+
 /**
  * Verify booking slots and send personal confirmations 9 AM on booking day.
- * Called daily via cron; finds all bookings scheduled for today.
+ * Triggered daily by Vercel Cron (see vercel.json).
  *
- * For each booking:
- * 1. Verify slot is still available (not overbooked)
+ * For each booking scheduled today:
+ * 1. Verify the slot is still available (not overbooked)
  * 2. If available:
- *    - Auto-assign mechanic if not yet assigned (pick least-booked)
- *    - Send personal confirmation email from that mechanic
+ *    - Auto-assign a mechanic if not yet assigned (pick least-booked)
+ *    - Send a personal confirmation email from that mechanic
  * 3. If NOT available:
- *    - Mark as needs_reschedule
- *    - Notify admin
+ *    - Mark 'needs_reschedule' and notify admins in-app so they can reach out
  *
- * Security: Requires X-API-Key matching VERIFY_BOOKINGS_API_KEY env var.
+ * SECURITY: Guarded by the same CRON_SECRET bearer token as /api/cron/touchpoints.
  */
-export async function POST(req: NextRequest) {
-  const apiKey = req.headers.get('x-api-key')
-  const expectedKey = process.env.VERIFY_BOOKINGS_API_KEY
+function authorized(req: NextRequest): boolean {
+  const secret = process.env.CRON_SECRET
+  if (!secret) return false // fail closed — no secret configured means no access
+  const header = req.headers.get('authorization') ?? ''
+  const expected = `Bearer ${secret}`
+  if (header.length !== expected.length) return false
+  return timingSafeEqual(Buffer.from(header), Buffer.from(expected))
+}
 
-  if (!expectedKey || apiKey !== expectedKey) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function GET(req: NextRequest) {
+  if (!authorized(req)) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
 
   try {
     const admin = createServiceRoleClient()
 
-    // Find all bookings scheduled for today
     const today = new Date().toISOString().slice(0, 10)
     const { data: bookings, error: bookingErr } = await admin
       .from('bookings')
@@ -62,7 +70,13 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // Verify slot capacity and auto-assign mechanics
+    const notifications = createNotificationStore(admin)
+    const { data: admins } = await admin
+      .from('profiles')
+      .select('id')
+      .in('role', ['admin', 'super_admin'])
+    const adminIds = (admins ?? []).map(a => a.id)
+
     let verified = 0
     let needsReschedule = 0
     const errors: string[] = []
@@ -86,13 +100,22 @@ export async function POST(req: NextRequest) {
         // Get shop settings for slot capacity (assume 1 per slot for now)
         const maxPerSlot = 1
         if ((slotBookings?.length ?? 0) > maxPerSlot) {
-          // Slot is overbooked
+          // Slot is overbooked — flag for a human to reschedule, don't send a
+          // false confirmation.
           await admin
             .from('bookings')
             .update({ status: 'needs_reschedule' })
             .eq('id', booking.id)
           needsReschedule++
-          // TODO: notify admin of conflict
+
+          if (adminIds.length > 0) {
+            await notifications.notifyCustomers(
+              adminIds,
+              'Booking needs rescheduling',
+              `${booking.booking_code} at ${booking.scheduled_time} today is overbooked — the guest needs to be contacted to reschedule.`,
+              `/admin/bookings/${booking.booking_code}`
+            )
+          }
           continue
         }
 

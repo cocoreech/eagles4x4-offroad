@@ -57,7 +57,7 @@ describe('runTouchpointEngine', () => {
 
     const summary = await runTouchpointEngine({
       today: '2026-06-17', shopName: 'Eagles 4x4',
-      store, emailSender: sender,
+      store, emailSender: sender, baseUrl: 'https://example.com',
     })
 
     expect(summary.created).toBe(2)
@@ -78,7 +78,7 @@ describe('runTouchpointEngine', () => {
       async deliverToInbox() { return true },
     }
     const sender = { async send() { return { ok: true } } }
-    const s = await runTouchpointEngine({ today: '2026-06-17', shopName: 'X', store, emailSender: sender })
+    const s = await runTouchpointEngine({ today: '2026-06-17', shopName: 'X', store, emailSender: sender, baseUrl: 'https://example.com' })
     expect(s.created).toBe(0)
     expect(s.emailed).toBe(0)
   })
@@ -104,11 +104,11 @@ describe('runTouchpointEngine', () => {
       },
     }
     const sender = { async send() { return { ok: true } } }
-    const summary = await runTouchpointEngine({ today: '2026-06-17', shopName: 'Eagles 4x4', store, emailSender: sender })
+    const summary = await runTouchpointEngine({ today: '2026-06-17', shopName: 'Eagles 4x4', store, emailSender: sender, baseUrl: 'https://example.com' })
 
     expect(summary.inboxed).toBe(1)
     expect(summary.emailed).toBe(0)
-    expect(delivered).toEqual(['cust-9|Hi Juan, how is your Hilux?'])
+    expect(delivered).toEqual(['cust-9|Hi Juan, how is your Hilux?\n\nLeave feedback: https://example.com/bookings/E4X4-1/feedback'])
     expect(sent).toEqual(['b3:post_service'])
   })
 })

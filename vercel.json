@@ -4,6 +4,10 @@
     {
       "path": "/api/cron/touchpoints",
       "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/bookings/verify-and-confirm",
+      "schedule": "0 1 * * *"
     }
   ]
 }

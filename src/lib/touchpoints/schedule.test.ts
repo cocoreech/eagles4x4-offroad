@@ -5,8 +5,8 @@ describe('schedule', () => {
   it('reminder matches bookings scheduled the next day', () => {
     expect(reminderScheduledDate('2026-06-17')).toBe('2026-06-18')
   })
-  it('post-service matches bookings completed 3 days ago', () => {
-    expect(postServiceCompletedDate('2026-06-17')).toBe('2026-06-14')
+  it('post-service matches bookings completed 1 day ago', () => {
+    expect(postServiceCompletedDate('2026-06-17')).toBe('2026-06-16')
   })
   it('PMS matches bookings completed 3 months ago', () => {
     expect(pmsCompletedDate('2026-06-17')).toBe('2026-03-17')

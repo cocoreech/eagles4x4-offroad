@@ -49,6 +49,7 @@ export async function GET(req: NextRequest) {
       shopName: brand.name_full,
       store,
       emailSender,
+      baseUrl: process.env.NEXT_PUBLIC_SITE_URL ?? '',
     })
     return NextResponse.json({ ok: true, today, ...summary })
   } catch (err) {

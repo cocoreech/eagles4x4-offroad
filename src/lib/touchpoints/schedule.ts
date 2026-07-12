@@ -23,7 +23,7 @@ export function reminderScheduledDate(today: string): string {
 }
 /** Bookings completed this date should get a post-service follow-up when run on `today`. */
 export function postServiceCompletedDate(today: string): string {
-  return addDays(today, -3)
+  return addDays(today, -1)
 }
 /** Bookings completed this date should get a PMS reminder when run on `today`. */
 export function pmsCompletedDate(today: string): string {

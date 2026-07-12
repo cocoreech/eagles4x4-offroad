@@ -58,8 +58,10 @@ export async function runTouchpointEngine(opts: {
   shopName: string
   store: TouchpointStore
   emailSender: TouchpointSender
+  /** Site base URL, for building links (e.g. the feedback form) into inbox messages. */
+  baseUrl: string
 }): Promise<TouchpointSummary> {
-  const { shopName, store, emailSender } = opts
+  const { shopName, store, emailSender, baseUrl } = opts
   const summary: TouchpointSummary = { created: 0, emailed: 0, queued: 0, inboxed: 0 }
 
   for (const type of TOUCHPOINT_TYPES) {
@@ -83,7 +85,12 @@ export async function runTouchpointEngine(opts: {
 
       if (channel === 'inbox' && b.customer_id) {
         const tokens = buildTokens(b, shopName)
-        const body = renderTemplate(template.body, tokens)
+        let body = renderTemplate(template.body, tokens)
+        // Account holders can submit structured feedback; guests have no login
+        // to reach the form, so this link is only appended for the inbox channel.
+        if (type === 'post_service') {
+          body += `\n\nLeave feedback: ${baseUrl}/bookings/${b.booking_code}/feedback`
+        }
         const ok = await store.deliverToInbox({
           customerId: b.customer_id,
           body,
