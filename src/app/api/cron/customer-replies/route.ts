@@ -2,12 +2,15 @@
 // GET /api/cron/customer-replies — auto-reply to customer messages
 // ============================================================
 // Triggered every 30 minutes by Vercel Cron. Finds customer messages older
-// than 1 hour with no merchant response and sends a friendly bot concierge reply.
-// Prevents duplicate replies by tracking bot_auto_replied_at.
+// than 1 hour with no merchant response and sends a contextual bot reply via Claude.
+// Bot analyzes sentiment/intent and replies accordingly (celebrate positive,
+// acknowledge questions, empathize with concerns). Prevents duplicate replies via
+// bot_auto_replied_at timestamp.
 
 import { NextResponse, type NextRequest } from 'next/server'
 import { timingSafeEqual } from 'node:crypto'
 import { createServiceRoleClient } from '@/utils/supabase/server'
+import { Anthropic } from '@anthropic-ai/sdk'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,6 +25,43 @@ function authorized(req: NextRequest): boolean {
 
 const AUTO_REPLY_DELAY_MINUTES = 60
 
+async function generateContextualReply(customerMessage: string, customerName: string): Promise<string> {
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not configured')
+
+  const client = new Anthropic({ apiKey })
+
+  const response = await client.messages.create({
+    model: 'claude-opus-4-8',
+    max_tokens: 150,
+    messages: [
+      {
+        role: 'user',
+        content: `You are a warm, friendly concierge from Eagles 4x4 Offroad shop in the Philippines.
+
+A customer named "${customerName}" just sent you this message:
+"${customerMessage}"
+
+Analyze their message and write a SHORT, WARM reply (1-2 sentences max). Match their tone:
+- If positive/happy: celebrate and thank them
+- If asking a question: acknowledge it warmly
+- If complaint/concern: empathize and assure them you're looking into it
+- If neutral: be friendly and welcoming
+
+Use casual Taglish mix (English + Tagalog). Include the customer's name. Keep it conversational, sound like a real person, not robotic. Add ONE emoji at the end.
+
+IMPORTANT: Do NOT say "our team is reviewing" or "we're looking at this" — just respond warmly to what they said.
+
+Reply with ONLY the message, nothing else.`,
+      },
+    ],
+  })
+
+  const content = response.content[0]
+  if (content.type !== 'text') throw new Error('Unexpected Claude response type')
+  return content.text.trim()
+}
+
 async function sendAutoReplies() {
   const client = createServiceRoleClient()
   const now = new Date()
@@ -34,7 +74,7 @@ async function sendAutoReplies() {
     .from('conversation_messages')
     .select(
       `
-      id, conversation_id, created_at,
+      id, body, conversation_id, created_at,
       conversation:conversations (
         id, customer_id,
         customer:customer_id ( full_name, preferred_name )
@@ -69,8 +109,10 @@ async function sendAutoReplies() {
       }
 
       const customerName = convo.customer?.preferred_name ?? convo.customer?.full_name ?? 'friend'
+      const customerMessage = msg.body as string
 
-      const autoReplyBody = `Hey ${customerName}! Thanks for reaching out — we're looking at this now and will get back to you shortly. Appreciate mo! 🙌`
+      // Generate contextual reply using Claude
+      const autoReplyBody = await generateContextualReply(customerMessage, customerName)
 
       // Insert bot auto-reply
       const { error: insertError } = await client.from('conversation_messages').insert({
