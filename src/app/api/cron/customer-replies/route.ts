@@ -70,7 +70,7 @@ async function sendAutoReplies() {
 
       const customerName = convo.customer?.preferred_name ?? convo.customer?.full_name ?? 'friend'
 
-      const autoReplyBody = `Thanks so much for the feedback, ${customerName}! We really appreciate you taking the time. Our team is reviewing this right now and will get back to you shortly. In the meantime, if you need anything else, just let us know. Salamat!`
+      const autoReplyBody = `Hey ${customerName}! Thanks for reaching out — we're looking at this now and will get back to you shortly. Appreciate mo! 🙌`
 
       // Insert bot auto-reply
       const { error: insertError } = await client.from('conversation_messages').insert({
