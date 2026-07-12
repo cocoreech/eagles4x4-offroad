@@ -4,6 +4,10 @@ import { emailSender } from '@/lib/touchpoints/channels'
 import { brand } from '@/content/brand'
 import { resolveGreetingName } from '@/lib/name'
 
+type Mechanic = { id: string; preferred_name: string | null; full_name: string | null }
+type Vehicle = { make: string | null; model: string | null; year: number | null }
+type BookingItem = { name_snapshot: string; item_type: string }
+
 /**
  * Verify booking slots and send personal confirmations 9 AM on booking day.
  * Called daily via cron; finds all bookings scheduled for today.
@@ -94,7 +98,7 @@ export async function POST(req: NextRequest) {
 
         // Slot is available — auto-assign mechanic if not assigned
         let mechanicId = booking.assigned_to
-        let mechanic = booking.mechanic as any
+        let mechanic = ((booking.mechanic as unknown) as Mechanic[] | null)?.[0] ?? null
 
         if (!mechanicId) {
           const { data: mechanics, error: mechErr } = await admin
@@ -108,7 +112,7 @@ export async function POST(req: NextRequest) {
             for (const mech of mechanics) {
               const { count, error: countErr } = await admin
                 .from('bookings')
-                .select('id', { count: 'exact', head: 0 })
+                .select('id', { count: 'exact', head: false })
                 .eq('assigned_to', mech.id)
                 .eq('scheduled_date', today)
               if (!countErr) {
@@ -139,14 +143,14 @@ export async function POST(req: NextRequest) {
         })
 
         // Resolve vehicle label
-        const vehicle = booking.vehicles as any
+        const vehicle = ((booking.vehicles as unknown) as Vehicle[] | null)?.[0] ?? null
         const make = vehicle?.make ?? booking.vehicle_make_snapshot
         const model = vehicle?.model ?? booking.vehicle_model_snapshot
         const year = vehicle?.year ?? booking.vehicle_year_snapshot
         const vehicleLabel = [year, make, model].filter(Boolean).join(' ').trim() || 'your vehicle'
 
         // Resolve service
-        const bookingItems = booking.booking_items as any[] ?? []
+        const bookingItems = (booking.booking_items as BookingItem[] | null) ?? []
         const service = bookingItems.find(i => i.item_type === 'service')?.name_snapshot ?? 'service'
 
         const sender = emailSender({

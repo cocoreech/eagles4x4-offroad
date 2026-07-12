@@ -148,6 +148,11 @@ export default async function AdminHomePage() {
               desc="Everyone who signed up · export CSV/PDF"
               count="View"
             />
+            <Tile
+              href="/admin/testimonials" icon="⭐" title="Testimonials"
+              desc="Review feedback, publish to the public page"
+              count="Moderate"
+            />
           </div>
 
           {/* Traffic stats */}
