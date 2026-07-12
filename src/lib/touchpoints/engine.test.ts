@@ -53,6 +53,7 @@ describe('runTouchpointEngine', () => {
       },
       async markSent(id: string) { sent.push(id) },
       async deliverToInbox() { return true },
+      async getPmsServiceId() { return 'pms-id' },
     }
     const sender = { async send() { return { ok: true, providerId: 're_1' } } }
 
@@ -77,6 +78,7 @@ describe('runTouchpointEngine', () => {
       async insertIfAbsent() { return null },
       async markSent() {},
       async deliverToInbox() { return true },
+      async getPmsServiceId() { return 'pms-id' },
     }
     const sender = { async send() { return { ok: true } } }
     const s = await runTouchpointEngine({ today: '2026-06-17', shopName: 'X', store, emailSender: sender, baseUrl: 'https://example.com' })
@@ -103,6 +105,7 @@ describe('runTouchpointEngine', () => {
         delivered.push(`${args.customerId}|${args.body}`)
         return true
       },
+      async getPmsServiceId() { return 'pms-id' },
     }
     const sender = { async send() { return { ok: true } } }
     const summary = await runTouchpointEngine({ today: '2026-06-17', shopName: 'Eagles 4x4', store, emailSender: sender, baseUrl: 'https://example.com' })

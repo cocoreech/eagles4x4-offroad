@@ -102,13 +102,21 @@ export function createTouchpointStore(client: SupabaseClient, today: string): To
 
       if (type === 'appointment_reminder') {
         query = query.eq('scheduled_date', reminderScheduledDate(today)).in('status', ACTIVE_STATUSES)
-      } else {
-        // post_service / pms_reminder both key off the completion date.
-        const day = type === 'post_service' ? postServiceCompletedDate(today) : pmsCompletedDate(today)
+      } else if (type === 'post_service') {
+        const day = postServiceCompletedDate(today)
         query = query
           .eq('status', 'completed')
           .gte('completed_at', `${day}T00:00:00+00:00`)
           .lte('completed_at', `${day}T23:59:59.999+00:00`)
+      } else if (type === 'pms_reminder') {
+        // PMS reminders only trigger for bookings that included a PMS service
+        const pmsServiceId = await this.getPmsServiceId()
+        const day = pmsCompletedDate(today)
+        query = query
+          .eq('status', 'completed')
+          .gte('completed_at', `${day}T00:00:00+00:00`)
+          .lte('completed_at', `${day}T23:59:59.999+00:00`)
+          .eq('booking_items.service_id', pmsServiceId)
       }
 
       // Supabase types the to-one joins as arrays; assert the real one-to-one
@@ -116,6 +124,16 @@ export function createTouchpointStore(client: SupabaseClient, today: string): To
       const { data, error } = await query.returns<RawBooking[]>()
       if (error) throw new Error(`findDueBookings(${type}): ${error.message}`)
       return (data ?? []).map(toDueBooking)
+    },
+
+    async getPmsServiceId(): Promise<string> {
+      const { data, error } = await client
+        .from('services')
+        .select('id')
+        .eq('slug', 'pms-maintenance')
+        .maybeSingle()
+      if (error || !data) throw new Error('PMS service not found')
+      return data.id
     },
 
     async getTemplate(type: TouchpointType): Promise<TouchpointTemplate> {

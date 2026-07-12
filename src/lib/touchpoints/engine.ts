@@ -34,6 +34,8 @@ export interface TouchpointStore {
     customerEmail: string | null
     notifyByEmail: boolean
   }): Promise<boolean>
+  /** Get the PMS service ID for filtering PMS reminders. */
+  getPmsServiceId(): Promise<string>
 }
 
 /**

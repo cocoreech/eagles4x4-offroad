@@ -25,7 +25,7 @@ export function reminderScheduledDate(today: string): string {
 export function postServiceCompletedDate(today: string): string {
   return addDays(today, -1)
 }
-/** Bookings completed this date should get a PMS reminder when run on `today`. */
+/** Bookings with PMS service completed this date should get a reminder when run on `today`. */
 export function pmsCompletedDate(today: string): string {
-  return addMonths(today, -3)
+  return addMonths(today, -4)
 }
