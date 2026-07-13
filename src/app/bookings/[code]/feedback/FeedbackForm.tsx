@@ -4,9 +4,9 @@ import { useState, useTransition } from 'react'
 import { submitFeedback } from './actions'
 
 const REACTIONS = [
-  { value: 'thumbs_down', emoji: '👎', label: 'Not great' },
   { value: 'thumbs_up', emoji: '👍', label: 'Good' },
   { value: 'heart', emoji: '❤️', label: 'Excellent' },
+  { value: 'thumbs_down', emoji: '👎', label: 'Not great' },
 ] as const
 
 export default function FeedbackForm({ bookingCode }: Readonly<{ bookingCode: string }>) {
