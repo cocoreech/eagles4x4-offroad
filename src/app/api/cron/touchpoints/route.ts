@@ -20,6 +20,7 @@ import { createServiceRoleClient } from '@/utils/supabase/server'
 import { getSender } from '@/lib/touchpoints/channels'
 import { createTouchpointStore } from '@/lib/touchpoints/store'
 import { runTouchpointEngine } from '@/lib/touchpoints/engine'
+import { runCustomerAutoReplies } from '@/lib/inbox/autoReply'
 import { brand } from '@/content/brand'
 
 export const dynamic = 'force-dynamic'
@@ -51,7 +52,19 @@ export async function GET(req: NextRequest) {
       emailSender,
       baseUrl: process.env.NEXT_PUBLIC_SITE_URL ?? '',
     })
-    return NextResponse.json({ ok: true, today, ...summary })
+
+    // Piggyback the customer auto-reply pass on this daily run (Hobby plan cron
+    // limits — see /api/cron/customer-replies). Isolated so a failure here can't
+    // fail the touchpoint summary the engine already produced.
+    let autoReplies: { autoRepliesCount: number; processedMessages: number } | { error: string }
+    try {
+      autoReplies = await runCustomerAutoReplies(client)
+    } catch (err) {
+      console.error('[cron/touchpoints] auto-reply pass failed', err)
+      autoReplies = { error: 'auto-reply pass failed' }
+    }
+
+    return NextResponse.json({ ok: true, today, ...summary, autoReplies })
   } catch (err) {
     console.error('[cron/touchpoints] run failed', err)
     return NextResponse.json({ error: 'run failed' }, { status: 500 })
