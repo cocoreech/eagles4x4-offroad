@@ -9,15 +9,8 @@ const REACTIONS = [
   { value: 'heart', emoji: '❤️', label: 'Excellent' },
 ] as const
 
-const QUESTIONS = [
-  { name: 'serviceQuality', label: 'Rate the service quality' },
-  { name: 'installQuality', label: 'Rate the installation quality' },
-  { name: 'wouldRecommend', label: 'Would you recommend us?' },
-] as const
-
 export default function FeedbackForm({ bookingCode }: Readonly<{ bookingCode: string }>) {
   const [reaction, setReaction] = useState<string>('')
-  const [ratings, setRatings] = useState<Record<string, number>>({})
   const [comment, setComment] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
@@ -27,19 +20,10 @@ export default function FeedbackForm({ bookingCode }: Readonly<{ bookingCode: st
       setError('Pick a reaction first.')
       return
     }
-    for (const q of QUESTIONS) {
-      if (!ratings[q.name]) {
-        setError('Please answer all three questions.')
-        return
-      }
-    }
     setError(null)
     formData.set('bookingCode', bookingCode)
     formData.set('reaction', reaction)
     formData.set('comment', comment)
-    for (const q of QUESTIONS) {
-      formData.set(q.name, String(ratings[q.name]))
-    }
     startTransition(async () => {
       const result = await submitFeedback(formData)
       if (result && 'error' in result && result.error) {
@@ -77,32 +61,6 @@ export default function FeedbackForm({ bookingCode }: Readonly<{ bookingCode: st
         </div>
       </section>
 
-      {/* Ratings */}
-      {QUESTIONS.map(q => (
-        <section key={q.name}>
-          <div className="text-[10px] font-bold tracking-[0.15em] uppercase mb-3" style={{ color: 'var(--color-text-muted)' }}>
-            {q.label}
-          </div>
-          <div className="flex gap-2">
-            {[1, 2, 3, 4, 5].map(n => {
-              const isSel = (ratings[q.name] ?? 0) >= n
-              return (
-                <button
-                  key={n}
-                  type="button"
-                  aria-label={`${n} out of 5`}
-                  onClick={() => setRatings(prev => ({ ...prev, [q.name]: n }))}
-                  className="text-2xl leading-none transition"
-                  style={{ color: isSel ? 'var(--color-accent)' : 'var(--color-border)' }}
-                >
-                  ★
-                </button>
-              )
-            })}
-          </div>
-        </section>
-      ))}
-
       {/* Optional comment */}
       <section>
         <label className="block">
@@ -122,7 +80,7 @@ export default function FeedbackForm({ bookingCode }: Readonly<{ bookingCode: st
           />
         </label>
         <p className="mt-2 text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
-          Comments are reviewed by our team before appearing publicly. Your rating always stays private.
+          Comments are reviewed by our team before appearing publicly.
         </p>
       </section>
 

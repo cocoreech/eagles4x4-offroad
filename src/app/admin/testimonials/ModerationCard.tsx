@@ -12,9 +12,6 @@ const REACTION_EMOJI: Record<string, string> = {
 export type FeedbackRow = {
   id: string
   reaction: string
-  service_quality: number
-  install_quality: number
-  would_recommend: number
   comment: string | null
   moderation_status: string
   published: boolean
@@ -42,12 +39,6 @@ export default function ModerationCard({ feedback }: Readonly<{ feedback: Feedba
           </div>
         </div>
         <div className="text-2xl">{REACTION_EMOJI[feedback.reaction] ?? ''}</div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2 mb-3 text-center">
-        <RatingPill label="Service" value={feedback.service_quality} />
-        <RatingPill label="Install" value={feedback.install_quality} />
-        <RatingPill label="Recommend" value={feedback.would_recommend} />
       </div>
 
       {feedback.comment && (
@@ -106,17 +97,6 @@ export default function ModerationCard({ feedback }: Readonly<{ feedback: Feedba
           )}
         </div>
       </div>
-    </div>
-  )
-}
-
-function RatingPill({ label, value }: Readonly<{ label: string; value: number }>) {
-  return (
-    <div className="rounded-sm py-2" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
-      <div className="text-[9px] font-bold tracking-widest uppercase mb-1" style={{ color: 'var(--color-text-muted)' }}>
-        {label}
-      </div>
-      <div className="text-sm font-bold" style={{ color: 'var(--color-accent)' }}>{value}/5</div>
     </div>
   )
 }

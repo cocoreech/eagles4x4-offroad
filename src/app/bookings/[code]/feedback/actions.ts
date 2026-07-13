@@ -18,9 +18,6 @@ async function getIp(): Promise<string> {
 const feedbackSchema = z.object({
   bookingCode: z.string().min(1),
   reaction: z.enum(['thumbs_down', 'thumbs_up', 'heart']),
-  serviceQuality: z.coerce.number().int().min(1).max(5),
-  installQuality: z.coerce.number().int().min(1).max(5),
-  wouldRecommend: z.coerce.number().int().min(1).max(5),
   comment: z.string().transform(s => sanitizeMultiline(s, 1000)).optional(),
 })
 
@@ -33,9 +30,6 @@ export async function submitFeedback(formData: FormData) {
   const parsed = feedbackSchema.safeParse({
     bookingCode: formData.get('bookingCode'),
     reaction: formData.get('reaction'),
-    serviceQuality: formData.get('serviceQuality'),
-    installQuality: formData.get('installQuality'),
-    wouldRecommend: formData.get('wouldRecommend'),
     comment: formData.get('comment') ?? '',
   })
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid input' }
@@ -59,9 +53,6 @@ export async function submitFeedback(formData: FormData) {
     booking_id: booking.id,
     customer_id: user.id,
     reaction: d.reaction,
-    service_quality: d.serviceQuality,
-    install_quality: d.installQuality,
-    would_recommend: d.wouldRecommend,
     comment: d.comment || null,
   })
 

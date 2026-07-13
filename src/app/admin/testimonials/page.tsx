@@ -14,7 +14,7 @@ export default async function AdminTestimonialsPage() {
   const { data: rows } = await supabase
     .from('booking_feedback')
     .select(`
-      id, reaction, service_quality, install_quality, would_recommend, comment,
+      id, reaction, comment,
       moderation_status, published, created_at,
       bookings ( booking_code ),
       profiles:customer_id ( preferred_name, full_name )
@@ -29,9 +29,6 @@ export default async function AdminTestimonialsPage() {
     return {
       id: r.id,
       reaction: r.reaction,
-      service_quality: r.service_quality,
-      install_quality: r.install_quality,
-      would_recommend: r.would_recommend,
       comment: r.comment,
       moderation_status: r.moderation_status,
       published: r.published,
@@ -69,7 +66,7 @@ export default async function AdminTestimonialsPage() {
               Customer <em style={{ color: 'var(--color-accent)' }}>Feedback.</em>
             </h1>
             <p className="mt-3 text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              Ratings stay private. Publish a comment to feature it on the public testimonials page.
+              Publish a comment to feature it on the public testimonials page.
             </p>
           </div>
 
