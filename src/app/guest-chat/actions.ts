@@ -20,6 +20,7 @@ import { sanitizeText } from '@/lib/sanitize'
 import { buildConciergeSystemPrompt, type ConciergeContext, type GroundingPromo } from '@/lib/inbox/grounding'
 import { generateConciergeReply, type ConciergeTurn } from '@/lib/inbox/concierge'
 import { rlGuestChat, checkLimit, checkAiBudget, recordAiUsage, AI_SYSTEM_SCOPE_KEY } from '@/utils/ratelimit'
+import { createNotificationStore } from '@/lib/notifications/store'
 
 const ESCALATION_CONTACT_PROMPT =
   "Let me get the team to follow up on this — could you share your name and email (or phone) so they can reach you?"
@@ -126,6 +127,25 @@ export async function submitGuestContact(formData: FormData): Promise<{ error?: 
   } catch (err) {
     console.error('[submitGuestContact]', err)
     return { error: 'Could not save your info. Please try again.' }
+  }
+
+  // Let admins know a guest is waiting — otherwise the lead just sits silently.
+  try {
+    const { data: admins } = await admin
+      .from('profiles')
+      .select('id')
+      .in('role', ['admin', 'super_admin'])
+    const adminIds = (admins ?? []).map(a => a.id)
+    if (adminIds.length > 0) {
+      await createNotificationStore(admin).notifyCustomers(
+        adminIds,
+        'New chat lead',
+        `${parsed.data.name} (${parsed.data.email}) left their contact info in the guest chat and is waiting for a reply.`,
+        '#'
+      )
+    }
+  } catch (err) {
+    console.error('[submitGuestContact] admin notify', err)
   }
 
   return buildState(admin, convo.id, convo.status)

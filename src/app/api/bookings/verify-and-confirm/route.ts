@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { timingSafeEqual } from 'node:crypto'
 import { createServiceRoleClient } from '@/utils/supabase/server'
 import { createNotificationStore } from '@/lib/notifications/store'
+import { createInboxStore } from '@/lib/inbox/store'
 import { emailSender } from '@/lib/touchpoints/channels'
 import { brand } from '@/content/brand'
 import { resolveGreetingName } from '@/lib/name'
@@ -116,6 +117,35 @@ export async function GET(req: NextRequest) {
               `/admin/bookings/${booking.booking_code}`
             )
           }
+
+          // Let the guest know too — don't leave them wondering why no confirmation came.
+          const rescheduleCustomerName = resolveGreetingName({
+            preferredName: booking.preferred_name,
+            contactName: booking.contact_name,
+          })
+          const rescheduleBody = `Hey ${rescheduleCustomerName}! Looks like your slot today at ${booking.scheduled_time} got double-booked on our end, sorry about that. Our team will reach out shortly to find a new time that works for you.`
+
+          if (booking.customer_id) {
+            try {
+              const inbox = createInboxStore(admin)
+              const convo = await inbox.getOrCreateConversation(booking.customer_id)
+              await inbox.insertMessage({ conversationId: convo.id, sender: 'bot', body: rescheduleBody })
+            } catch (err) {
+              console.error(`[verify-bookings] reschedule inbox notify failed for ${booking.booking_code}`, err)
+            }
+          } else if (booking.contact_email) {
+            const rescheduleSender = emailSender({
+              apiKey: process.env.RESEND_API_KEY ?? '',
+              from: process.env.TOUCHPOINT_EMAIL_FROM ?? 'Eagles 4x4 <onboarding@resend.dev>',
+            })
+            const res = await rescheduleSender.send({
+              to: booking.contact_email,
+              subject: `About your ${booking.booking_code} appointment today`,
+              body: rescheduleBody,
+            })
+            if (!res.ok) console.error(`[verify-bookings] reschedule email failed for ${booking.booking_code}`, res.error)
+          }
+
           continue
         }
 
