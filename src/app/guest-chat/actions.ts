@@ -141,7 +141,7 @@ export async function submitGuestContact(formData: FormData): Promise<{ error?: 
         adminIds,
         'New chat lead',
         `${parsed.data.name} (${parsed.data.email}) left their contact info in the guest chat and is waiting for a reply.`,
-        '#'
+        `/admin/inbox?tab=leads&c=${convo.id}`
       )
     }
   } catch (err) {

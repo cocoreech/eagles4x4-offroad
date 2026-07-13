@@ -4,12 +4,13 @@ import { GUEST_SESSION_COOKIE } from '@/lib/guestSession'
 import { createInboxStore } from '@/lib/inbox/store'
 import { createGuestInboxStore } from '@/lib/inbox/guestStore'
 import type { MessageSender } from '@/types/inbox'
+import type { GuestMessageSender } from '@/lib/inbox/guestStore'
 
 // Guest chat messages map onto the account thread's sender vocabulary: a guest
-// is the account's 'customer'; 'bot' is unchanged. (There is no guest analogue
-// of 'merchant' — a human reply only ever happens after handoff, in tooling.)
-function mapSender(sender: 'guest' | 'bot'): MessageSender {
-  return sender === 'guest' ? 'customer' : 'bot'
+// is the account's 'customer'; 'bot' and 'merchant' carry straight across (an
+// admin may have already replied to the lead before the guest signed up).
+function mapSender(sender: GuestMessageSender): MessageSender {
+  return sender === 'guest' ? 'customer' : sender
 }
 
 /**
@@ -52,7 +53,7 @@ export async function claimGuestConversation(userId: string): Promise<number> {
         sender: mapSender(m.sender),
         body: m.body,
         created_at: m.created_at,
-        read_at: m.sender === 'bot' ? m.created_at : null,
+        read_at: m.sender !== 'guest' ? m.created_at : null,
       }))
       const inserted = await admin.from('conversation_messages').insert(rows)
       if (inserted.error) throw new Error(`claimGuestConversation insert: ${inserted.error.message}`)

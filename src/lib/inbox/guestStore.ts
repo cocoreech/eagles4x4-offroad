@@ -1,7 +1,19 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 export type GuestConversationStatus = 'open' | 'awaiting_merchant' | 'closed'
-export type GuestMessageSender = 'guest' | 'bot'
+export type GuestMessageSender = 'guest' | 'bot' | 'merchant'
+
+export interface LeadWithConversation {
+  id: string
+  name: string
+  email: string
+  phone: string | null
+  guest_conversation_id: string | null
+  created_at: string
+  conversationStatus: GuestConversationStatus | null
+  lastMessageAt: string | null
+  lastMessageBody: string | null
+}
 
 export interface GuestConversation {
   id: string
@@ -92,6 +104,57 @@ export function createGuestInboxStore(client: SupabaseClient) {
         .update({ status })
         .eq('id', guestConversationId)
       if (error) throw new Error(`setGuestStatus: ${error.message}`)
+    },
+
+    /** Leads (chat-captured contacts) joined with their conversation's latest state, newest first. */
+    async listLeadsWithConversations(): Promise<LeadWithConversation[]> {
+      const { data, error } = await client
+        .from('leads')
+        .select(
+          `id, name, email, phone, guest_conversation_id, created_at,
+           conversation:guest_conversations!guest_conversation_id ( status, last_message_at )`
+        )
+        .order('created_at', { ascending: false })
+      if (error) throw new Error(`listLeadsWithConversations: ${error.message}`)
+
+      const rows = (data ?? []) as unknown as Array<{
+        id: string
+        name: string
+        email: string
+        phone: string | null
+        guest_conversation_id: string | null
+        created_at: string
+        conversation: { status: GuestConversationStatus; last_message_at: string | null } | null
+      }>
+
+      const withLastMessage = await Promise.all(
+        rows.map(async row => {
+          let lastMessageBody: string | null = null
+          if (row.guest_conversation_id) {
+            const { data: lastMsg } = await client
+              .from('guest_messages')
+              .select('body')
+              .eq('guest_conversation_id', row.guest_conversation_id)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+            lastMessageBody = lastMsg?.body ?? null
+          }
+          return {
+            id: row.id,
+            name: row.name,
+            email: row.email,
+            phone: row.phone,
+            guest_conversation_id: row.guest_conversation_id,
+            created_at: row.created_at,
+            conversationStatus: row.conversation?.status ?? null,
+            lastMessageAt: row.conversation?.last_message_at ?? null,
+            lastMessageBody,
+          }
+        })
+      )
+
+      return withLastMessage
     },
   }
 }
