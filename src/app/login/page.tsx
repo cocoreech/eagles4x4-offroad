@@ -48,7 +48,7 @@ export default async function LoginPage(
               className="mt-4 text-sm"
               style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-display)', fontStyle: 'italic' }}
             >
-              Enter your email and we&apos;ll send a 6-digit code. No password needed.
+              Enter your email and we&apos;ll send you a sign-in link. No password needed.
               Returning customer? Use the same email and your bookings are already there.
             </p>
           </div>

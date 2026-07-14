@@ -48,6 +48,7 @@ export async function sendOtp(formData: FormData) {
     return { error: 'Please enter a valid email address.' }
   }
   const { email } = parsed.data
+  const next = safeNext(formData.get('next'))
 
   // Email + IP combined rate limit (our app-level)
   const ip = await getIp()
@@ -68,12 +69,15 @@ export async function sendOtp(formData: FormData) {
   }
 
   const supabase = await createClient()
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? ''
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      // Create the user on first OTP request (passwordless signup).
+      // Create the user on first request (passwordless signup).
       shouldCreateUser: true,
-      // No emailRedirectTo → no magic link path. Email contains the 6-digit code only.
+      // Magic-link flow: the email carries a link back to /auth/callback, which
+      // exchanges it for a session. No 6-digit code.
+      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
     },
   })
 
