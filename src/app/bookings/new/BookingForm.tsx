@@ -32,37 +32,31 @@ type Product = {
 
 const QUOTE_KEY = 'eagles4x4.quote'
 
-type Mechanic = {
-  id: string
-  preferred_name: string | null
-  full_name: string | null
-}
-
 export default function BookingForm({
   services,
   products,
-  mechanics,
   defaultEmail,
   defaultName,
   defaultPreferredName,
   hasPreferredName,
-  isLoggedIn,
 }: Readonly<{
   services: Service[]
   products: Product[]
-  mechanics: Mechanic[]
   defaultEmail: string
   defaultName: string
   defaultPreferredName: string
   hasPreferredName: boolean
-  isLoggedIn: boolean
 }>) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [prefilledNotes, setPrefilledNotes] = useState<string>('')
   const [branch, setBranch] = useState<BranchSlug>('cavite')
-  const [assignedTo, setAssignedTo] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+
+  // Split any prefilled full name into first/last for the two-field name inputs.
+  const nameParts = defaultName.trim().split(/\s+/).filter(Boolean)
+  const defaultFirst = nameParts[0] ?? ''
+  const defaultLast = nameParts.slice(1).join(' ')
 
   // Hydrate from the /services Quote Calculator if the customer came from there.
   // We map slugs → IDs server-data-side, so a stale cart with deleted items
@@ -110,6 +104,10 @@ export default function BookingForm({
       return
     }
     setError(null)
+    // The name is captured as two fields; the server stores one full name.
+    const first = String(formData.get('firstName') ?? '').trim()
+    const last = String(formData.get('lastName') ?? '').trim()
+    formData.set('contactName', `${first} ${last}`.trim())
     // Server action expects serviceIds as multi-value; FormData append once per id
     Array.from(selected).forEach(id => formData.append('serviceIds', id))
     startTransition(async () => {
@@ -237,21 +235,32 @@ export default function BookingForm({
             <input type="hidden" name="preferredName" value={defaultPreferredName} />
           ) : (
             <Field
-              label="What should we call you? (optional)"
+              label="What should we call you?"
               name="preferredName"
               type="text"
-              placeholder="e.g. Juan, JD — leave blank to use your full name"
+              placeholder="e.g. Juan, JD — the name we'll greet you by"
               defaultValue={defaultPreferredName}
+              required
             />
           )}
-          <Field
-            label="Full Name"
-            name="contactName"
-            type="text"
-            placeholder="Juan dela Cruz"
-            defaultValue={defaultName}
-            required
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field
+              label="First Name"
+              name="firstName"
+              type="text"
+              placeholder="Juan"
+              defaultValue={defaultFirst}
+              required
+            />
+            <Field
+              label="Last Name"
+              name="lastName"
+              type="text"
+              placeholder="dela Cruz"
+              defaultValue={defaultLast}
+              required
+            />
+          </div>
           <PhoneInput />
           <Field
             label="Email"
@@ -262,36 +271,6 @@ export default function BookingForm({
           />
         </div>
         <div className="mt-4">
-          <label className="block">
-            <span
-              className="block text-[10px] font-bold tracking-[0.15em] uppercase mb-2"
-              style={{ color: 'var(--color-text-muted)' }}
-            >
-              Assign Mechanic *
-            </span>
-            <select
-              name="assignedTo"
-              value={assignedTo}
-              onChange={(e) => setAssignedTo(e.target.value)}
-              required
-              className="w-full px-4 py-3 rounded-sm outline-none text-sm transition"
-              style={{
-                background: 'var(--color-bg)',
-                border: '1px solid var(--color-border)',
-                color: 'var(--color-text-primary)',
-              }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--color-accent)')}
-              onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--color-border)')}
-            >
-              <option value="">Select a mechanic...</option>
-              {mechanics.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.preferred_name || m.full_name || m.id}
-                </option>
-              ))}
-            </select>
-          </label>
-
           <label className="block">
             <span
               className="block text-[10px] font-bold tracking-[0.15em] uppercase mb-2"
