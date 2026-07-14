@@ -97,7 +97,7 @@ export default function ConciergeWidget() {
           <ul className="flex-1 space-y-3 overflow-y-auto p-4" aria-live="polite">
             {messages.length === 0 && (
               <li className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                Ask about hours, services, promos, or anything else — we'll get right back to you.
+                Hi there! How can we help you today? 👋
               </li>
             )}
             {messages.map(m => {
@@ -125,7 +125,7 @@ export default function ConciergeWidget() {
               className="mx-3 mb-2 rounded-lg px-3 py-2 text-xs"
               style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', color: 'var(--color-text-muted)' }}
             >
-              Want updates on promos & your build?{' '}
+              Stay in the loop on promos & builds.{' '}
               <Link href="/login" className="font-semibold underline" style={{ color: 'var(--color-accent)' }}>
                 Create a free account →
               </Link>

@@ -48,8 +48,8 @@ export default async function LoginPage(
               className="mt-4 text-sm"
               style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-display)', fontStyle: 'italic' }}
             >
-              Enter your email and we&apos;ll send a 6-digit code — no passwords.
-              New or returning, it&apos;s the same email.
+              Enter your email and we&apos;ll send a 6-digit code. No password needed.
+              Returning customer? Use the same email and your bookings are already there.
             </p>
           </div>
 
