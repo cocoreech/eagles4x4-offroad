@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth'
 import { createClient } from '@/utils/supabase/server'
+import DeleteCustomerButton from './DeleteCustomerButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,7 +22,7 @@ const peso = (n: number | null) => '₱' + Number(n ?? 0).toLocaleString('en-PH'
 
 export default async function AdminCustomerDetailPage(props: Readonly<{ params: Promise<{ id: string }> }>) {
   const { id } = await props.params
-  await requireAdmin()
+  const { profile: adminProfile } = await requireAdmin()
   const supabase = await createClient()
 
   const { data: profile } = await supabase
@@ -91,6 +92,19 @@ export default async function AdminCustomerDetailPage(props: Readonly<{ params: 
           </tbody>
         </table>
       </div>
+
+      {adminProfile.role === 'super_admin' && (
+        <section className="mt-8 rounded-md p-5" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-destructive)' }}>
+          <h2 className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: 'var(--color-destructive)' }}>
+            Danger Zone
+          </h2>
+          <p className="mb-4 text-sm" style={{ color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
+            Permanently delete this customer account. Bookings are retained (scrubbed and unlinked)
+            for the shop&apos;s records.
+          </p>
+          <DeleteCustomerButton customerId={profile.id} />
+        </section>
+      )}
     </main>
   )
 }

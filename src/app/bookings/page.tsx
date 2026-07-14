@@ -48,13 +48,22 @@ export default async function MyBookingsPage() {
     <main className="min-h-screen flex flex-col">
       <nav className="px-6 py-5 flex items-center justify-between border-b" style={{ borderColor: 'var(--color-border)' }}>
         <BrandMark href="/" />
-        <Link
-          href="/bookings/new"
-          className="text-xs font-extrabold tracking-widest uppercase px-4 py-2 rounded-sm"
-          style={{ background: 'var(--color-accent)', color: '#000' }}
-        >
-          + New Booking
-        </Link>
+        <div className="flex items-center gap-5">
+          <Link
+            href="/account"
+            className="text-xs font-bold tracking-widest uppercase"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
+            Account
+          </Link>
+          <Link
+            href="/bookings/new"
+            className="text-xs font-extrabold tracking-widest uppercase px-4 py-2 rounded-sm"
+            style={{ background: 'var(--color-accent)', color: '#000' }}
+          >
+            + New Booking
+          </Link>
+        </div>
       </nav>
 
       <div className="flex-1 px-6 py-12">
