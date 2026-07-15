@@ -202,10 +202,15 @@ export async function middleware(req: NextRequest) {
 
   // ── 2. Geo-block /admin/* ─────────────────────────────────
   // Vercel injects x-vercel-ip-country. In local dev it's missing — we allow.
+  // The detected region is echoed in the body so a legitimately-blocked admin
+  // can see which country to add to ADMIN_ALLOWED_COUNTRIES.
   if (pathHasPrefix(pathname, ADMIN_PREFIXES)) {
     const country = req.headers.get('x-vercel-ip-country')?.toUpperCase()
     if (country && !ADMIN_ALLOWED_COUNTRIES.has(country)) {
-      return new NextResponse('Forbidden', { status: 403 })
+      return new NextResponse(
+        `Forbidden — admin access is restricted by region (your connection was detected as: ${country}).`,
+        { status: 403 },
+      )
     }
   }
 

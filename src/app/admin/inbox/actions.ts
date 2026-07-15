@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { requireAdmin } from '@/lib/auth'
 import { createClient, createServiceRoleClient } from '@/utils/supabase/server'
 import { createInboxStore } from '@/lib/inbox/store'
+import type { ConversationMessage } from '@/types/inbox'
 import { messageBodySchema } from '@/lib/inbox/message'
 import { shouldSendDoorbell, sendDoorbellEmail } from '@/lib/inbox/doorbell'
 import { resolveGreetingName } from '@/lib/name'
@@ -20,7 +21,9 @@ async function getIp(): Promise<string> {
 
 const idSchema = z.string().uuid()
 
-export async function sendMerchantMessage(formData: FormData): Promise<{ error?: string }> {
+export async function sendMerchantMessage(
+  formData: FormData
+): Promise<{ error?: string; message?: ConversationMessage }> {
   const { user } = await requireAdmin()
   const limit = await checkLimit(rlAdminGeneral, `inbox-admin-send:${user.id}:${await getIp()}`)
   if (!limit.allowed) return { error: 'Too many actions. Please slow down.' }
@@ -32,8 +35,9 @@ export async function sendMerchantMessage(formData: FormData): Promise<{ error?:
 
   const supabase = await createClient()
   const store = createInboxStore(supabase)
+  let message: ConversationMessage
   try {
-    await store.insertMessage({
+    message = await store.insertMessage({
       conversationId: conversationId.data,
       sender: 'merchant',
       body: parsed.data,
@@ -45,7 +49,7 @@ export async function sendMerchantMessage(formData: FormData): Promise<{ error?:
     return { error: 'Could not send the message.' }
   }
   revalidatePath('/admin/inbox')
-  return {}
+  return { message }
 }
 
 interface ConversationWithCustomer {

@@ -12,7 +12,7 @@ interface Props {
   conversationId: string
   initial: ConversationMessage[]
   isAdmin?: boolean
-  onSend?: (formData: FormData) => Promise<{ error?: string }>
+  onSend?: (formData: FormData) => Promise<{ error?: string; message?: ConversationMessage }>
 }
 
 export function InboxThread({ conversationId, initial, isAdmin = false, onSend }: Props) {
@@ -68,8 +68,17 @@ export function InboxThread({ conversationId, initial, isAdmin = false, onSend }
     setError(null)
     startTransition(async () => {
       const res = await send(formData)
-      if (res.error) setError(res.error)
-      else formRef.current?.reset()
+      if (res.error) {
+        setError(res.error)
+        return
+      }
+      // Show the sent message immediately rather than waiting for the Realtime
+      // echo (which can lag). Deduped by id, so the echo won't double it.
+      if (res.message) {
+        const row = res.message
+        setMessages(prev => (prev.some(m => m.id === row.id) ? prev : [...prev, row]))
+      }
+      formRef.current?.reset()
     })
   }
 

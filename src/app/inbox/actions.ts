@@ -5,6 +5,7 @@ import { headers } from 'next/headers'
 import { requireConfirmed } from '@/lib/auth'
 import { createClient, createServiceRoleClient } from '@/utils/supabase/server'
 import { createInboxStore } from '@/lib/inbox/store'
+import type { ConversationMessage } from '@/types/inbox'
 import { messageBodySchema } from '@/lib/inbox/message'
 import { buildConciergeSystemPrompt, type ConciergeContext, type GroundingBooking, type GroundingPromo } from '@/lib/inbox/grounding'
 import { generateConciergeReply, type ConciergeTurn } from '@/lib/inbox/concierge'
@@ -18,7 +19,9 @@ async function getIp(): Promise<string> {
   return h.get('x-real-ip') ?? '0.0.0.0'
 }
 
-export async function sendCustomerMessage(formData: FormData): Promise<{ error?: string }> {
+export async function sendCustomerMessage(
+  formData: FormData
+): Promise<{ error?: string; message?: ConversationMessage }> {
   const user = await requireConfirmed()
   const limit = await checkLimit(rlServerAction, `inbox-send:${user.id}:${await getIp()}`)
   if (!limit.allowed) return { error: 'Too many messages. Please slow down.' }
@@ -28,16 +31,19 @@ export async function sendCustomerMessage(formData: FormData): Promise<{ error?:
 
   const supabase = await createClient()
   const store = createInboxStore(supabase)
+  let message: ConversationMessage
   try {
     const convo = await store.getOrCreateConversation(user.id)
-    await store.insertMessage({ conversationId: convo.id, sender: 'customer', body: parsed.data })
+    // Return the inserted row so the client can show it instantly, instead of
+    // waiting for the Realtime echo (which may lag or not arrive).
+    message = await store.insertMessage({ conversationId: convo.id, sender: 'customer', body: parsed.data })
     await maybeRunConcierge(convo.id, user.id)
   } catch (err) {
     console.error('[sendCustomerMessage]', err)
     return { error: 'Could not send your message. Please try again.' }
   }
   revalidatePath('/inbox')
-  return {}
+  return { message }
 }
 
 // Reuses the booking shaping the touchpoint store already does.
