@@ -61,9 +61,12 @@ const BLOCKED_UA_PATTERNS = [
 // Route-gating prefixes + the public allowlist live in @/lib/routeProtection
 // (pure + unit-tested). ADMIN_PREFIXES is imported for the geo/UA checks below.
 
-// Country allow-list for /admin/* (ISO 3166-1 alpha-2)
+// Country allow-list for /admin/* (ISO 3166-1 alpha-2).
+// Defaults to PH plus SG and HK: Philippine ISPs and Vercel's edge frequently
+// route PH traffic through Singapore/Hong Kong, so those regions must be allowed
+// or legitimate PH admins get falsely geo-blocked. Override via env if needed.
 const ADMIN_ALLOWED_COUNTRIES = new Set(
-  (process.env.ADMIN_ALLOWED_COUNTRIES || 'PH')
+  (process.env.ADMIN_ALLOWED_COUNTRIES || 'PH,SG,HK')
     .split(',')
     .map(c => c.trim().toUpperCase())
 )
