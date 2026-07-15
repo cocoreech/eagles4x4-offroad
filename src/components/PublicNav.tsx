@@ -201,13 +201,6 @@ export default function PublicNav({
                   >
                     My Bookings
                   </Link>
-                  <Link
-                    href="/inbox"
-                    className="hidden sm:inline-block text-[11px] font-semibold tracking-[0.1em] uppercase"
-                    style={{ color: 'var(--color-text-muted)' }}
-                  >
-                    Inbox
-                  </Link>
                 </>
               )}
               {isAdmin && (

@@ -5,7 +5,7 @@
 // Polished UI follows in Step 4 (Frontend) using the Phase 3 design.
 // ============================================================
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useState, useTransition, type FormEvent } from 'react'
 import { createBooking } from './actions'
 import DateTimePicker from '@/components/DateTimePicker'
 import VehiclePicker from '@/components/VehiclePicker'
@@ -98,7 +98,11 @@ export default function BookingForm({
     setSelected(next)
   }
 
-  function handleSubmit(formData: FormData) {
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    // onSubmit + preventDefault (not a form `action`) so React never auto-resets
+    // the form — on a server error the filled-in fields must stay put.
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
     if (selected.size === 0) {
       setError('Select at least one service.')
       return
@@ -128,7 +132,7 @@ export default function BookingForm({
   const peso = (n: number) => '₱' + Math.round(n).toLocaleString('en-PH')
 
   return (
-    <form action={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-8">
       {/* ── Branch ── */}
       <section>
         <h2 className="font-display font-bold text-xl mb-4">
