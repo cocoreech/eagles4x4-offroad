@@ -105,6 +105,7 @@ export function InboxThread({ conversationId, initial, isAdmin = false, onSend }
       </ul>
 
       <form ref={formRef} action={handleSubmit} className="flex gap-2 border-t border-border p-3">
+        <input type="hidden" name="conversationId" value={conversationId} />
         <label htmlFor="inbox-body" className="sr-only">
           {inboxCopy.placeholder}
         </label>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import Link from 'next/link'
 import { adminLogin } from './actions'
 import PasswordInput from '@/components/PasswordInput'
 import { BRANCHES } from '@/content/branches'
@@ -53,6 +54,11 @@ export default function AdminLoginForm() {
         autoComplete="current-password"
         minLength={8}
       />
+      <p className="-mt-2 text-right">
+        <Link href="/admin/forgot-password" className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+          Forgot password?
+        </Link>
+      </p>
 
       <label className="block">
         <span

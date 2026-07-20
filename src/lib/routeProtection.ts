@@ -16,6 +16,7 @@ const PUBLIC_ALLOWLIST = [
   '/',
   '/login',
   '/admin/login',
+  '/admin/forgot-password',
   '/signup',
   '/verify-email',
   '/mfa-challenge',
