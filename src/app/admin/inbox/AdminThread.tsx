@@ -40,6 +40,7 @@ export function AdminThread({ conversationId, initial, online, customerName }: P
       </div>
       <div className="flex-1 overflow-hidden">
         <InboxThread
+          key={conversationId}
           conversationId={conversationId}
           initial={initial}
           isAdmin
