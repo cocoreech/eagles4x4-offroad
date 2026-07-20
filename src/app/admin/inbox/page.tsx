@@ -207,11 +207,16 @@ async function CustomerThread({
   const selected = c ?? needsReply[0]?.id ?? conversations[0]?.id ?? null
   if (!selected) return <p className="p-4 text-text-muted">{inboxCopy.admin.listEmpty}</p>
 
+  const customerName =
+    needsReply.find(nr => nr.id === selected)?.customer_name ??
+    conversations.find(cv => cv.id === selected)?.customer_name ??
+    'Customer'
+
   const messages = await store.listMessages(selected)
   await store.markRead(selected, 'merchant')
   await store.markReviewedByAdmin(selected)
 
-  return <AdminThread conversationId={selected} initial={messages} online={online} />
+  return <AdminThread conversationId={selected} initial={messages} online={online} customerName={customerName} />
 }
 
 async function LeadThread({

@@ -10,9 +10,10 @@ interface Props {
   conversationId: string
   initial: ConversationMessage[]
   online: boolean
+  customerName: string
 }
 
-export function AdminThread({ conversationId, initial, online }: Props) {
+export function AdminThread({ conversationId, initial, online, customerName }: Props) {
   const [pending, startTransition] = useTransition()
 
   function togglePresence() {
@@ -26,6 +27,7 @@ export function AdminThread({ conversationId, initial, online }: Props) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-border p-2">
+        <span className="px-1 text-sm font-semibold text-text-primary">{customerName}</span>
         <button
           type="button"
           onClick={togglePresence}

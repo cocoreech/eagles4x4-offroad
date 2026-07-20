@@ -1,5 +1,22 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Conversation, ConversationMessage, ConversationStatus, MessageSender } from '@/types/inbox'
+import { resolveGreetingName } from '@/lib/name'
+
+// Customer fields embedded on a conversation row for admin display.
+type CustomerEmbed = { full_name: string | null; preferred_name: string | null; email: string | null } | null
+
+// Resolve a human label for the admin inbox: preferred → full → email.
+// Magic-link customers often have a blank full_name, so plain
+// `full_name ?? 'Customer'` renders an empty (invisible) row — this never does.
+function customerLabel(customer: CustomerEmbed): string {
+  const name = resolveGreetingName({
+    preferredName: customer?.preferred_name,
+    fullName: customer?.full_name,
+    contactName: customer?.email,
+  })
+  // resolveGreetingName falls back to 'there'; for the inbox 'Customer' reads better.
+  return name === 'there' ? 'Customer' : name
+}
 
 export function createInboxStore(client: SupabaseClient) {
   return {
@@ -138,13 +155,13 @@ export function createInboxStore(client: SupabaseClient) {
     async listConversations(): Promise<(Conversation & { customer_name: string | null })[]> {
       const { data, error } = await client
         .from('conversations')
-        .select('*, customer:profiles!customer_id ( full_name )')
+        .select('*, customer:profiles!customer_id ( full_name, preferred_name, email )')
         .order('last_message_at', { ascending: false, nullsFirst: false })
       if (error) throw new Error(`listConversations: ${error.message}`)
       return (data ?? []).map(
-        (row: Conversation & { customer: { full_name: string | null } | null }) => ({
+        (row: Conversation & { customer: CustomerEmbed }) => ({
           ...row,
-          customer_name: row.customer?.full_name ?? null,
+          customer_name: customerLabel(row.customer),
         }),
       )
     },
@@ -156,7 +173,7 @@ export function createInboxStore(client: SupabaseClient) {
       // (most recent message from customer with no merchant reply after it)
       const { data: conversations, error: convoError } = await client
         .from('conversations')
-        .select('*, customer:profiles!customer_id ( full_name )')
+        .select('*, customer:profiles!customer_id ( full_name, preferred_name, email )')
         .order('last_message_at', { ascending: false, nullsFirst: false })
       if (convoError) throw new Error(`listConversationsNeedingReply: ${convoError.message}`)
 
@@ -165,7 +182,7 @@ export function createInboxStore(client: SupabaseClient) {
 
       // For each conversation, check if there's an unresponded customer message
       for (const row of conversations ?? []) {
-        const convo = row as Conversation & { customer: { full_name: string | null } | null }
+        const convo = row as Conversation & { customer: CustomerEmbed }
 
         // Get the most recent message
         const { data: lastMsg, error: lastMsgError } = await client
@@ -181,7 +198,7 @@ export function createInboxStore(client: SupabaseClient) {
         if (lastMsg?.sender === 'customer') {
           result.push({
             ...convo,
-            customer_name: convo.customer?.full_name ?? null,
+            customer_name: customerLabel(convo.customer),
             lastCustomerMessage: lastMsg.body,
           })
         }
