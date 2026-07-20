@@ -42,9 +42,17 @@ export default async function AdminInboxPage({
   return (
     <main className="mx-auto flex h-[calc(100vh-6rem)] max-w-6xl gap-4 px-4 py-6">
       <aside className="w-72 shrink-0 overflow-y-auto rounded-2xl border border-border">
-        <h1 className="border-b border-border p-3 font-display text-lg text-text-primary">
-          {inboxCopy.admin.title}
-        </h1>
+        <div className="border-b border-border p-3">
+          <Link
+            href="/admin"
+            className="mb-2 inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-text-muted transition-colors hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+          >
+            ← Admin Home
+          </Link>
+          <h1 className="font-display text-lg text-text-primary">
+            {inboxCopy.admin.title}
+          </h1>
+        </div>
 
         <div className="flex gap-1 border-b border-border p-2">
           <Link href="/admin/inbox?tab=customers" className={tabButtonClass(tab === 'customers')}>
