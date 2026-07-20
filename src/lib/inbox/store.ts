@@ -153,9 +153,14 @@ export function createInboxStore(client: SupabaseClient) {
     },
 
     async listConversations(): Promise<(Conversation & { customer_name: string | null })[]> {
+      // Simply opening /inbox creates a conversation row (getOrCreateConversation),
+      // so a customer who never actually typed anything still has a row here with
+      // last_message_at still null. Exclude those — the admin list is for
+      // conversations someone has actually messaged into.
       const { data, error } = await client
         .from('conversations')
         .select('*, customer:profiles!customer_id ( full_name, preferred_name, email )')
+        .not('last_message_at', 'is', null)
         .order('last_message_at', { ascending: false, nullsFirst: false })
       if (error) throw new Error(`listConversations: ${error.message}`)
       return (data ?? []).map(
